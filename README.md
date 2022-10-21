@@ -137,7 +137,9 @@ Nimbo-2 [d337c406] > help
     lsass <method>                         ->  dump lsass.exe [methods:  direct,comsvcs] (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
     shellc <raw-shellcode-file> <pid>      ->  inject shellcode to remote process
-
+    assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single string using quotes)
+                                               warning: make sure the assembly doesn't call any exit function
+                                               
     --== Evasion Stuff ==--
     unhook                                 ->  unhook ntdll.dll
     amsi                                   ->  patch amsi out of the current process

