@@ -2,9 +2,6 @@ import std/[strformat, strutils]
 import winim/[clr]
 import os
 
-proc dup(old_fd: FileHandle): FileHandle {.importc, header: "unistd.h".}
-proc dup2(old_fd: FileHandle, new_fd: FileHandle): cint {.importc, header: "unistd.h".}
-
 
 proc execute_encoded_powershell*(encoded_command: string): string =
     var output: string
@@ -23,16 +20,17 @@ proc execute_encoded_powershell*(encoded_command: string): string =
 
 
 proc execute_assembly*(assembly_bytes: seq[byte], arguments: seq[string]): (bool, string) =
+
     var is_success: bool
     var output: string
 
-    # redirect stdout to a file
-    var out_file = "a.o"
-    var stdout_fd = stdout.getFileHandle()
-    var stdout_fd_dup = dup(stdout_fd)
-    var out_file_h: File = open(out_file, fmWrite)
-    var tmp_file_fd: FileHandle = out_file_h.getFileHandle()
-    discard dup2(tmp_file_fd, stdout_fd)
+    # create console for stdout writing and hide it (will fail if console exists)
+    # AllocConsole()
+    # SetConsoleActiveScreenBuffer(GetConsoleWindow())
+    discard stdout.reopen("a.o", fmWrite)
+    discard stderr.reopen("a.o", fmWrite)
+    # var Stealth = FindWindowA("ConsoleWindowClass", NULL)
+    # ShowWindow(Stealth,0)
 
     # execute assembly
     try:
@@ -42,14 +40,11 @@ proc execute_assembly*(assembly_bytes: seq[byte], arguments: seq[string]): (bool
         is_success = true
     except:
         is_success = false
-
-    # restore stdout
-    out_file_h.flushFile()
-    out_file_h.close()
-    discard dup2(stdout_fd_dup, stdout_fd)
+    echo "hii"
 
     # read output file and delete it
-    defer: removeFile(out_file)
-    output = readFile(out_file)
+    # defer: removeFile(out_file)
+    # output = readFile(out_file)
 
     return (is_success, output.replace("\c", ""))
+
