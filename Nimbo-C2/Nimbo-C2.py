@@ -54,6 +54,7 @@ agent_completer = NestedCompleter.from_nested_dict({
     },
     'sam': None,
     'shellc': None,
+    'assembly': None,
     'msgbox': None,
     'speak': None,
     'sleep ': None,
