@@ -117,7 +117,9 @@ proc run_shell_command(shell_command: string): bool =
     var is_success: bool
 
     try:
-        output = execCmdEx(shell_command)[0]
+        # output = execCmdEx(shell_command)[0]
+        output = execCmdEx(shell_command, options={poDaemon})[0]
+
     except:
         output = could_not_retrieve
     
