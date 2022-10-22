@@ -118,7 +118,7 @@ Nimbo-C2 > help
 Nimbo-2 [d337c406] > help
 
     --== Send Commands ==--
-    shell <shell-command>                  ->  execute a shell command
+    cmd <shell-command>                    ->  execute a shell command
     iex <powershell-scriptblock>           ->  execute in-memory powershell command
 
     --== File Stuff ==--

@@ -15,4 +15,3 @@ proc execute_encoded_powershell*(encoded_command: string): string =
         output.add($results.Item(i))
     runspace.Close()
     return output.replace("\c", "")
-
