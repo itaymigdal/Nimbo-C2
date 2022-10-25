@@ -181,16 +181,12 @@ Nimbo-2 [d337c406] > help
 
 ## Modules
 
-- Improve Unhooking and patching by using syscalls.
-- Run .NET assemblies.
-- Migrate to another process (Meterpreter-like).
-- Getsystem.
-- Collect installed software.
-- Zip & exfiltrate folder.
-- Find sensitive files by keywords / regex search.
+- Improve Unhooking and patching by using syscalls
+- Migrate
+- Getsystem
+- Collect installed software
 
 ## Misc
-- Develop Proxy awareness for the agent.
-- Add option to sign PE agent with digital signature. Some very nice Github projects do that to lower detection.
-- Support shellcode payload type.
-- Support more packers.
+- Develop Proxy awareness for the agent
+- Add option to sign PE agent with digital signature. Some very nice Github projects do that to lower detection
+- Support more packers
