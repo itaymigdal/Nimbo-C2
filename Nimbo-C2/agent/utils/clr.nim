@@ -24,27 +24,6 @@ proc execute_assembly*(assembly_bytes: seq[byte], arguments: seq[string]): (bool
     var is_success: bool
     var output: string
 
-    # create console for stdout writing and hide it (will fail if console exists)
-    # AllocConsole()
-    # SetConsoleActiveScreenBuffer(GetConsoleWindow())
-    discard stdout.reopen("a.o", fmWrite)
-    discard stderr.reopen("a.o", fmWrite)
-    # var Stealth = FindWindowA("ConsoleWindowClass", NULL)
-    # ShowWindow(Stealth,0)
-
-    # execute assembly
-    try:
-        var assembly = load(assembly_bytes)
-        var arr = toCLRVariant(arguments, VT_BSTR)
-        assembly.EntryPoint.Invoke(nil, toCLRVariant([arr]))
-        is_success = true
-    except:
-        is_success = false
-    echo "hii"
-
-    # read output file and delete it
-    # defer: removeFile(out_file)
-    # output = readFile(out_file)
 
     return (is_success, output.replace("\c", ""))
 
