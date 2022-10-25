@@ -25,7 +25,8 @@ def clear_screen():
 
 def sanitize_data(data):
     bad_chars = {
-        r"\'": "'"
+        r"\'": "'",
+        r'\x00': ""
     }
     for c in bad_chars:
         data = data.replace(c, bad_chars[c])
