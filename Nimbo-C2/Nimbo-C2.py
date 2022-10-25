@@ -332,7 +332,7 @@ def agent_screen(agent_id):
                 if not assembly:
                     continue
                 else:
-                    assembly_base64 = utils.encode_base_64(assembly, encoding="utf-8")
+                    assembly_base64 = utils.encode_base_64(assembly)
                 command_dict = {
                     "command_type": "assembly",
                     "assembly_base64": assembly_base64,
