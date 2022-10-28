@@ -129,6 +129,7 @@ Nimbo-2 [d337c406] > help
     --== Discovery Stuff ==--
     pstree                                 ->  show process tree
     checksec                               ->  check for security products
+    software                               ->  check for installed software
 
     --== Collection Stuff ==--
     clipboard                              ->  retrieve clipboard
