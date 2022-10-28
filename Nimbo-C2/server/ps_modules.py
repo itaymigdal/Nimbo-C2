@@ -1,10 +1,5 @@
 
 pstree = """
-function IsElevated
-{
-    return (new-object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole("Administrators")
-}
-
 function Get-ProcessTree
 {
     [CmdletBinding()]
@@ -18,12 +13,12 @@ function Get-ProcessTree
     $deadParents  = Compare-Object -ReferenceObject $parents -DifferenceObject $liveParents `
                   | select -ExpandProperty InputObject
     $processByParent = $processes | Group-Object -AsHashTable ParentProcessId
-    
+
     function Write-ProcessTree($process, [int]$level = 0)
     {
         $id = $process.ProcessId
         $parentProcessId = $process.ParentProcessId
-        if (IsElevated)
+        if ($IsElevated)
             {$process = Get-Process -Id $id -IncludeUserName}
         else
             {$process = Get-Process -Id $id}
@@ -42,9 +37,10 @@ function Get-ProcessTree
     | % { Write-ProcessTree $_ }
 }
 
-if (IsElevated)
-    {Get-ProcessTree -Verbose | select Process_Id, Process_Name, UserName}
-else
-    {Get-ProcessTree -Verbose | select Process_Id, Process_Name}
+$IsElevated = (new-object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole("Administrators")
 
+if ($IsElevated) 
+    {Get-ProcessTree -Verbose | select Process_Id, Process_Name, UserName}
+else 
+    {Get-ProcessTree -Verbose | select Process_Id, Process_Name}
 """
