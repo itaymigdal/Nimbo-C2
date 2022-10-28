@@ -186,7 +186,6 @@ Nimbo-2 [d337c406] > help
 - Improve Unhooking and patching by using syscalls
 - Migrate
 - Getsystem
-- Collect installed software
 
 ## Misc
 - Develop Proxy awareness for the agent
