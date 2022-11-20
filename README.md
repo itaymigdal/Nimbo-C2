@@ -15,9 +15,6 @@
   - [Main Window](#main-window)
   - [Agent Window](#agent-window)
 - [Credits](#credits)
-- [TODO](#todo)
-  - [Modules](#modules)
-  - [Misc](#misc)
 
 # About
 
@@ -179,15 +176,3 @@ Nimbo-2 [d337c406] > help
 - [ascii-image-converter](https://github.com/TheZoraiz/ascii-image-converter) - For the awsome Nimbo ascii art.
 - All those random people from Github & Stackoverflow that I copy & pasted their code :kissing_heart:.
   
-# TODO
-
-## Modules
-
-- Improve Unhooking and patching by using syscalls
-- Migrate
-- Getsystem
-
-## Misc
-- Develop Proxy awareness for the agent
-- Add option to sign PE agent with digital signature. Some very nice Github projects do that to lower detection
-- Support more packers
