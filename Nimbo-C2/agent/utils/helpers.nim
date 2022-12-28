@@ -1,4 +1,5 @@
 import winim
+import random
 
 proc `+`*[S: SomeInteger](p: pointer, offset: S): pointer =
   return cast[pointer](cast[ByteAddress](p) +% int(offset))
@@ -38,3 +39,9 @@ proc get_pid*(pname: string): int =
 
     return 0
 
+
+proc get_random_string*(length: int): string =
+  var rand_string: string
+  for _ in .. length:
+    add(rand_string, char(rand(int('A') .. int('z'))))
+    return rand_string
