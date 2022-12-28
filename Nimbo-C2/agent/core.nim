@@ -1,5 +1,5 @@
 include config
-import utils/[clipboard, clr, enc, helpers, memops, misc, screenshot]
+import utils/[audio, clipboard, clr, enc, helpers, memops, misc, screenshot]
 import std/[strformat, tables, nativesockets, random, json, streams]
 import winim/[lean, com]
 import wAuto/[registry]
