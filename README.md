@@ -42,7 +42,7 @@ My work wouldn't be possible without the previous great work done by others, lis
 - In-memory Powershell commands execution.
 - File download and upload commands.
 - Built-in discovery commands.
-- Screenshot taking and clipboard stealing.
+- Screenshot taking, clipboard stealing, audio recording.
 - Memory evasion techniques like NTDLL unhooking, ETW & AMSI patching.
 - LSASS and SAM hives dumping. 
 - Shellcode injection.
@@ -131,7 +131,8 @@ Nimbo-2 [d337c406] > help
     --== Collection Stuff ==--
     clipboard                              ->  retrieve clipboard
     screenshot                             ->  retrieve screenshot
-
+    audio <record-time>                    ->  record audio
+    
     --== Post Exploitation Stuff ==--
     lsass <method>                         ->  dump lsass.exe [methods:  direct,comsvcs] (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
