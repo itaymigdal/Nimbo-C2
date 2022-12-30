@@ -14,6 +14,7 @@
 - [Usage](#usage)
   - [Main Window](#main-window)
   - [Agent Window](#agent-window)
+- [Contribution \& Notes](#contribution--notes)
 - [Credits](#credits)
 
 # About
