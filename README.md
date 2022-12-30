@@ -30,7 +30,7 @@ All server components are written in Python:
 - Builder that generates the agent payloads. 
 - Nimbo-C2 is the interactive C2 component that rule'em all!
 
-I developed Nimbo-C2 in the past several months mainly at the late evenings while working at my day job and waking up at nights to my boy, in order to learn and maybe contribute my part to the cyber community :muscle:.
+I developed Nimbo-C2 in the past several months mainly at the late evenings while working at my day job and waking up at nights to my boy, in order to learn and maybe contribute my part to the cyber community :muscle:
 
 My work wouldn't be possible without the previous great work done by others, listed under credits.
 
@@ -85,6 +85,8 @@ First, edit `config.jsonc` for your needs.
 Then run with: `python3 Nimbo-C2.py`
 
 Use the `help` command for each screen, and tab completion.
+
+Also, check the [examples](/examples) directory.
 
 ## Main Window
 
