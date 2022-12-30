@@ -171,9 +171,14 @@ Nimbo-2 [d337c406] > help
     exit                                   ->  exit Nimbo-C2
 ```
 
+# Contribution & Notes
+This software may be buggy or unstable in some use cases as it not being fully and constantly tested.
+Feel free to open issues, PR's, and contact me for any reason at ([Gmail](itaymigdal9@gmail.com) | [Linkedin](https://www.linkedin.com/in/itay-migdal-b91821116/) | [Twitter](https://twitter.com/0xTheBruter)).
+
 # Credits
 - [OffensiveNim](https://github.com/byt3bl33d3r/OffensiveNim) - Great resource that taught me a lot about leveraging Nim for implant tasks. Some of Nimbo-C2 agent capabilities are basically wrappers around OffensiveNim modified examples.
 - [Python-Prompt-Toolkit-3](https://github.com/prompt-toolkit/python-prompt-toolkit) - Awsome library for developing python CLI applications. Developed the Nimbo-C2 interactive console using this.
 - [ascii-image-converter](https://github.com/TheZoraiz/ascii-image-converter) - For the awsome Nimbo ascii art.
 - All those random people from Github & Stackoverflow that I copy & pasted their code :kissing_heart:.
+
   
