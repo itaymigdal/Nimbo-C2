@@ -14,6 +14,7 @@
 - [Usage](#usage)
   - [Main Window](#main-window)
   - [Agent Window](#agent-window)
+- [Limitations \& Warnings](#limitations--warnings)
 - [Contribution \& Notes](#contribution--notes)
 - [Credits](#credits)
 
@@ -173,6 +174,15 @@ Nimbo-2 [d337c406] > help
     help                                   ->  print this help message
     exit                                   ->  exit Nimbo-C2
 ```
+
+# Limitations & Warnings
+- Even though the HTTP communication is encrypted, the 'user-agent' header is in plain text and may be suspicious as it carries the real agent id, which some products may flag it suspicious.
+- When using `assembly` command, make sure your assembly doesn't call any exit function because it will kill the agent.
+- `shellc` command may unexpectedly crash or change the injected process behavior, test the shellcode and the target process first.
+- `audio`, `lsass` and `sam` commands temporarily save artifacts to disk before exfiltrate and delete them.
+- Cleaning the `persist` commands should be done manually.
+- Specify whether to keep or kill the initiating agent process in the `uac` commands. `die` flag may leave you with no active agent (if the unelevated agent thinks that the UAC bypass was successful, and it wasn't), `keep` should leave you with 2 active agents probing the C2, then you should manually kill the unelevated.
+- `msgbox` is blocking, until the user will press the ok button.
 
 # Contribution & Notes
 This software may be buggy or unstable in some use cases as it not being fully and constantly tested.
