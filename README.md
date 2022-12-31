@@ -5,6 +5,7 @@
   <img alt="Nimbo" src="/assets/nimbo.png">
 </p>
 
+- [Nimbo-C2](#nimbo-c2)
 - [About](#about)
 - [Features](#features)
 - [Installation](#installation)
@@ -175,7 +176,7 @@ Nimbo-2 [d337c406] > help
 ```
 
 # Limitations & Warnings
-- Even though the HTTP communication is encrypted, the 'user-agent' header is in plain text and may be suspicious as it carries the real agent id, which some products may flag it suspicious.
+- Even though the HTTP communication is encrypted, the 'user-agent' header is in plain text and it carries the real agent id, which some products may flag it suspicious.
 - When using `assembly` command, make sure your assembly doesn't call any exit function because it will kill the agent.
 - `shellc` command may unexpectedly crash or change the injected process behavior, test the shellcode and the target process first.
 - `audio`, `lsass` and `sam` commands temporarily save artifacts to disk before exfiltrate and delete them.
