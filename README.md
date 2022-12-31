@@ -5,7 +5,6 @@
   <img alt="Nimbo" src="/assets/nimbo.png">
 </p>
 
-- [Nimbo-C2](#nimbo-c2)
 - [About](#about)
 - [Features](#features)
 - [Installation](#installation)
