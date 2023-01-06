@@ -48,7 +48,7 @@ My work wouldn't be possible without the previous great work done by others, lis
 - Memory evasion techniques like NTDLL unhooking, ETW & AMSI patching.
 - LSASS and SAM hives dumping. 
 - Shellcode injection.
-- inline .NET assemblies execution.
+- Inline .NET assemblies execution.
 - Persistence capabilities.
 - UAC bypass methods.
 - And more !
