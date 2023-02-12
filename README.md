@@ -38,6 +38,7 @@ My work wouldn't be possible without the previous great work done by others, lis
 # Features
 
 - Build EXE, DLL payloads.
+- Encrypted implant configuration and strings using [NimProtect](https://github.com/itaymigdal/NimProtect).
 - Packing payloads using [UPX](https://github.com/upx/upx) and obfuscate the PE section names (`UPX0`, `UPX1`) to make detection and unpacking harder.
 - Encrypted HTTP communication (AES in CBC mode, key hardcoded in the agent and configurable by the `config.jsonc`).
 - Auto-completion in the C2 Console for convenient interaction.  
