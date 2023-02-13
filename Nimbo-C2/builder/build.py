@@ -18,6 +18,7 @@ nim_global_flags = " --cpu=amd64"                     # for windows 64 bit
 nim_global_flags += " -d=mingw"                       # for cross compiling from linux
 nim_global_flags += " -d:danger -d:strip --opt:size"  # for size
 nim_global_flags += " --passL:-Wl,--dynamicbase"      # for relocation table (needed for loaders)
+nim_global_flags += " --benchmarkVM:on"               # for NimProtect key randomization
 nim_in_out = " -o:OUT_FILE SRC_FILE"
 
 # nimbo root folder
