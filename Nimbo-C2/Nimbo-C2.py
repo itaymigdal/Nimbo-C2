@@ -149,8 +149,9 @@ def print_main_help():
     print(main_help)
 
 
-def print_agent_help():
-    agent_help = f"""
+def print_agent_help(os):
+    if os == "windows":
+        agent_help = f"""
     --== Send Commands ==--
     cmd <shell-command>                    ->  execute a shell command 
     iex <powershell-scriptblock>           ->  execute in-memory powershell command
@@ -206,7 +207,30 @@ def print_agent_help():
     help                                   ->  print this help message
     exit                                   ->  exit Nimbo-C2
     """
+    elif os == "linux":
+        agent_help = f"""
+            --== Send Commands ==--
+            cmd <shell-command>                    ->  execute a shell command 
 
+            --== File Stuff ==--
+            download <remote-file>                 ->  download a file from the agent (wrap path with quotes)
+            upload <local-file> <remote-path>      ->  upload a file to the agent (wrap paths with quotes)
+
+            --== Communication Stuff ==--
+            sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
+            clear                                  ->  clear pending commands
+            collect                                ->  recollect agent data
+            kill                                   ->  kill the agent (persistence will still take place)
+
+            --== General ==--
+            show                                   ->  show agent details
+            back                                   ->  back to main screen
+            cls                                    ->  clear the screen
+            help                                   ->  print this help message
+            exit                                   ->  exit Nimbo-C2
+            """
+    else:
+        return
     print(agent_help)
 
 
