@@ -1,6 +1,6 @@
 import winim
 import helpers
-import NimProtect
+import nimprotect
 import os
 
 
