@@ -7,7 +7,7 @@ config_agent_file = os.path.join(nimbo_root, "agent", "config.nim")
 config = JsoncParser.parse_file(os.path.join(nimbo_root, "config.jsonc"))
 
 config_agent = f"""
-import NimProtect
+import nimprotect
 
 ############################ CONFIG ############################
 # C2
