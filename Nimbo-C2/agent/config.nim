@@ -1,5 +1,5 @@
 
-import NimProtect
+import nimprotect
 
 ############################ CONFIG ############################
 # C2
