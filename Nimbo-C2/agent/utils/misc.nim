@@ -1,6 +1,6 @@
 import helpers
 import winim
-import NimProtect
+import nimprotect
 
 proc MiniDumpWriteDump(
     process_handle: HANDLE,

@@ -1,6 +1,6 @@
 import std/[strformat, strutils]
 import winim/[clr, lean]
-import NimProtect
+import nimprotect
 
 proc execute_encoded_powershell*(encoded_command: string): string =
     var output: string

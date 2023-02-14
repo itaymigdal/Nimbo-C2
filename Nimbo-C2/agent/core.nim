@@ -5,7 +5,7 @@ import winim/[lean, com]
 import wAuto/[registry]
 import system/[io]
 import httpclient
-import NimProtect
+import nimprotect
 import strutils
 import osproc
 import crc32

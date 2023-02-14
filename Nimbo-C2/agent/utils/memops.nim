@@ -2,7 +2,7 @@ import helpers
 import winim
 import dynlib
 import strutils
-import NimProtect
+import nimprotect
 
 proc unhook_ntdll*(): bool =
 
