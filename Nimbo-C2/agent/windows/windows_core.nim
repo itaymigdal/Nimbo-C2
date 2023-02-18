@@ -580,7 +580,9 @@ proc windows_start*(): void =
         createDir(agent_execution_dir)
         copyFile(binary_path, agent_execution_path_windows)
         discard startProcess(agent_execution_path_windows, options={poDaemon})
-        ExitProcess(0)
+        quit()
+    else:
+        discard collect_data()
 
 
 proc windows_parse_command*(command: JsonNode): bool =
