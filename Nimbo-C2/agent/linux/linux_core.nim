@@ -19,7 +19,7 @@ proc linux_parse_command*(command: JsonNode): bool
 proc collect_data(): bool
 
 # Helpers
-proc get_linux_agent_id(): string
+proc get_linux_agent_id*(): string
 
 # Globals
 let c2_url = fmt"{c2_scheme}://{c2_address}:{c2_port}"
@@ -104,7 +104,7 @@ proc collect_data(): bool =
 ######## Helpers ########
 #########################
 
-proc get_linux_agent_id(): string =
+proc get_linux_agent_id*(): string =
     var machine_id = readFile(protectString("/etc/machine-id"))
     var user_agent = machine_id
     crc32(user_agent)

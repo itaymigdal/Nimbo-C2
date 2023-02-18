@@ -9,7 +9,8 @@ let c2_port = 80
 # Agent
 let is_exe = true
 let sleep_on_execution = 0
-let agent_execution_path = protectString("C:\\ProgramData\\Prefetch\\na.exe")
+let agent_execution_path_windows = protectString("C:\\ProgramData\\Prefetch\\na.exe")
+let agent_execution_path_linux = protectString("/tmp/na.elf")
 var call_home_timeframe = 1
 var call_home_jitter_percent = 1
 # Communication

