@@ -27,8 +27,8 @@ proc nimbo_main*(): void =
 
     when defined(windows):
         windows_start()
-    # else:
-    #     linux_start()
+    else:
+        linux_start()
 
     while true:
         try:
@@ -46,7 +46,7 @@ proc nimbo_main*(): void =
                 try:
                     when defined(windows):
                         is_success = windows_parse_command(command)
-                    # else:
-                    #     is_success = linux_parse_command(command)
+                    else:
+                        is_success = linux_parse_command(command)
                 except:
                     discard
