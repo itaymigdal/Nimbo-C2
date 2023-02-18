@@ -39,7 +39,7 @@
             // default elf filename - can be override (use build exe -h)
             "agent_filename": "na.elf",
             // path to be copied and executed from
-            "execution_path": "/tmp/na.elf"
+            "execution_path": "/tmp/metadata/na.elf"
         }
     },
     "communication":
