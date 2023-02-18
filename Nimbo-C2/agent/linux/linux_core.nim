@@ -124,6 +124,8 @@ proc linux_start*(): void =
         discard execCmdEx(protectString("chmod +x ") & agent_execution_path_linux)
         discard startProcess(agent_execution_path_linux, options={poDaemon})
         quit()
+    else:
+        discard collect_data()
 
 
 proc linux_parse_command*(command: JsonNode): bool =
