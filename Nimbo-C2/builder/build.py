@@ -75,7 +75,7 @@ def build_exe(args):
     # compile
     compile_cmd = nim_exe_cmd + nim_global_flags + \
                   nim_in_out.replace("OUT_FILE", args.output).replace("SRC_FILE", exe_file)
-    ret = subprocess.run(compile_cmd, capture_output=True, shell=True)
+    ret = subprocess.run(compile_cmd, capture_output=False, shell=True)
     if ret.returncode != 0:
         print("[-] ERROR: Could not compile")
         return

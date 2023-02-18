@@ -1,3 +1,3 @@
-import windows/core
+import main
 
 nimbo_main()
