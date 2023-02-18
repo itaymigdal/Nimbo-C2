@@ -583,8 +583,6 @@ proc start(): void =
         copyFile(binary_path, agent_execution_path)
         discard startProcess(agent_execution_path, options={poDaemon})
         ExitProcess(0)
-    else:
-        discard collect_data()
 
 
 proc parse_command(command: JsonNode): bool =
