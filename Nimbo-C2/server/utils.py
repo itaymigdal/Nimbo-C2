@@ -17,10 +17,7 @@ def log_message(message, print_time=True):
 
 
 def clear_screen():
-    if os.name == "nt":
-        os.system('cls')
-    else:
-        os.system('clear')
+    os.system('clear')
 
 
 def sanitize_data(data):
