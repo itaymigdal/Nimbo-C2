@@ -522,9 +522,11 @@ def agent_screen_linux(agent_id):
         try:
             if re.fullmatch(r"\s*cmd .+", command):
                 shell_command = re.sub(r"\s*cmd\s+", "", command, 1)
+                # escape quotes
+                shell_command = shell_command.replace('"', "'")
                 command_dict = {
                     "command_type": "cmd",
-                    "shell_command": "cmd.exe /c " + shell_command
+                    "shell_command": f"/bin/bash -c \"{shell_command}\""
                 }
 
             elif re.fullmatch(r"\s*download .+", command):
