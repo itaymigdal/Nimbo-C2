@@ -522,7 +522,6 @@ def agent_screen_linux(agent_id):
         try:
             if re.fullmatch(r"\s*cmd .+", command):
                 shell_command = re.sub(r"\s*cmd\s+", "", command, 1)
-                # escape quotes
                 shell_command = shell_command.replace('"', "'")
                 command_dict = {
                     "command_type": "cmd",
@@ -623,7 +622,8 @@ def main_screen():
             },
             'build': {
                 'exe': None,
-                'dll': None
+                'dll': None,
+                'elf': None
             },
             'listener': {
                 'start': None,
