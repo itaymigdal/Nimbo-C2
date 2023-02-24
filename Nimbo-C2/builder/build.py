@@ -18,7 +18,7 @@ nim_elf_cmd = "nim compile --app:console"             # elf format
 nim_pe_flags = " --cpu=amd64"                         # for windows 64 bit
 nim_pe_flags += " -d=mingw"                           # for cross compiling from linux
 nim_pe_flags += " --passL:-Wl,--dynamicbase"          # for relocation table (needed for loaders)
-nim_elf_flags = " --passL:-static"                    # for linking musl library staticly
+nim_elf_flags = " "                                   # no need for now
 nim_global_flags = " -d:danger -d:strip --opt:size"   # for minimal size
 nim_global_flags += " --benchmarkVM:on"               # for NimProtect key randomization
 nim_in_out = " -o:OUT_FILE SRC_FILE"                  # for source and compiled file names
