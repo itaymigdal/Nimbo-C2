@@ -1,5 +1,5 @@
 # Internal imports
-include config
+import config
 import common
 when defined(windows):
     import windows/[windows_core]
