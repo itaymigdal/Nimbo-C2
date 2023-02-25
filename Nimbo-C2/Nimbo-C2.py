@@ -232,10 +232,6 @@ def print_agent_help(os):
     --== Post Exploitation Stuff ==--
     memfd <elf-file>                       ->  load elf in-memory using the memfd_create syscall
     
-    --== Persistence Stuff ==--
-    
-    --== Privesc Stuff ==--
-    
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
     clear                                  ->  clear pending commands
@@ -249,6 +245,7 @@ def print_agent_help(os):
     help                                   ->  print this help message
     exit                                   ->  exit Nimbo-C2
     """
+    
     if os == "windows":
         print(windows_help)
     elif os == "linux":
