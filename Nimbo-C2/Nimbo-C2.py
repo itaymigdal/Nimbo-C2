@@ -43,15 +43,15 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'unhook': None,
     'amsi': None,
     'etw': None,
-    'persist ': {
-        'run ': None,
-        'spe ': None
+    'persist': {
+        'run': None,
+        'spe': None
     },
-    'uac ': {
-        'fodhelper ',
-        'sdclt '
+    'uac': {
+        'fodhelper',
+        'sdclt'
     },
-    'lsass ': {
+    'lsass': {
         'direct': None,
         'comsvcs': None
     },
@@ -73,9 +73,9 @@ agent_completer_linux = NestedCompleter.from_nested_dict({
     'cmd ': None,
     'download ': None,
     'upload ': None,
-    'memfd ': {
-        'implant ': None,
-        'task ': None
+    'memfd': {
+        'task': None,
+        'implant': None
     },
     'sleep ': None,
     'collect': None,
