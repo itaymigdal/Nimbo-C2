@@ -171,6 +171,7 @@ def print_main_help():
 
 
 def print_agent_help(os):
+    
     windows_help = f"""
     --== Send Commands ==--
     cmd <shell-command>                    ->  execute a shell command 
