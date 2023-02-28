@@ -61,7 +61,7 @@ proc load_memfd*(elf_base64: string, command_line = "test 1 2 3", is_task=false)
         redirect_file.close()
 
     # child - live and become elf payload
-    var fake_process_array = (command_line.split(" ")).allocCStringArray()
-    discard execve(fd_path, fake_process_array[0].addr, nil)
+    var process_args_array = (command_line.split(" ")).allocCStringArray()
+    discard execve(fd_path, process_args_array[0].addr, nil)
     # execve failed (should not return on success)
     return (false, "")
