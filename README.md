@@ -52,7 +52,7 @@ My work wouldn't be possible without the previous great work done by others, lis
 - Inline .NET assemblies execution.
 - Persistence capabilities.
 - UAC bypass methods.
-- ELF loading using memfd in 2 modes
+- ELF loading using memfd in 2 modes.
 - And more !
 
 # Installation
