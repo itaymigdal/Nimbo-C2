@@ -3,7 +3,7 @@ import ../config
 import ../common
 import utils/[memfd]
 # External imports
-import std/[strformat, tables, nativesockets, random, json, streams]
+import std/[tables, nativesockets, json]
 import system/[io]
 import httpclient
 import nimprotect
