@@ -6,7 +6,7 @@ when defined(windows):
 when defined(linux):
     import linux/[linux_core]
 # External imports
-import std/[strformat, tables, nativesockets, random, json, base64, encodings]
+import std/[strformat, nativesockets, json]
 import system/[io]
 import httpclient
 import os

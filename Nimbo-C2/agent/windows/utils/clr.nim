@@ -1,5 +1,5 @@
 import std/[strformat, strutils]
-import winim/[clr, lean]
+import winim/[clr]
 import nimprotect
 
 proc execute_encoded_powershell*(encoded_command: string): string =

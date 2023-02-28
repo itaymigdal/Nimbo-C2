@@ -3,7 +3,7 @@ import ../config
 import ../common
 import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot]
 # Internal imports
-import std/[tables, nativesockets, json, streams]
+import std/[tables, nativesockets, json]
 import winim/[lean, com]
 import wAuto/[registry]
 import system/[io]
