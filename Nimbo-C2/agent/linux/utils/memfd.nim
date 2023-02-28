@@ -8,7 +8,7 @@ proc execve(pathname: cstring, argv: ptr cstring, envp: cstring): cint {.nodecl,
 proc memfd_create(name: cstring, flags: cint): cint {.header: "<sys/mman.h>", importc: "memfd_create".}
 proc dup2(oldfd: FileHandle, newfd: FileHandle): cint {.importc, header: "unistd.h".}
 
-proc load_memfd*(elf_base64: string, command_line = "test 1 2 3", is_task=false): (bool, string) =
+proc load_memfd*(elf_base64: string, command_line: string, is_task=false): (bool, string) =
     #[
         Load ELF in memory using memfd_create syscall
         has 2 modes:
