@@ -73,16 +73,16 @@ main_prompt_text = FormattedText([(f"fg:{nimbo_prompt_color}", "Nimbo-C2 > ")])
 agent_prompt_text = FormattedText([(f"fg:{nimbo_prompt_color}", "Nimbo-C2 "),
                                    (f"fg:{agent_prompt_color}", "[AGENT-ID]"), ("", " > ")])
 agent_completer_windows = NestedCompleter.from_nested_dict({
-    'cmd ': None,
-    'iex ': None,
-    'download ': None,
-    'upload ': None,
+    'cmd': None,
+    'iex': None,
+    'download': None,
+    'upload': None,
     'pstree': None,
     'checksec': None,
     'software': None,
     'clipboard': None,
     'screenshot': None,
-    'audio ': None,
+    'audio': None,
     'unhook': None,
     'amsi': None,
     'etw': None,
@@ -99,11 +99,11 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
         'comsvcs': None
     },
     'sam': None,
-    'shellc ': None,
-    'assembly ': None,
-    'msgbox ': None,
-    'speak ': None,
-    'sleep ': None,
+    'shellc': None,
+    'assembly': None,
+    'msgbox': None,
+    'speak': None,
+    'sleep': None,
     'collect': None,
     'kill': None,
     'show': None,
@@ -113,14 +113,14 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'exit': None
 })
 agent_completer_linux = NestedCompleter.from_nested_dict({
-    'cmd ': None,
-    'download ': None,
-    'upload ': None,
+    'cmd': None,
+    'download': None,
+    'upload': None,
     'memfd': {
         'task': None,
         'implant': None
     },
-    'sleep ': None,
+    'sleep': None,
     'collect': None,
     'kill': None,
     'show': None,
