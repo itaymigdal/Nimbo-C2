@@ -14,8 +14,10 @@
 - [Usage](#usage)
   - [Main Window](#main-window)
   - [Agent Window](#agent-window)
+    - [Windows agent](#windows-agent)
+    - [Linux agent](#linux-agent)
 - [Limitations \& Warnings](#limitations--warnings)
-- [Contribution \& Notes](#contribution--notes)
+- [Contribution](#contribution)
 - [Credits](#credits)
 
 # About
@@ -24,20 +26,18 @@
 
 ![](/assets/ui.png)
 
-Nimbo-C2 agent currently supports Windows x64 only. It's written in Nim, with some usage of .NET (by dynamically loading the CLR to the process). Nim is powerful, but interacting with Windows is much easier and robust using Powershell, hence this combination is made.
+Nimbo-C2 agent supports x64 Windows & Linux. It's written in Nim, with some usage of .NET on Windows (by dynamically loading the CLR to the process). Nim is powerful, but interacting with Windows is much easier and robust using Powershell, hence this combination is made. The Linux agent is slimer and capable only of basic commands, including ELF loading using the memfd technique.
 
 All server components are written in Python:
 - HTTP listener that manages the agents.
 - Builder that generates the agent payloads. 
 - Nimbo-C2 is the interactive C2 component that rule'em all!
 
-I developed Nimbo-C2 in the past several months mainly at the late evenings while working at my day job and waking up at nights to my boy, in order to learn and maybe contribute my part to the cyber community :muscle:
-
 My work wouldn't be possible without the previous great work done by others, listed under credits.
 
 # Features
 
-- Build EXE, DLL payloads.
+- Build EXE, DLL, ELF payloads.
 - Encrypted implant configuration and strings using [NimProtect](https://github.com/itaymigdal/NimProtect).
 - Packing payloads using [UPX](https://github.com/upx/upx) and obfuscate the PE section names (`UPX0`, `UPX1`) to make detection and unpacking harder.
 - Encrypted HTTP communication (AES in CBC mode, key hardcoded in the agent and configurable by the `config.jsonc`).
@@ -52,6 +52,7 @@ My work wouldn't be possible without the previous great work done by others, lis
 - Inline .NET assemblies execution.
 - Persistence capabilities.
 - UAC bypass methods.
+- ELF loading using memfd in 2 modes
 - And more !
 
 # Installation
@@ -103,6 +104,7 @@ Nimbo-C2 > help
     --== Builder ==--
     build exe                     ->  build exe agent (-h for help)
     build dll                     ->  build dll agent (-h for help)
+    build elf                     ->  build elf agent (-h for help)
 
     --== Listener ==--
     listener start                ->  start the listener
@@ -117,6 +119,7 @@ Nimbo-C2 > help
 
 ## Agent Window
 
+### Windows agent
 ```
 Nimbo-2 [d337c406] > help
 
@@ -175,6 +178,36 @@ Nimbo-2 [d337c406] > help
     help                                   ->  print this help message
     exit                                   ->  exit Nimbo-C2
 ```
+### Linux agent
+```
+Nimbo-2 [51a33cb9] > help
+
+    --== Send Commands ==--
+    cmd <shell-command>                    ->  execute a terminal command 
+    
+    --== File Stuff ==--
+    download <remote-file>                 ->  download a file from the agent (wrap path with quotes)
+    upload <local-file> <remote-path>      ->  upload a file to the agent (wrap paths with quotes)
+    
+    --== Post Exploitation Stuff ==--
+    memfd <mode> <elf-file> <commandline>  ->  load elf in-memory using the memfd_create syscall
+                                               implant mode: load the elf as a child process and return
+                                               task mode: load the elf as a child process, wait on it, and get its output when it's done
+                                               (pass the whole commandline as a single string using quotes)
+    
+    --== Communication Stuff ==--
+    sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
+    clear                                  ->  clear pending commands
+    collect                                ->  recollect agent data
+    kill                                   ->  kill the agent (persistence will still take place)
+    
+    --== General ==--
+    show                                   ->  show agent details
+    back                                   ->  back to main screen
+    cls                                    ->  clear the screen
+    help                                   ->  print this help message
+    exit                                   ->  exit Nimbo-C2
+```
 
 # Limitations & Warnings
 - Even though the HTTP communication is encrypted, the 'user-agent' header is in plain text and it carries the real agent id, which some products may flag it suspicious.
@@ -185,7 +218,7 @@ Nimbo-2 [d337c406] > help
 - Specify whether to keep or kill the initiating agent process in the `uac` commands. `die` flag may leave you with no active agent (if the unelevated agent thinks that the UAC bypass was successful, and it wasn't), `keep` should leave you with 2 active agents probing the C2, then you should manually kill the unelevated.
 - `msgbox` is blocking, until the user will press the ok button.
 
-# Contribution & Notes
+# Contribution
 This software may be buggy or unstable in some use cases as it not being fully and constantly tested.
 Feel free to open issues, PR's, and contact me for any reason at ([Gmail](itaymigdal9@gmail.com) | [Linkedin](https://www.linkedin.com/in/itay-migdal-b91821116/) | [Twitter](https://twitter.com/0xTheBruter)).
 
