@@ -1,5 +1,7 @@
-# NtWriteVirtualMemory -> OMQoAnSSJGeTcUxq
-# NtProtectVirtualMemory -> eGHtTmjXcbZTDDUi
+# NtAllocateVirtualMemory -> RyNyHmVLmPVVJaOX
+# NtWriteVirtualMemory -> OaulqyCKIJNrYoKN
+# NtProtectVirtualMemory -> EIYkmUCPaWkVhdPS
+# NtCreateThreadEx -> GUAklSyZtyYwMqFf
 
 {.passC:"-masm=intel".}
 
@@ -14,7 +16,7 @@
 
 #include <windows.h>
 
-#define SW3_SEED 0x529D59CA
+#define SW3_SEED 0x9DC6DB23
 #define SW3_ROL8(v) (v << 8 | v >> 24)
 #define SW3_ROR8(v) (v >> 8 | v << 24)
 #define SW3_ROX8(v) ((SW3_SEED % 2) ? SW3_ROL8(v) : SW3_ROR8(v))
@@ -332,18 +334,41 @@ EXTERN_C PVOID SW3_GetRandomSyscallAddress(DWORD FunctionHash)
 
 """.}
 
+type
+  PS_ATTR_UNION* {.pure, union.} = object
+    Value*: ULONG
+    ValuePtr*: PVOID
+  PS_ATTRIBUTE* {.pure.} = object
+    Attribute*: ULONG 
+    Size*: SIZE_T
+    u1*: PS_ATTR_UNION
+    ReturnLength*: PSIZE_T
+  PPS_ATTRIBUTE* = ptr PS_ATTRIBUTE
+  PS_ATTRIBUTE_LIST* {.pure.} = object
+    TotalLength*: SIZE_T
+    Attributes*: array[2, PS_ATTRIBUTE]
+  PPS_ATTRIBUTE_LIST* = ptr PS_ATTRIBUTE_LIST
 
-proc OMQoAnSSJGeTcUxq*(ProcessHandle: HANDLE, BaseAddress: PVOID, Buffer: PVOID, NumberOfBytesToWrite: SIZE_T, NumberOfBytesWritten: PSIZE_T): NTSTATUS {.asmNoStackFrame.} =
+# NtAllocateVirtualMemory -> RyNyHmVLmPVVJaOX
+# NtWriteVirtualMemory -> OaulqyCKIJNrYoKN
+# NtProtectVirtualMemory -> EIYkmUCPaWkVhdPS
+# NtCreateThreadEx -> GUAklSyZtyYwMqFf
+
+
+
+
+
+proc RyNyHmVLmPVVJaOX*(ProcessHandle: HANDLE, BaseAddress: PVOID, ZeroBits: ULONG, RegionSize: PSIZE_T, AllocationType: ULONG, Protect: ULONG): NTSTATUS {.asmNoStackFrame.} =
     asm """
 	mov [rsp +8], rcx          
 	mov [rsp+16], rdx
 	mov [rsp+24], r8
 	mov [rsp+32], r9
 	sub rsp, 0x28
-	mov ecx, 0x009911111
+	mov ecx, 0x00191333B
 	call SW3_GetSyscallAddress              
 	mov r15, rax                           
-	mov ecx, 0x009911111
+	mov ecx, 0x00191333B
 	call SW3_GetSyscallNumber              
 	add rsp, 0x28
 	mov rcx, [rsp+8]                      
@@ -354,17 +379,59 @@ proc OMQoAnSSJGeTcUxq*(ProcessHandle: HANDLE, BaseAddress: PVOID, Buffer: PVOID,
 	jmp r15                                
     """
 
-proc eGHtTmjXcbZTDDUi*(ProcessHandle: HANDLE, BaseAddress: PVOID, RegionSize: PSIZE_T, NewProtect: ULONG, OldProtect: PULONG): NTSTATUS {.asmNoStackFrame.} =
+proc OaulqyCKIJNrYoKN*(ProcessHandle: HANDLE, BaseAddress: PVOID, Buffer: PVOID, NumberOfBytesToWrite: SIZE_T, NumberOfBytesWritten: PSIZE_T): NTSTATUS {.asmNoStackFrame.} =
     asm """
 	mov [rsp +8], rcx          
 	mov [rsp+16], rdx
 	mov [rsp+24], r8
 	mov [rsp+32], r9
 	sub rsp, 0x28
-	mov ecx, 0x01596E19B
+	mov ecx, 0x003A3F7DF
 	call SW3_GetSyscallAddress              
 	mov r15, rax                           
-	mov ecx, 0x01596E19B
+	mov ecx, 0x003A3F7DF
+	call SW3_GetSyscallNumber              
+	add rsp, 0x28
+	mov rcx, [rsp+8]                      
+	mov rdx, [rsp+16]
+	mov r8, [rsp+24]
+	mov r9, [rsp+32]
+	mov r10, rcx
+	jmp r15                                
+    """
+
+proc EIYkmUCPaWkVhdPS*(ProcessHandle: HANDLE, BaseAddress: PVOID, RegionSize: PSIZE_T, NewProtect: ULONG, OldProtect: PULONG): NTSTATUS {.asmNoStackFrame.} =
+    asm """
+	mov [rsp +8], rcx          
+	mov [rsp+16], rdx
+	mov [rsp+24], r8
+	mov [rsp+32], r9
+	sub rsp, 0x28
+	mov ecx, 0x006813C00
+	call SW3_GetSyscallAddress              
+	mov r15, rax                           
+	mov ecx, 0x006813C00
+	call SW3_GetSyscallNumber              
+	add rsp, 0x28
+	mov rcx, [rsp+8]                      
+	mov rdx, [rsp+16]
+	mov r8, [rsp+24]
+	mov r9, [rsp+32]
+	mov r10, rcx
+	jmp r15                                
+    """
+
+proc GUAklSyZtyYwMqFf*(ThreadHandle: PHANDLE, DesiredAccess: ACCESS_MASK, ObjectAttributes: POBJECT_ATTRIBUTES, ProcessHandle: HANDLE, StartRoutine: PVOID, Argument: PVOID, CreateFlags: ULONG, ZeroBits: SIZE_T, StackSize: SIZE_T, MaximumStackSize: SIZE_T, AttributeList: PPS_ATTRIBUTE_LIST): NTSTATUS {.asmNoStackFrame.} =
+    asm """
+	mov [rsp +8], rcx          
+	mov [rsp+16], rdx
+	mov [rsp+24], r8
+	mov [rsp+32], r9
+	sub rsp, 0x28
+	mov ecx, 0x05CB01075
+	call SW3_GetSyscallAddress              
+	mov r15, rax                           
+	mov ecx, 0x05CB01075
 	call SW3_GetSyscallNumber              
 	add rsp, 0x28
 	mov rcx, [rsp+8]                      
