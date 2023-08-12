@@ -1,6 +1,7 @@
 import winim
 import random
 
+
 proc `+`*[S: SomeInteger](p: pointer, offset: S): pointer =
   return cast[pointer](cast[ByteAddress](p) +% int(offset))
 
