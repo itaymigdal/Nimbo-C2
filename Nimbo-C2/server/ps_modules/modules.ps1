@@ -1,0 +1,1 @@
+get-process -Id $PID | select -expand modules | select ModuleName,FileName,Company,Description,FileVersion | Format-List
