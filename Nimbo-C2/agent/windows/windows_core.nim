@@ -205,7 +205,7 @@ proc wrap_record_audio(record_time: int): bool =
 
     discard record_audio(wav_file, record_time)
 
-    sleep(3000)
+    sleep(2000)
 
     try:
         file_content_base64 = encode_64(readFile(wav_file), is_bin=true)
