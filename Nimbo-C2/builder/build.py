@@ -12,7 +12,7 @@ import subprocess
 from jsonc_parser.parser import JsoncParser
 
 # compiler args
-nim_exe_cmd = "nim compile --app:console"             # exe format
+nim_exe_cmd = "nim compile --app:gui"                 # exe format
 nim_dll_cmd = "nim compile --app:lib --nomain"        # dll format
 nim_elf_cmd = "nim compile --app:console"             # elf format
 nim_pe_flags = " --cpu=amd64"                         # for windows 64 bit
