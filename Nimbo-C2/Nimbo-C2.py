@@ -409,10 +409,6 @@ def agent_screen_windows(agent_id):
                     "assembly_args": assembly_args
                 }
 
-                command_dict = {
-                    "command_type": "unhook"
-                }
-
             elif re.fullmatch(r"\s*patch\s+(etw|amsi)\s*", command):
                 patch_func = shlex.split(re.sub(r"\s*patch\s+", "", command, 1))[0]
                 command_dict = {
