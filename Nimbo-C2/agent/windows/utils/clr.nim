@@ -1,4 +1,4 @@
-import std/[strformat, strutils]
+import std/[strutils]
 import winim/[clr]
 import nimprotect
 
