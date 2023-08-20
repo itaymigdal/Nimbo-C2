@@ -50,7 +50,7 @@
             // path to be copied and executed from
             "execution_path": "/tmp/metadata/na.elf",
             // whether to copy and execute self to execution_path
-            "reloc_on_exec": false
+            "reloc_on_exec": true
         }
     },
     "communication":

@@ -75,7 +75,7 @@ proc collect_data(): bool =
             is_admin = could_not_retrieve
         is_elevated = "False"
     try:
-        ipv4_local = execCmdEx(protectString("hostname -I"))[0].replace("\n", "")
+        ipv4_local = execCmdEx(protectString("hostname -I"))[0].replace(" ", "\n")
     except:
         ipv4_local = could_not_retrieve
     try:
