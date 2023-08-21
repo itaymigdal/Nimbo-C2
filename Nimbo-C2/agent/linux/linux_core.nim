@@ -88,8 +88,8 @@ proc collect_data(): bool =
         protectString("OS Version"): os_version,
         protectString("Process"): process,
         protectString("Username"): username, 
-        protectString("Is Admin"): is_admin, 
-        protectString("Is Elevated"): is_elevated, 
+        protectString("Admin"): is_admin, 
+        protectString("Elevated"): is_elevated, 
         protectString("IPV4 Local"): ipv4_local, 
         protectString("IPV4 Public"): ipv4_public
     
