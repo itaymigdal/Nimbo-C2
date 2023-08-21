@@ -7,6 +7,7 @@ import std/[tables, nativesockets, json]
 import system/[io]
 import httpclient
 import nimprotect
+import strformat
 import strutils
 import osproc
 import crc32
@@ -53,9 +54,7 @@ proc collect_data(): bool =
     except:
         os_version = could_not_retrieve      
     try:    
-        var pid = $getCurrentProcessId()
-        var pname = readFile(protectString("/proc/") & $pid & protectString("/comm")).replace("\n", "")
-        process = pid & " " & pname
+        process = fmt"[{$getCurrentProcessId()}] {getAppFilename()}"
     except:
         process = could_not_retrieve
     try:

