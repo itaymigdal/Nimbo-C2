@@ -145,9 +145,8 @@ Nimbo-C2 [d337c406] > help
     --== Post Exploitation Stuff ==--
     lsass <method>                         ->  dump lsass.exe [methods:  direct,comsvcs] (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
-    shellc <raw-shellcode-file> <pid>      ->  inject shellcode to remote process
+    shellc <raw-shellcode-file> <pid>      ->  inject shellcode to remote process using indirect syscalls
     assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single quoted string)
-                                               warning: make sure the assembly doesn't call any exit function
 
     --== Evasion Stuff ==--
     patch <amsi/etw>                       ->  patch amsi/etw using indirect syscalls
@@ -162,8 +161,8 @@ Nimbo-C2 [d337c406] > help
     uac sdclt <command> <keep/die>         ->  elevate session using the sdclt uac bypass technique
 
     --== Interaction stuff ==--
-    msgbox <title> <text>                  ->  pop a message box (blocking! waits for enter press)
-    speak <text>                           ->  speak using sapi.spvoice com interface
+    msgbox <title> <text>                  ->  pop a message box in a new thread
+    speak <text>                           ->  speak using 'sapi.spvoice' com interface
 
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
