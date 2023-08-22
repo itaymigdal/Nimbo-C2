@@ -19,12 +19,6 @@
         "call_home_jitter_percent": 1,
         // seconds to sleep after initial execution
         "sleep_on_execution": 0,
-        // sleep obfuscation technique
-        // 0 = none
-        // 1 = Ekko
-        "sleep_obfuscation_technique": 0,
-        // keep it 16 chars
-        "nekko_rc4_key": "Nimbo-C2     :-)",
         "exe":
         {
             // default exe filename - can be override (use build exe -h)

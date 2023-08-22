@@ -46,7 +46,7 @@ My work wouldn't be possible without the previous great work done by others, lis
 - File download and upload commands.
 - Built-in discovery commands.
 - Screenshot taking, clipboard stealing, audio recording.
-- Memory evasion techniques like ETW & AMSI patching using indirect syscalls, and Ekko sleep obfuscation.
+- ETW & AMSI patching using indirect syscalls.
 - LSASS and SAM hives dumping. 
 - Shellcode injection using indirect syscalls.
 - Inline .NET assemblies execution.
@@ -150,7 +150,6 @@ Nimbo-C2 [d337c406] > help
 
     --== Evasion Stuff ==--
     patch <amsi/etw>                       ->  patch amsi/etw using indirect syscalls
-    memsleep <none/ekko>                   ->  sleep obfuscation technique
 
     --== Persistence Stuff ==--
     persist run <command> <key-name>       ->  set run key (will try first hklm, then hkcu)
@@ -213,7 +212,6 @@ Nimbo-2 [51a33cb9] > help
 - `audio`, `lsass` and `sam` commands temporarily save artifacts to disk before exfiltrate and delete them.
 - Cleaning the `persist` commands should be done manually.
 - Specify whether to keep or kill the initiating agent process in the `uac` commands. `die` flag may leave you with no active agent (if the unelevated agent thinks that the UAC bypass was successful, and it wasn't), `keep` should leave you with 2 active agents probing the C2, then you should manually kill the unelevated.
-- For some reason, using Ekko technique with Nimbo-C2 agent causes a process suspension and `werfault.exe` spawning once in a while, don't know why. Anyway, it still works.
 
 # Contribution
 This software may be buggy or unstable in some use cases as it not being fully and constantly tested.
@@ -223,7 +221,6 @@ Feel free to open issues, PR's, and contact me for any reason at ([Gmail](itaymi
 - [OffensiveNim](https://github.com/byt3bl33d3r/OffensiveNim) - Great resource that taught me a lot about leveraging Nim for implant tasks. Some of Nimbo-C2 agent capabilities are basically wrappers around OffensiveNim modified examples.
 - [Python-Prompt-Toolkit-3](https://github.com/prompt-toolkit/python-prompt-toolkit) - Awesome library for developing python CLI applications. Developed the Nimbo-C2 interactive console using this.
 - [ascii-image-converter](https://github.com/TheZoraiz/ascii-image-converter) - For the awsome Nimbo ascii art.
-- [nEkko](https://github.com/pruno7/nEkko) - For the Nim Ekko implementation (that needed a little modification).
 - [NimlineWhispers3](https://github.com/klezVirus/NimlineWhispers3) - For the Nim indirect syscalls.
 - All those random people from Github & Stackoverflow that I copy & pasted their code :kissing_heart:.
 
