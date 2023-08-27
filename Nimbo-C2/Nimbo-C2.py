@@ -642,7 +642,10 @@ def agent_screen_linux(agent_id):
 
 def send_build_command(build_params):
     build_command = "python3 builder/build.py " + build_params
-    subprocess.run(build_command, shell=True)
+    try:    
+        subprocess.run(build_command, shell=True)
+    except:
+        utils.log_message(f"[-] Stopping build", print_time=False)
 
 
 def main_screen():
