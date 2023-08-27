@@ -45,7 +45,7 @@ My work wouldn't be possible without the previous great work done by others, lis
 - In-memory Powershell commands execution.
 - File download and upload commands.
 - Built-in discovery commands.
-- Screenshot taking, clipboard stealing, audio recording.
+- Screenshot taking, clipboard stealing, audio recording, and keylogger.
 - ETW & AMSI patching using indirect syscalls.
 - LSASS and SAM hives dumping. 
 - Shellcode injection using indirect syscalls.
