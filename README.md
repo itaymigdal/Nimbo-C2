@@ -124,51 +124,56 @@ Nimbo-C2 > help
 Nimbo-C2 [d337c406] > help
 
     --== Send Commands ==--
-    cmd <shell-command>                    ->  execute a shell command
+    cmd <shell-command>                    ->  execute a shell command 
     iex <powershell-scriptblock>           ->  execute in-memory powershell command
-
+    
     --== File Stuff ==--
     download <remote-file>                 ->  download a file from the agent (wrap path with quotes)
     upload <local-file> <remote-path>      ->  upload a file to the agent (wrap paths with quotes)
-
+    
     --== Discovery Stuff ==--
     pstree                                 ->  show process tree
     checksec                               ->  check for security products
     software                               ->  check for installed software
     modules                                ->  check process loaded modules
-
+    
     --== Collection Stuff ==--
     clipboard                              ->  retrieve clipboard
     screenshot                             ->  retrieve screenshot
     audio <record-time>                    ->  record audio
-
+    keylog start                           ->  start keylogger
+    keylog dump                            ->  retrieve captured keystrokes
+    keylog stop                            ->  retrieve captured keystrokes and stop keylogger
+    
     --== Post Exploitation Stuff ==--
-    lsass <method>                         ->  dump lsass.exe [methods:  direct,comsvcs] (elevation required)
+    lsass direct                           ->  dump lsass.exe directly (elevation required)
+    lsass comsvcs                          ->  dump lsass.exe using rundll32 and comsvcs.dll (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
-    shellc <raw-shellcode-file> <pid>      ->  inject shellcode to remote process using indirect syscalls
+    shellc <raw-shellcode-file> <pid>      ->  inject shellcode to a remote process using indirect syscalls
     assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single quoted string)
-
+    
     --== Evasion Stuff ==--
-    patch <amsi/etw>                       ->  patch amsi/etw using indirect syscalls
-
+    patch amsi                             ->  patch amsi using indirect syscalls
+    patch etw                              ->  patch etw using indirect syscalls
+    
     --== Persistence Stuff ==--
     persist run <command> <key-name>       ->  set run key (will try first hklm, then hkcu)
     persist spe <command> <process-name>   ->  persist using silent process exit technique (elevation required)
-
+    
     --== Privesc Stuff ==--
     uac fodhelper <command> <keep/die>     ->  elevate session using the fodhelper uac bypass technique
     uac sdclt <command> <keep/die>         ->  elevate session using the sdclt uac bypass technique
-
+    
     --== Interaction stuff ==--
     msgbox <title> <text>                  ->  pop a message box in a new thread
     speak <text>                           ->  speak using 'sapi.spvoice' com interface
-
+    
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
     clear                                  ->  clear pending commands
     collect                                ->  recollect agent data
     kill                                   ->  kill the agent (persistence will still take place)
-
+    
     --== General ==--
     show                                   ->  show agent details
     back                                   ->  back to main screen
