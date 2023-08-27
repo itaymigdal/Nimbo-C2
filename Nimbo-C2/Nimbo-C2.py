@@ -203,13 +203,15 @@ def print_agent_help(os):
     keylog stop                            ->  retrieve captured keystrokes and stop keylogger
     
     --== Post Exploitation Stuff ==--
-    lsass <method>                         ->  dump lsass.exe [methods:  direct,comsvcs] (elevation required)
+    lsass direct                           ->  dump lsass.exe directly (elevation required)
+    lsass comsvcs                          ->  dump lsass.exe using rundll32 and comsvcs.dll (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
-    shellc <raw-shellcode-file> <pid>      ->  inject shellcode to remote process using indirect syscalls
+    shellc <raw-shellcode-file> <pid>      ->  inject shellcode to a remote process using indirect syscalls
     assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single quoted string)
     
     --== Evasion Stuff ==--
-    patch <amsi/etw>                       ->  patch amsi/etw using indirect syscalls
+    patch amsi                             ->  patch amsi using indirect syscalls
+    patch etw                              ->  patch etw using indirect syscalls
     
     --== Persistence Stuff ==--
     persist run <command> <key-name>       ->  set run key (will try first hklm, then hkcu)
