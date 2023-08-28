@@ -14,8 +14,8 @@ proc record_audio*(wav_file_path: string, record_time: int): bool =
     
     sleep(record_time * 1000)
 
-    if mciSendString("save " & alias_name & " " & wav_file_path, "", 0, 0) != 0 or
-     (mciSendString("close " & alias_name, "", 0, 0)) != 0:        
+    if mciSendString(protectString("save ") & alias_name & " " & wav_file_path, "", 0, 0) != 0 or
+     (mciSendString(protectString("close ") & alias_name, "", 0, 0)) != 0:        
         return false
 
     return true

