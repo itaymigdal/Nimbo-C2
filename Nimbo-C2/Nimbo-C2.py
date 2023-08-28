@@ -137,6 +137,12 @@ agent_completer_linux = NestedCompleter.from_nested_dict({
     'exit': None
 })
 
+elevated_commands = [
+    "lsass",
+    "sam",
+    "persis-spe"
+]
+
 
 def exit_nimbo():
     listener.listener_stop()
@@ -519,8 +525,12 @@ def agent_screen_windows(agent_id):
             else:
                 print("[-] Wrong command")
                 continue
-
-            listener.agents[agent_id]["pending_commands"] += [command_dict]
+            
+            if command_dict["command_type"] in elevated_commands and listener.agents[agent_id]["info"]["Elevated"].strip() == 'False':
+                utils.log_message(f"[-] This command requires elevation", print_time=False)
+                continue
+            else:
+                listener.agents[agent_id]["pending_commands"] += [command_dict]
 
         except Exception:
             print("[-] Could not parse command")
