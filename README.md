@@ -161,8 +161,8 @@ Nimbo-C2 [d337c406] > help
     persist spe <command> <process-name>   ->  persist using silent process exit technique (elevation required)
     
     --== Privesc Stuff ==--
-    uac fodhelper <command> <keep/die>     ->  elevate session using the fodhelper uac bypass technique
-    uac sdclt <command> <keep/die>         ->  elevate session using the sdclt uac bypass technique
+    uac fodhelper <command>                ->  elevate session using the fodhelper uac bypass technique
+    uac sdclt <command>                    ->  elevate session using the sdclt uac bypass technique
     
     --== Interaction stuff ==--
     msgbox <title> <text>                  ->  pop a message box in a new thread
@@ -216,7 +216,6 @@ Nimbo-2 [51a33cb9] > help
 - Even though the HTTP communication is encrypted, the 'user-agent' header is in plain text and it carries the real agent id, which some products may flag it suspicious.
 - `audio`, `lsass` and `sam` commands temporarily save artifacts to disk before exfiltrate and delete them.
 - Cleaning the `persist` commands should be done manually.
-- Specify whether to keep or kill the initiating agent process in the `uac` commands. `die` flag may leave you with no active agent (if the unelevated agent thinks that the UAC bypass was successful, and it wasn't), `keep` should leave you with 2 active agents probing the C2, then you should manually kill the unelevated.
 
 # Contribution
 This software may be buggy or unstable in some use cases as it not being fully and constantly tested.

