@@ -3,7 +3,6 @@
 import winim
 import tables
 import strutils
-import strformat
 import nimprotect
 import threadpool
 

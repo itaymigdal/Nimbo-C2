@@ -449,6 +449,11 @@ def agent_screen_windows(agent_id):
                     continue
 
             elif re.fullmatch(r"\s*uac\s+(fodhelper|sdclt)\s+.*\s*", command):
+                
+                if listener.agents[agent_id]["info"]["Elevated"].strip() == 'True':
+                    utils.log_message(f"[-] Already elevated", print_time=False)
+                    continue
+        
                 args = shlex.split(re.sub(r"\s*uac\s+", "", command, 1))
                 bypass_method = args[0]
                 elevated_command = args[1]
