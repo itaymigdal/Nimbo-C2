@@ -54,7 +54,7 @@ proc run_shell_command*(client: HttpClient, shell_command: string): bool =
     var data = {
         protectString("shell_command"): shell_command,
         protectString("is_success"): $is_success,
-        protectString("output"): output
+        protectString("output"): "\n" & output
     }.toOrderedTable()
     
     is_success = post_data(client, protectString("cmd"), $data)
