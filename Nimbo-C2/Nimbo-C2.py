@@ -81,6 +81,7 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'modules': None,
     'checksec': None,
     'software': None,
+    'windows': None,
     'clipboard': None,
     'screenshot': None,
     'audio': None,
@@ -196,9 +197,10 @@ def print_agent_help(os):
     
     --== Discovery Stuff ==--
     pstree                                 ->  show process tree
-    checksec                               ->  check for security products
-    software                               ->  check for installed software
-    modules                                ->  check process loaded modules
+    checksec                               ->  enum security products
+    software                               ->  enum installed software
+    windows                                ->  enum visible windows
+    modules                                ->  enum process loaded modules
     
     --== Collection Stuff ==--
     clipboard                              ->  retrieve clipboard
@@ -358,6 +360,11 @@ def agent_screen_windows(agent_id):
             elif re.fullmatch(r"\s*checksec\s*", command):
                 command_dict = {
                     "command_type": "checksec"
+                }
+            
+            elif re.fullmatch(r"\s*windows\s*", command):
+                command_dict = {
+                    "command_type": "windows"
                 }
 
             elif re.fullmatch(r"\s*clipboard\s*", command):
