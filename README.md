@@ -146,6 +146,7 @@ Nimbo-C2 [d337c406] > help
     keylog stop                            ->  retrieve captured keystrokes and stop keylogger
     
     --== Post Exploitation Stuff ==--
+    lsass examine                          ->  examine lsass.exe protections
     lsass direct                           ->  dump lsass.exe directly (elevation required)
     lsass comsvcs                          ->  dump lsass.exe using rundll32 and comsvcs.dll (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
