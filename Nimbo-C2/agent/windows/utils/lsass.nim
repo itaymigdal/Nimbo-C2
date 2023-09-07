@@ -1,6 +1,8 @@
+import priv
 import winim
 import helpers
 import nimprotect
+
 
 proc MiniDumpWriteDump(
     process_handle: HANDLE,
@@ -48,7 +50,7 @@ proc check_protection(process_h: int): int =
         process_h,
         ProcessProtectionInformation,
         addr pp,
-        cast[windef.ULONG](sizeof(pp)),
+        cast[ULONG](sizeof(pp)),
         addr temp
     ) != 0:
         # Could not retrieve
