@@ -105,7 +105,8 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'lsass': {
         'examine': None,
         'direct': None,
-        'comsvcs': None
+        'comsvcs': None,
+        'eviltwin': None
     },
     'sam': None,
     'shellc': None,
@@ -215,6 +216,7 @@ def print_agent_help(os):
     lsass examine                          ->  examine lsass.exe protections
     lsass direct                           ->  dump lsass.exe directly (elevation required)
     lsass comsvcs                          ->  dump lsass.exe using rundll32 and comsvcs.dll (elevation required)
+    lsass eviltwin                         ->  dump lsass.exe using the evil lsass twin method
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
     shellc <raw-shellcode-file> <pid>      ->  inject shellcode to a remote process using indirect syscalls
     assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single quoted string)
@@ -391,7 +393,7 @@ def agent_screen_windows(agent_id):
                     "command_type": "lsass-examine",
                 }
 
-            elif re.fullmatch(r"\s*lsass\s+(direct|comsvcs)", command):
+            elif re.fullmatch(r"\s*lsass\s+(direct|comsvcs|eviltwin)", command):
                 dump_method = re.sub(r"\s*lsass\s+", "", command, 1)
                 command_dict = {
                     "command_type": "lsass",
