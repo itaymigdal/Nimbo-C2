@@ -1,3 +1,5 @@
+# Modified code of https://github.com/RePRGM/Nimperiments/tree/main/EvilLsassTwin
+
 import winim
 import nimprotect
 import ../helpers
@@ -11,6 +13,7 @@ type
 
 {.emit: protectString("char procName[4096];").}
 var procName {.importc, nodecl.}: cstring
+
 
 proc enumLsassHandles(): seq[(ULONG, HANDLE)] =
     var status: NTSTATUS

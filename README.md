@@ -149,6 +149,7 @@ Nimbo-C2 [d337c406] > help
     lsass examine                          ->  examine lsass.exe protections
     lsass direct                           ->  dump lsass.exe directly (elevation required)
     lsass comsvcs                          ->  dump lsass.exe using rundll32 and comsvcs.dll (elevation required)
+    lsass eviltwin                         ->  dump lsass.exe using the evil lsass twin method (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
     shellc <raw-shellcode-file> <pid>      ->  inject shellcode to a remote process using indirect syscalls
     assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single quoted string)
@@ -225,8 +226,9 @@ Feel free to open issues, PR's, and contact me for any reason at ([Gmail](itaymi
 # Credits
 - [OffensiveNim](https://github.com/byt3bl33d3r/OffensiveNim) - Great resource that taught me a lot about leveraging Nim for implant tasks. Some of Nimbo-C2 agent capabilities are basically wrappers around OffensiveNim modified examples.
 - [Python-Prompt-Toolkit-3](https://github.com/prompt-toolkit/python-prompt-toolkit) - Awesome library for developing python CLI applications. Developed the Nimbo-C2 interactive console using this.
-- [ascii-image-converter](https://github.com/TheZoraiz/ascii-image-converter) - For the awsome Nimbo ascii art.
+- [ascii-image-converter](https://github.com/TheZoraiz/ascii-image-converter) - For the awesome Nimbo ascii art.
 - [NimlineWhispers3](https://github.com/klezVirus/NimlineWhispers3) - For the Nim indirect syscalls.
+- [EvilLsassTwin](https://github.com/RePRGM/Nimperiments/tree/main/EvilLsassTwin) - Great method to dump lsass evasively.
 - All those random people from Github & Stackoverflow that I copy & pasted their code :kissing_heart:.
 
 
