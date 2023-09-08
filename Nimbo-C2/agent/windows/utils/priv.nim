@@ -4,6 +4,7 @@ import winim/inc/windef
 import winim/inc/winbase
 import winim/inc/objbase
 
+
 proc set_privilege*(lpszPrivilege:string): bool=
     # inits
     var tp : TOKEN_PRIVILEGES
@@ -25,3 +26,15 @@ proc set_privilege*(lpszPrivilege:string): bool=
     return true
 
 
+
+proc is_elevated*(): bool =
+    var isElevated: bool
+    var token: HANDLE
+
+    if OpenProcessToken(cast[HANDLE](-1), TOKEN_QUERY, addr token) != 0:
+        var elevation: TOKEN_ELEVATION
+        var token_check: DWORD = cast[DWORD](sizeof TOKEN_ELEVATION)
+        if GetTokenInformation(token, tokenElevation, addr elevation, cast[DWORD](sizeof elevation), addr token_check) != 0:
+            isElevated = if elevation.TokenIsElevated != 0: true else: false
+    CloseHandle(token)
+    return isElevated
