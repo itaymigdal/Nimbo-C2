@@ -1,6 +1,6 @@
 import winim
-import helpers
 import nimprotect
+import ../helpers
 import std/[strutils, dynlib, tables, net]
 
 type
