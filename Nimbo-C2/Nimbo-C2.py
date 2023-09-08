@@ -216,7 +216,7 @@ def print_agent_help(os):
     lsass examine                          ->  examine lsass.exe protections
     lsass direct                           ->  dump lsass.exe directly (elevation required)
     lsass comsvcs                          ->  dump lsass.exe using rundll32 and comsvcs.dll (elevation required)
-    lsass eviltwin                         ->  dump lsass.exe using the evil lsass twin method
+    lsass eviltwin                         ->  dump lsass.exe using the evil lsass twin method (elevation required)
     sam                                    ->  dump sam,security,system hives using reg.exe (elevation required)
     shellc <raw-shellcode-file> <pid>      ->  inject shellcode to a remote process using indirect syscalls
     assembly <local-assembly> <args>       ->  execute .net assembly (pass all args as a single quoted string)
