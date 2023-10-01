@@ -3,7 +3,7 @@ import ../config
 import ../common
 import utils/incl/[evillsasstwin]
 import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex]
-# Internal imports
+# External imports
 import std/[tables, nativesockets, json]
 import wAuto/[registry, window]
 import winim/[lean, com]
