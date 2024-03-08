@@ -22,9 +22,9 @@
         "windows":
         {   
             // patch etw on start
-            "patch_etw_on_start": true,
+            "patch_etw_on_start": false,
             // patch amsi on start
-            "patch_amsi_on_start": true,
+            "patch_amsi_on_start": false,
             "exe":
             {
                 // default exe filename - can be override (use build exe -h)
