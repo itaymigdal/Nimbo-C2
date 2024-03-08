@@ -46,9 +46,9 @@ dll_file = os.path.join(agent_files, "dll.nim")
 # elf file
 elf_file = os.path.join(agent_files, "elf.nim")
 # default output files
-default_exe = os.path.join(nimbo_root, config["agent"]["exe"]["agent_filename"])
-default_dll = os.path.join(nimbo_root, config["agent"]["dll"]["agent_filename"])
-default_elf = os.path.join(nimbo_root, config["agent"]["elf"]["agent_filename"])
+default_exe = os.path.join(nimbo_root, config["agent"]["windows"]["exe"]["agent_filename"])
+default_dll = os.path.join(nimbo_root, config["agent"]["windows"]["dll"]["agent_filename"])
+default_elf = os.path.join(nimbo_root, config["agent"]["linux"]["elf"]["agent_filename"])
 # upx command
 upx_cmd = "UPX_BIN OUT_BIN"
 upx_sections = {
@@ -177,7 +177,7 @@ def main():
     parser_dll.add_argument("-v", "--verbose", action="store_false",
                             help="show compiler output")
     parser_dll.add_argument("-e", "--export-name", metavar="<name>", type=str,
-                            help="dll export name", default=config["agent"]["dll"]["export_name"])
+                            help="dll export name", default=config["agent"]["windows"]["dll"]["export_name"])
 
     parser_elf = sub_parsers.add_parser('elf', help='build elf agent')
     parser_elf.add_argument("-o", "--output", metavar="<path>", help="output path")

