@@ -87,7 +87,5 @@
     },
     "builder":
     {
-        // define your local UPX binary path or define simple "upx" if installed and in path
-        "upx_path": "upx"
     }
 }

