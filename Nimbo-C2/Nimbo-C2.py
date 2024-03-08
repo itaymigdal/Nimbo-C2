@@ -99,8 +99,8 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
         'spe': None
     },
     'uac': {
-        'fodhelper',
-        'sdclt'
+        'fodhelper': None,
+        'sdclt': None
     },
     'lsass': {
         'examine': None,

