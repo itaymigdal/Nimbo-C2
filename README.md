@@ -68,11 +68,11 @@ My work wouldn't be possible without the previous great work done by others, lis
 git clone https://github.com/itaymigdal/Nimbo-C2
 cd Nimbo-C2
 ```
-1. Build the docker image
+2. Build the docker image
 ```
 docker build -t nimbo-dependencies .
 ```
-1. `cd` again into the source files and run the docker image interactively, expose port 80 and mount Nimbo-C2 directory to the container (so you can easily access all project files, modify `config.jsonc`, download and upload files from agents, etc.). For Linux replace `${pwd}` with `$(pwd)`.
+3. `cd` again into the source files and run the docker image interactively, expose port 80 and mount Nimbo-C2 directory to the container (so you can easily access all project files, modify `config.jsonc`, download and upload files from agents, etc.). For Linux replace `${pwd}` with `$(pwd)`.
 ```
 cd Nimbo-C2
 docker run -it --rm -p 80:80 -v ${pwd}:/Nimbo-C2 -w /Nimbo-C2 nimbo-dependencies
