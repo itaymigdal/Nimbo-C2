@@ -142,7 +142,8 @@ Nimbo-C2 [d337c406] > help
     checksec                               ->  Enum security products
     software                               ->  Enum installed software
     windows                                ->  Enum visible windows
-    modules                                ->  Enum process loaded modules
+    modules                                ->  Enum process loaded modules (exclude Microsoft Dlls)
+    modules_full                           ->  Enum process loaded modules (include Microsoft Dlls)
     
     --== Collection Stuff ==--
     clipboard                              ->  Retrieve clipboard

@@ -1,1 +1,1 @@
-get-process -Id $PID | select -expand modules | select ModuleName,FileName,Company,Description,FileVersion | Format-List
+get-process -Id $PID | select -expand modules | select ModuleName,FileName,Company,Description,FileVersion | ? {$_.Company -ne "Microsoft Corporation"} | Format-List

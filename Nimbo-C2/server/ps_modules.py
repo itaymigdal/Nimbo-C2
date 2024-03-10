@@ -10,3 +10,4 @@ def read_ps_module(ps_module_filename):
 pstree = read_ps_module("pstree.ps1")
 software = read_ps_module("software.ps1")
 modules = read_ps_module("modules.ps1")
+modules_full = read_ps_module("modules_full.ps1")

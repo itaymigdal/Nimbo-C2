@@ -79,6 +79,7 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'upload': None,
     'pstree': None,
     'modules': None,
+    'modules_full': None,
     'checksec': None,
     'software': None,
     'windows': None,
@@ -202,7 +203,8 @@ def print_agent_help(os):
     checksec                               ->  Enum security products
     software                               ->  Enum installed software
     windows                                ->  Enum visible windows
-    modules                                ->  Enum process loaded modules
+    modules                                ->  Enum process loaded modules (exclude Microsoft Dlls)
+    modules_full                           ->  Enum process loaded modules (include Microsoft Dlls)
     
     --== Collection Stuff ==--
     clipboard                              ->  Retrieve clipboard
@@ -329,7 +331,7 @@ def agent_screen_windows(agent_id):
                 }
 
             # handle ps_modules
-            elif re.fullmatch(r"\s*(pstree|software|modules)\s*", command):
+            elif re.fullmatch(r"\s*(pstree|software|modules|modules_full)\s*", command):
                 ps_module = command.replace(" ", "")
                 powershell_command = getattr(ps_modules, ps_module)
                 encoded_powershell_command = utils.encode_base_64(powershell_command)
