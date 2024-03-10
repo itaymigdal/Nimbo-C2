@@ -2,7 +2,6 @@ import winim
 import winim/lean
 import winim/inc/windef
 import winim/inc/winbase
-import winim/inc/objbase
 
 
 proc set_privilege*(lpszPrivilege:string): bool=

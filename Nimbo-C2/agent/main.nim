@@ -7,7 +7,6 @@ when defined(linux):
     import linux/[linux_core]
 # External imports
 import std/[strformat, nativesockets, json]
-import system/[io]
 import httpclient
 import os
 

