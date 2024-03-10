@@ -181,7 +181,7 @@ Nimbo-C2 [d337c406] > help
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
     collect                                ->  Recollect agent data
-    kill                                   ->  Kill the agent (persistence will still take place)
+    die                                    ->  Kill the agent
     
     --== General ==--
     show                                   ->  Show agent details
@@ -211,7 +211,7 @@ Nimbo-2 [51a33cb9] > help
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
     collect                                ->  Recollect agent data
-    kill                                   ->  Kill the agent
+    die                                    ->  Kill the agent
     
     --== General ==--
     show                                   ->  Show agent details

