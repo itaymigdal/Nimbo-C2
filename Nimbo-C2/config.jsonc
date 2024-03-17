@@ -19,24 +19,33 @@
         "call_home_jitter_percent": 1,
         // seconds to sleep after initial execution
         "sleep_on_execution": 0,
-        "exe":
-        {
-            // default exe filename - can be override (use build exe -h)
-            "agent_filename": "na.exe",
-            // path to be copied and executed from
-            "execution_path": "C:\\\\ProgramData\\\\Prefetch\\\\na.exe",
-            // whether to copy and execute self to execution_path
-            // you may want to set this to false for reflective loading stuff
-            "reloc_on_exec": true
+        "windows":
+        {   
+            // patch etw on start
+            "patch_etw_on_start": false,
+            // patch amsi on start
+            "patch_amsi_on_start": false,
+            "exe":
+            {
+                // default exe filename - can be override (use build exe -h)
+                "agent_filename": "na.exe",
+                // path to be copied and executed from
+                "execution_path": "C:\\\\ProgramData\\\\Prefetch\\\\na.exe",
+                // whether to copy and execute self to execution_path
+                // you may want to set this to false for reflective loading stuff
+                "reloc_on_exec": true
+            },
+            "dll":
+            {
+                // default dll filename - can be override (use build dll -h)
+                "agent_filename": "na.dll",
+                // default dll export name - can be override (use build dll -h)
+                // using this export name - nice to execute using regsvr32 <dll-path>
+                "export_name": "DllRegisterServer"
+            }
         },
-        "dll":
-        {
-            // default dll filename - can be override (use build dll -h)
-            "agent_filename": "na.dll",
-            // default dll export name - can be override (use build dll -h)
-            // using this export name - nice to execute using regsvr32 <dll-path>
-            "export_name": "DllRegisterServer"
-        },
+    "linux":
+    {
         "elf":
         {
             // default elf filename - can be override (use build exe -h)
@@ -46,6 +55,7 @@
             // whether to copy and execute self to execution_path
             "reloc_on_exec": true
         }
+    }
     },
     "communication":
     {
@@ -87,7 +97,5 @@
     },
     "builder":
     {
-        // define your local UPX binary path or define simple "upx" if installed and in path
-        "upx_path": "upx"
     }
 }

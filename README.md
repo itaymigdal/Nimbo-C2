@@ -52,6 +52,7 @@ My work wouldn't be possible without the previous great work done by others, lis
 - Inline .NET assemblies execution.
 - Persistence capabilities.
 - UAC bypass methods.
+- Setting implant process as critical (BSOD on termination).
 - ELF loading using `memfd` in 2 modes.
 - And more !
 
@@ -142,7 +143,8 @@ Nimbo-C2 [d337c406] > help
     checksec                               ->  Enum security products
     software                               ->  Enum installed software
     windows                                ->  Enum visible windows
-    modules                                ->  Enum process loaded modules
+    modules                                ->  Enum process loaded modules (exclude Microsoft Dlls)
+    modules_full                           ->  Enum process loaded modules (include Microsoft Dlls)
     
     --== Collection Stuff ==--
     clipboard                              ->  Retrieve clipboard
@@ -177,11 +179,14 @@ Nimbo-C2 [d337c406] > help
     msgbox <title> <text>                  ->  Pop a message box in a new thread
     speak <text>                           ->  Speak a string using the microphone
     
+    --== Misc stuff ==--
+    critical <true/false>                  -> Set agent process as critical (BSOD on termination) (elevation required)
+    
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
     collect                                ->  Recollect agent data
-    kill                                   ->  Kill the agent (persistence will still take place)
+    die                                    ->  Kill the agent
     
     --== General ==--
     show                                   ->  Show agent details
@@ -211,7 +216,7 @@ Nimbo-2 [51a33cb9] > help
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
     collect                                ->  Recollect agent data
-    kill                                   ->  Kill the agent
+    die                                    ->  Kill the agent
     
     --== General ==--
     show                                   ->  Show agent details
