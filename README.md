@@ -52,6 +52,7 @@ My work wouldn't be possible without the previous great work done by others, lis
 - Inline .NET assemblies execution.
 - Persistence capabilities.
 - UAC bypass methods.
+- Setting implant process as critical (BSOD on termination).
 - ELF loading using `memfd` in 2 modes.
 - And more !
 

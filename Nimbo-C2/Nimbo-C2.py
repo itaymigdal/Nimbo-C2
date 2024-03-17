@@ -251,7 +251,7 @@ def print_agent_help(os):
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
     collect                                ->  Recollect agent data
-    die                                   ->  Kill the agent
+    die                                    ->  Kill the agent
     
     --== General ==--
     show                                   ->  Show agent details
