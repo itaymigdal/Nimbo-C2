@@ -119,6 +119,7 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
         'false': None
     },
     'sleep': None,
+    'clear': None,
     'collect': None,
     'die': None,
     'show': None,
@@ -136,6 +137,7 @@ agent_completer_linux = NestedCompleter.from_nested_dict({
         'implant': None
     },
     'sleep': None,
+    'clear': None,
     'collect': None,
     'die': None,
     'show': None,
@@ -251,7 +253,7 @@ def print_agent_help(os):
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
     collect                                ->  Recollect agent data
-    die                                   ->  Kill the agent
+    die                                    ->  Kill the agent
     
     --== General ==--
     show                                   ->  Show agent details
@@ -279,7 +281,7 @@ def print_agent_help(os):
     sleep <sleep-time> <jitter-%>          ->  Change sleep time interval and jitter
     clear                                  ->  Clear pending commands
     collect                                ->  Recollect agent data
-    die                                   ->  Kill the agent
+    die                                    ->  Kill the agent
     
     --== General ==--
     show                                   ->  Show agent details
