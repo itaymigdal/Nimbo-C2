@@ -119,6 +119,7 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
         'false': None
     },
     'sleep': None,
+    'clear': None,
     'collect': None,
     'die': None,
     'show': None,
@@ -136,6 +137,7 @@ agent_completer_linux = NestedCompleter.from_nested_dict({
         'implant': None
     },
     'sleep': None,
+    'clear': None,
     'collect': None,
     'die': None,
     'show': None,

