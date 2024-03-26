@@ -75,6 +75,7 @@ agent_prompt_text = FormattedText([(f"fg:{nimbo_prompt_color}", "Nimbo-C2 "),
 agent_completer_windows = NestedCompleter.from_nested_dict({
     'cmd': None,
     'iex': None,
+    'spawn': None,
     'download': None,
     'upload': None,
     'pstree': None,
@@ -200,6 +201,7 @@ def print_agent_help(os):
     --== Send Commands ==--
     cmd <shell-command>                    ->  Execute a shell command 
     iex <powershell-scriptblock>           ->  Execute in-memory powershell command
+    spawn <process-cmdline>                ->  Spawn new process using WMI win32_process class
     
     --== File Stuff ==--
     download <remote-file>                 ->  Download a file from the agent (wrap path with quotes)
@@ -349,6 +351,13 @@ def agent_screen_windows(agent_id):
                     "command_type": "iex",
                     "ps_module": ps_module,
                     "encoded_powershell_command": encoded_powershell_command
+                }
+
+            elif re.fullmatch(r"\s*spawn .+", command):
+                cmdline = re.sub(r"\s*spawn\s+", "", command, 1)
+                command_dict = {
+                    "command_type": "spawn",
+                    "cmdline": cmdline
                 }
 
             elif re.fullmatch(r"\s*download .+", command):

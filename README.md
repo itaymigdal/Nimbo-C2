@@ -133,6 +133,7 @@ Nimbo-C2 [d337c406] > help
     --== Send Commands ==--
     cmd <shell-command>                    ->  Execute a shell command 
     iex <powershell-scriptblock>           ->  Execute in-memory powershell command
+    spawn <process-cmdline>                ->  Spawn new process using WMI win32_process class
     
     --== File Stuff ==--
     download <remote-file>                 ->  Download a file from the agent (wrap path with quotes)

