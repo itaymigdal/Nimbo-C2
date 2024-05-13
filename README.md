@@ -242,6 +242,7 @@ Feel free to open issues, PR's, and contact me for any reason at ([Gmail](itaymi
 - [ascii-image-converter](https://github.com/TheZoraiz/ascii-image-converter) - For the awesome Nimbo ascii art.
 - [NimlineWhispers3](https://github.com/klezVirus/NimlineWhispers3) - For the Nim indirect syscalls.
 - [EvilLsassTwin](https://github.com/RePRGM/Nimperiments/tree/main/EvilLsassTwin) - Great method to dump lsass evasively.
+- [RuBublik](https://github.com/RuBublik) - For the improved screenshot.
 - All those random people from Github & Stackoverflow that I copy & pasted their code :kissing_heart:.
 
 
