@@ -1,7 +1,5 @@
 import winim, pixie
 import winim/inc/windef
-when not defined(release):
-    import std/strformat
 
 type
     RectPhysical = object
@@ -22,28 +20,10 @@ type
         
 var virtMonitors: seq[MyMonInfo]
 
-when not defined(release):
-    proc PPrint(): void 
 proc EnumDisplayMonitorsCallback(hMon: HMONITOR,hdcMon: HDC,rectLogical: LPRECT,lparam: LPARAM): WINBOOL {.stdcall.}
 
 # ---------------------------------------------------------------------------------------
         
-# DEBUG OUTPUT
-# - print monitor info
-when not defined(release):
-    proc PPrint(): void =
-        echo ""
-        echo &"""                 | {"left":<12}| {"top":<12}| {"right":<12}| {"bottom":<12}"""
-        echo "----------------------------------------------------------------"
-
-        var cntr : int = 0
-        for mon in virtMonitors:
-            echo &"Disp {cntr} : {mon.w}x{mon.h}, (scale: {mon.scaleFactor})"
-            echo &"   > Logical :  | {mon.rectLogical.left:<12}| {mon.rectLogical.top:<12}| {mon.rectLogical.right:<12}| {mon.rectLogical.bottom:<12}"
-            echo &"   > Physical:  | {mon.rectPhysical.left:<12}| {mon.rectPhysical.top:<12}| {mon.rectPhysical.right:<12}| {mon.rectPhysical.bottom:<12}"
-            inc(cntr)
-        echo ""
-
 proc EnumDisplayMonitorsCallback(hMon: HMONITOR,hdcMon: HDC,rectLogical: LPRECT,lparam: LPARAM): WINBOOL {.stdcall.} =
 
     # used to account for scaling ratio between the virtual resolution and real resolution
@@ -114,16 +94,8 @@ proc get_screenshot*(): string =
 
         virtMonitors[idx].rectPhysical = tmpRectPhysical
 
-    # DEBUG OUTPUT
-    when not defined(release):
-        PPrint()
-
     # calc coordinates for shifting of screenshots, each in relation to the others.
     # for this, finding the leftmost/topmost coordinates
-
-    # DEBUG OUTPUT
-    when not defined(release):
-        echo "[+] calculating left/top-most pixel coordinates for relative image positioning."
 
     var
         leftMost : int32 = 0
@@ -140,17 +112,8 @@ proc get_screenshot*(): string =
         if mon.rectPhysical.bottom > bottomMost:
             bottomMost = mon.rectPhysical.bottom
 
-    # DEBUG OUTPUT
-    when not defined(release):
-        echo &" \\--> saved values: ({leftMost= }, {topMost= }, {rightMost= }, {bottomMost= })"
-        echo ""
-
     # combining screenshots into ONE 'virtual screen' final bitmap
     # getting size of virtual screen (in pixels). The virtual screen is the bounding rectangle of all display monitors.
-
-    # DEBUG OUTPUT
-    when not defined(release):
-        echo "[+] creating image in size of bounding rectangle of all display monitors."
 
     var hScreen = GetDC(cast[HWND](nil))
     var 
@@ -160,18 +123,9 @@ proc get_screenshot*(): string =
         hCaptureDC : HDC = CreateCompatibleDC(hScreen)
         hBitmap = CreateCompatibleBitmap(hScreen, int32 vBoundingRectW, int32 vBoundingRectH)
 
-    # DEBUG OUTPUT
-    when not defined(release):
-        echo &" \\--> Detected Physical Bounding dimensions: {vBoundingRectW} x {vBoundingRectH}"
-        echo ""
-
     discard SelectObject(hCaptureDC, hBitmap)
 
     # position all screenshots in the final bitmap
-
-    # DEBUG OUTPUT
-    when not defined(release):
-        echo "[+] taking screenshots of detected monitors, and positioning relatively to left/top-most coordinates."
 
     for idx, mon in virtMonitors:
         var 
@@ -182,25 +136,9 @@ proc get_screenshot*(): string =
             x1 :int32 = mon.rectPhysical.left #mon.rectLogical.left
             y1 :int32 = mon.rectPhysical.top #mon.rectLogical.top
 
-        # DEBUG OUTPUT
-        # - print monitor info
-        when not defined(release):
-            echo &"  > Disp {idx}"
-            echo &"\t{x = },"
-            echo &"\t{y = },"
-            echo &"\t{cx= },"
-            echo &"\t{cy= },"
-            echo &"\t{x1= },"
-            echo &"\t{y1= }"
-
         discard BitBlt(hCaptureDC, x, y, cx, cy, hScreen#[mon.hdcMon]#, x1, y1, SRCCOPY)
 
     # setup bmi structure
-
-    # DEBUG OUTPUT
-    when not defined(release):
-        echo ""
-        echo "[+] constructing bit-map from 'Image' object."
 
     var mybmi: BITMAPINFO
     mybmi.bmiHeader.biSize = int32 sizeof(mybmi)
@@ -211,11 +149,6 @@ proc get_screenshot*(): string =
     mybmi.bmiHeader.biCompression = BI_RGB
     mybmi.bmiHeader.biSizeImage = vBoundingRectW * vBoundingRectH * 4
 
-    # DEBUG OUTPUT
-    when not defined(release):
-        echo &" \\--> using values:\n   {mybmi.bmiHeader.biSize= },\n   {mybmi.bmiHeader.biWidth= },\n   {mybmi.bmiHeader.biHeight= },\n   {mybmi.bmiHeader.biPlanes= },\n   {mybmi.bmiHeader.biBitCount= },\n   {mybmi.bmiHeader.biCompression= },\n   {mybmi.bmiHeader.biSizeImage= }"
-        echo ""
-
     # create an image
     var finalImage = newImage(vBoundingRectW, vBoundingRectH)
 
@@ -224,19 +157,9 @@ proc get_screenshot*(): string =
     discard GetDIBits(hCaptureDC, hBitmap, 0, vBoundingRectH, cast[ptr pointer](unsafeAddr finalImage.data[0]), addr mybmi, DIB_RGB_COLORS)
 
     # for some reason windows bitmaps are flipped? flip it back
-
-    # DEBUG OUTPUT
-    when not defined(release):
-        echo "[+] flipping image vertically."
-
     finalImage.flipVertical()
 
     # for some reason windows uses BGR, convert it to RGB
-
-    # DEBUG OUTPUT
-    when not defined(release):
-        echo "[+] recoding colors (BGR -> RGB)."
-
     for i in 0 ..< finalImage.height * finalImage.width:
         swap finalImage.data[i].r, finalImage.data[i].b
 
@@ -246,12 +169,5 @@ proc get_screenshot*(): string =
 
     # convert to more efficient image format
     # Pixie does not support more size-efficient JPEG format
-
-    # DEBUG OUTPUT
-    when not defined(release):
-        var debugFileName = ".\\combined_screenshot.png"
-        echo fmt"[+] saving bit-map to file: '{debugFileName}'"
-        finalImage.writeFile(debugFileName)
-    else:
-        var image_stream = encodeImage(finalImage, PngFormat)
-        return image_stream
+    var image_stream = encodeImage(finalImage, PngFormat)
+    return image_stream
