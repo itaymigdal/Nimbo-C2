@@ -231,6 +231,7 @@ Nimbo-2 [51a33cb9] > help
 - Even though the HTTP communication is encrypted, the 'user-agent' header is in plain text and it carries the real agent id, which some products may flag it suspicious.
 - `audio`, `lsass` (except the Evil Lsass Twin method) and `sam` commands temporarily save artifacts to disk before exfiltrate and delete them.
 - Cleaning the `persist` commands should be done manually.
+- If you tunnel the Nimbo server (e.g. if you expose it via [Pinggy](https://pinggy.io/)), use TCP, not HTTP.
 
 # Contribution
 This software may be buggy or unstable in some use cases as it not being fully and constantly tested.
