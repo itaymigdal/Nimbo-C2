@@ -122,6 +122,7 @@ Nimbo-C2 > help
     cls                           ->  Clear the screen
     help                          ->  Print this help message
     exit                          ->  Exit Nimbo-C2
+    ! <command>                   ->  Execute system command
 ```
 
 ## Agent Window
@@ -195,6 +196,7 @@ Nimbo-C2 [d337c406] > help
     cls                                    ->  Clear the screen
     help                                   ->  Print this help message
     exit                                   ->  Exit Nimbo-C2
+    ! <command>                            ->  Execute system command
 ```
 ### Linux agent
 ```
@@ -225,6 +227,7 @@ Nimbo-2 [51a33cb9] > help
     cls                                    ->  Clear the screen
     help                                   ->  Print this help message
     exit                                   ->  Exit Nimbo-C2
+    ! <command>                            ->  Execute system command
 ```
 
 # Limitations & Warnings

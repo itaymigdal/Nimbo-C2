@@ -2,6 +2,7 @@ from server import utils
 from server import listener
 from server import ps_modules
 
+import os
 import re
 import json
 import shlex
@@ -190,6 +191,7 @@ def print_main_help():
     cls                           ->  Clear the screen
     help                          ->  Print this help message
     exit                          ->  Exit Nimbo-C2
+    ! <command>                   ->  Execute system command
     """
 
     print(main_help)
@@ -263,6 +265,7 @@ def print_agent_help(os):
     cls                                    ->  Clear the screen
     help                                   ->  Print this help message
     exit                                   ->  Exit Nimbo-C2
+    ! <command>                            ->  Execute system command
     """
 
     linux_help = f"""
@@ -291,6 +294,7 @@ def print_agent_help(os):
     cls                                    ->  Clear the screen
     help                                   ->  Print this help message
     exit                                   ->  Exit Nimbo-C2
+    ! <command>                            ->  Execute system command
     """
     
     if os == "windows":
@@ -315,6 +319,24 @@ def print_agents(agent=None):
         agent_table[p] = [agents[agent]["info"][p] for agent in agents if agents[agent]["info"].get(p)]
 
     utils.log_message(f"\n{tabulate(agent_table, headers='keys', tablefmt='grid')}\n", print_time=False)
+
+
+def parse_common_command(command):
+    if re.fullmatch(r"\s*cls\s*", command):
+        utils.clear_screen()
+
+    elif re.fullmatch(r"\s*exit\s*", command):
+        raise KeyboardInterrupt
+
+    elif re.fullmatch(r"\s*!.*", command):
+        shell_command = re.sub(r"\s*!", "", command, 1)
+        os.system(shell_command)
+
+    elif re.fullmatch(r"\s*", command):
+        return
+
+    else:
+        print("[-] Wrong command")
 
 
 def agent_screen_windows(agent_id):
@@ -555,30 +577,20 @@ def agent_screen_windows(agent_id):
             elif re.fullmatch(r"\s*back\s*", command):
                 return
 
-            elif re.fullmatch(r"\s*cls\s*", command):
-                utils.clear_screen()
-                continue
-
             elif re.fullmatch(r"\s*help\s*", command):
                 print_agent_help("windows")
                 continue
 
-            elif re.fullmatch(r"\s*exit\s*", command):
-                raise KeyboardInterrupt
-
-            elif re.fullmatch(r"\s*", command):
-                continue
-
             else:
-                print("[-] Wrong command")
+                parse_common_command(command)
                 continue
-            
+
             if command_dict["command_type"] in elevated_commands and listener.agents[agent_id]["info"]["Elevated"].strip() == 'False':
                 utils.log_message(f"[-] This command requires elevation", print_time=False)
                 continue
             else:
                 listener.agents[agent_id]["pending_commands"] += [command_dict]
-
+        
         except Exception:
             print("[-] Could not parse command")
             continue
@@ -672,25 +684,17 @@ def agent_screen_linux(agent_id):
             elif re.fullmatch(r"\s*back\s*", command):
                 return
 
-            elif re.fullmatch(r"\s*cls\s*", command):
-                utils.clear_screen()
-                continue
-
             elif re.fullmatch(r"\s*help\s*", command):
                 print_agent_help("linux")
                 continue
-
-            elif re.fullmatch(r"\s*exit\s*", command):
-                raise KeyboardInterrupt
-
-            elif re.fullmatch(r"\s*", command):
-                continue
-
+            
             else:
-                print("[-] Wrong command")
+                parse_common_command(command)
                 continue
 
             listener.agents[agent_id]["pending_commands"] += [command_dict]
+
+            
 
         except Exception:
             print("[-] Could not parse command")
@@ -761,21 +765,12 @@ def main_screen():
 
         elif re.fullmatch(r"\s*listener\s+stop\s*", command):
             listener.listener_stop()
-
-        elif re.fullmatch(r"\s*cls\s*", command):
-            utils.clear_screen()
-
+        
         elif re.fullmatch(r"\s*help\s*", command):
             print_main_help()
-
-        elif re.fullmatch(r"\s*exit\s*", command):
-            raise KeyboardInterrupt
-
-        elif re.fullmatch(r"\s*", command):
-            pass
-
+        
         else:
-            print("[-] Wrong command")
+            parse_common_command(command)
 
 
 if __name__ == '__main__':
