@@ -673,7 +673,6 @@ proc windows_start*(): void =
             discard post_data(client, protectString("patch") , $data)
 
 
-
 proc windows_parse_command*(command: JsonNode): bool =
     var is_success: bool
     var command_type = command[protectString("command_type")].getStr()
