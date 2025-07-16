@@ -92,7 +92,7 @@
             // whether to start the listener on Nimbo-C2.py execution
             "start_listener_on_start": true,
             // collect agents data to this folder
-            "collect_folder": "collected"
+            "collect_folder": "loot"
         }
     },
     "builder":

