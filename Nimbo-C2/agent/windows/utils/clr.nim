@@ -54,4 +54,3 @@ proc execute_assembly*(assembly_b64: string, assembly_args: string): (bool, stri
     except:
         is_success = false
     return (is_success, output.replace("\c", ""))
-

