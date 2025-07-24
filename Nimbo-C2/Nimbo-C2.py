@@ -155,7 +155,7 @@ elevated_commands = [
     "critical"
 ]
 elevated_commands_ps_modules = [
-    "samdump",
+    "samdump"
 ]
 
 
