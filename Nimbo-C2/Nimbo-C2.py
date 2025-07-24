@@ -232,7 +232,7 @@ def print_agent_help(os):
     lsass direct                           ->  Dump Lsass directly (elevation required)
     lsass comsvcs                          ->  Dump Lsass using Rundll32 and Comsvcs.dll (elevation required)
     lsass eviltwin                         ->  Dump Lsass using the Evil Lsass Twin method (elevation required)
-    samdump                                ->  Dump SAM hashes using PowerDump.ps1 (elevation required)
+    samdump                                ->  Dump SAM hashes using inline PowerDump.ps1 (elevation required)
     shellc <raw-shellcode-file> <pid>      ->  Inject shellcode to a remote process using indirect syscalls
     assembly <local-assembly> <args>       ->  Execute inline .NET assembly (pass all args as a single quoted string)
     
