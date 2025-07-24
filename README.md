@@ -47,7 +47,7 @@ My work wouldn't be possible without the previous great work done by others, lis
 - Built-in discovery commands.
 - Screenshot taking, clipboard stealing, audio recording, and keylogger.
 - ETW & AMSI patching using indirect syscalls.
-- LSASS and SAM hives dumping. 
+- LSASS and SAM hashes dumping. 
 - Shellcode injection using indirect syscalls.
 - Inline .NET assemblies execution.
 - Persistence capabilities.
@@ -161,7 +161,7 @@ Nimbo-C2 [d337c406] > help
     lsass direct                           ->  Dump Lsass directly (elevation required)
     lsass comsvcs                          ->  Dump Lsass using Rundll32 and Comsvcs.dll (elevation required)
     lsass eviltwin                         ->  Dump Lsass using the Evil Lsass Twin method (elevation required)
-    sam                                    ->  Dump sam,security,system hives using reg.exe (elevation required)
+    samdump                                ->  Dump SAM hashes using inline PowerDump.ps1 (elevation required)
     shellc <raw-shellcode-file> <pid>      ->  Inject shellcode to a remote process using indirect syscalls
     assembly <local-assembly> <args>       ->  Execute inline .NET assembly (pass all args as a single quoted string)
     
@@ -232,7 +232,7 @@ Nimbo-2 [51a33cb9] > help
 
 # Limitations & Warnings
 - Even though the HTTP communication is encrypted, the 'user-agent' header is in plain text and it carries the real agent id, which some products may flag it suspicious.
-- `audio`, `lsass` (except the Evil Lsass Twin method) and `sam` commands temporarily save artifacts to disk before exfiltrate and delete them.
+- `audio`, `lsass` (except the Evil Lsass Twin method) commands temporarily save artifacts to disk before exfiltrate and delete them.
 - Cleaning the `persist` commands should be done manually.
 - If you tunnel the Nimbo server (e.g. if you expose it via [Pinggy](https://pinggy.io/)), use TCP, not HTTP.
 

