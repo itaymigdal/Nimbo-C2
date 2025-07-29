@@ -176,7 +176,10 @@ Nimbo-C2 [d337c406] > help
     --== Privesc Stuff ==--
     uac fodhelper <command>                ->  Elevate session using the Fodhelper UAC bypass technique
     uac sdclt <command>                    ->  Elevate session using the Sdclt UAC bypass technique
-    
+    impersonate <pid>                      ->  Steal and impersonate token from process (elevation required)
+    getsys                                 ->  Steal and impersonate SYSTEN token (elevation required)
+    rev2self                               ->  Revert to original token
+
     --== Interaction stuff ==--
     msgbox <title> <text>                  ->  Pop a message box in a new thread
     speak <text>                           ->  Speak a string using the microphone

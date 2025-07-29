@@ -1,10 +1,7 @@
 import winim
-import winim/lean
-import winim/inc/windef
-import winim/inc/winbase
 
 
-proc set_privilege*(lpszPrivilege:string): bool=
+proc set_privilege*(lpszPrivilege: string): bool =
     # inits
     var tp : TOKEN_PRIVILEGES
     var luid: LUID 

