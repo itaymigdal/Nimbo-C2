@@ -137,9 +137,18 @@ Nimbo-C2 [d337c406] > help
     spawn <process-cmdline>                ->  Spawn new process using WMI win32_process class
     
     --== File Stuff ==--
-    download <remote-file>                 ->  Download a file from the agent (wrap path with quotes)
-    upload <local-file> <remote-path>      ->  Upload a file to the agent (wrap paths with quotes)
+    download <remote-file>                 ->  Download a file from the agent
+    upload <local-file> <remote-path>      ->  Upload a file to the agent
     
+    --== Registry Stuff ==--
+    regenumkeys <key>                      -> Enumerate registry subkeys
+    regenumvalues <key>                    -> Enumerate registry values
+    regread <key> <value>                  -> Read registry value
+    regdelete <key>                        -> Delete entire registry key
+    regdelete <key> <value>                -> Delete registry value
+    regwrite <key>                         -> Create registry key
+    regwrite <key> <value> <data> <d/s>    -> Write a registry value (supports dword, string)
+
     --== Discovery Stuff ==--
     pstree                                 ->  Show process tree
     checksec                               ->  Enum security products

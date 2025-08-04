@@ -79,6 +79,13 @@ agent_completer_windows = NestedCompleter.from_nested_dict({
     'spawn': None,
     'download': None,
     'upload': None,
+    'regenumkeys': None,
+    'regenumvalues': None,
+    'regread': None,
+    'regdelete': None,
+    'regdelete': None,
+    'regwrite': None,
+    'regwrite': None,
     'pstree': None,
     'modules': None,
     'modules_full': None,
@@ -211,9 +218,18 @@ def print_agent_help(os):
     spawn <process-cmdline>                ->  Spawn new process using WMI win32_process class
     
     --== File Stuff ==--
-    download <remote-file>                 ->  Download a file from the agent (wrap path with quotes)
-    upload <local-file> <remote-path>      ->  Upload a file to the agent (wrap paths with quotes)
+    download <remote-file>                 ->  Download a file from the agent
+    upload <local-file> <remote-path>      ->  Upload a file to the agent
     
+    --== Registry Stuff ==--
+    regenumkeys <key>                      -> Enumerate registry subkeys
+    regenumvalues <key>                    -> Enumerate registry values
+    regread <key> <value>                  -> Read registry value
+    regdelete <key>                        -> Delete entire registry key
+    regdelete <key> <value>                -> Delete registry value
+    regwrite <key>                         -> Create registry key
+    regwrite <key> <value> <data> <d/s>    -> Write a registry value (supports dword, string)
+
     --== Discovery Stuff ==--
     pstree                                 ->  Show process tree
     checksec                               ->  Enum security products
@@ -417,6 +433,81 @@ def agent_screen_windows(agent_id):
                     "dst_file_path": remote_file
                 }
 
+            elif re.fullmatch(r"\s*regenumkeys .+", command):
+                args = re.sub(r"\s*regenumkeys\s+", "", command, 1)
+                remote_key = shlex.split(args)[0]
+                command_dict = {
+                    "command_type": "regenumkeys",
+                    "key": remote_key
+                }
+
+            elif re.fullmatch(r"\s*regenumvalues .+", command):
+                args = re.sub(r"\s*regenumvalues\s+", "", command, 1)
+                remote_key = shlex.split(args)[0]
+                command_dict = {
+                    "command_type": "regenumvalues",
+                    "key": remote_key
+                }
+            
+            elif re.fullmatch(r"\s*regread .+", command):
+                args = re.sub(r"\s*regread\s+", "", command, 1)
+                remote_key = shlex.split(args)[0]
+                remote_value = shlex.split(args)[1]
+                command_dict = {
+                    "command_type": "regread",
+                    "key": remote_key,
+                    "value": remote_value
+                }
+            
+            elif re.fullmatch(r"\s*regdelete .+", command):
+                args = re.sub(r"\s*regdelete\s+", "", command, 1)
+                argsl = shlex.split(args)
+                if len(argsl) == 1:
+                    remote_key = argsl[0]
+                    command_dict = {
+                    "command_type": "regdelete",
+                    "key": remote_key
+                    }  
+                elif len(argsl) == 2:
+                    remote_key = argsl[0]
+                    remote_value = argsl[1]
+                    command_dict = {
+                        "command_type": "regdelete",
+                        "key": remote_key,
+                        "value": remote_value
+                    }
+                else:
+                    raise Exception
+            
+            elif re.fullmatch(r"\s*regwrite .+", command):
+                args = re.sub(r"\s*regwrite\s+", "", command, 1)
+                argsl = shlex.split(args)
+                if len(argsl) == 1:
+                    remote_key = argsl[0]
+                    command_dict = {
+                        "command_type": "regwrite",
+                        "key": remote_key,
+                    }  
+
+                elif len(argsl) == 4:
+                    remote_key = argsl[0]
+                    remote_value = argsl[1]
+                    remote_data = argsl[2]
+                    remote_type = argsl[3]
+                    if remote_type not in ["d", "s"]:
+                        raise Exception
+                    if remote_type == "d":
+                        remote_data = int(remote_data)
+                    command_dict = {
+                        "command_type": "regwrite",
+                        "key": remote_key,
+                        "value": remote_value,
+                        "data": remote_data,
+                        "type": remote_type
+                    }  
+                else:
+                    raise Exception                                           
+
             elif re.fullmatch(r"\s*checksec\s*", command):
                 command_dict = {
                     "command_type": "checksec"
@@ -534,7 +625,7 @@ def agent_screen_windows(agent_id):
                 pid = re.sub(r"\s*impersonate\s+", "", command, 1)
                 command_dict = {
                     "command_type": "impersonate",
-                    "pid": pid,
+                    "pid": int(pid),
                 }
 
             elif re.fullmatch(r"\s*getsys\s*", command):   

