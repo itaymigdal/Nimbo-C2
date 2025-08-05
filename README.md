@@ -245,6 +245,7 @@ Nimbo-2 [51a33cb9] > help
 # Limitations & Warnings
 - Even though the HTTP communication is encrypted, the 'user-agent' header is in plain text and it carries the real agent id, which some products may flag it suspicious.
 - `audio`, `lsass` (except the Evil Lsass Twin method) commands temporarily save artifacts to disk before exfiltrate and delete them.
+- CLR works with primary access token so `impersonate`/`getsys` don't affect `iex`/`assembly`.
 - Cleaning the `persist` commands should be done manually.
 - If you tunnel the Nimbo server (e.g. if you expose it via [Pinggy](https://pinggy.io/)), use TCP, not HTTP.
 
