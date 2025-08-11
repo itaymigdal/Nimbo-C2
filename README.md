@@ -101,4 +101,4 @@ Use the `help` command for each screen, and tab completion.
 
 # Contribution
 This software may be buggy or unstable in some use cases as it not being fully and constantly tested.
-Feel free to open issues, PR's, and contact me for any reason at ([Gmail](itaymigdal9@gmail.com) | [Linkedin](https://www.linkedin.com/in/itay-migdal-b91821116/) 
+Feel free to open issues, PR's, and contact me for any reason at ([Gmail](itaymigdal9@gmail.com) | [Linkedin](https://www.linkedin.com/in/itay-migdal-b91821116/))
