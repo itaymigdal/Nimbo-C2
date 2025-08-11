@@ -382,11 +382,10 @@ def print_agent_help(target: str = "All"):
     for name, cmd in command_registry.items():
         cmd_target = cmd.target.lower()
 
-        # Logic: show if...
         if target == "all":
-            pass  # Show all commands
+            pass 
         elif cmd_target != "all" and cmd_target != target:
-            continue  # Skip commands not matching the platform
+            continue  
 
         categorized.setdefault(cmd.category, []).append(cmd)
 
