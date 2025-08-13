@@ -108,7 +108,13 @@ class C2(BaseHTTPRequestHandler):
             self.send_default_headers_and_status_code()
             content_len = int(self.headers.get('Content-Length'))
             post_body = utils.decrypt_cbc(self.rfile.read(content_len))
-            agent_data = json.loads(utils.sanitize_data(post_body))
+            try:
+                agent_data = json.loads(utils.sanitize_data(post_body))
+            except json.decoder.JSONDecodeError:
+                if request_classification == "exists":
+                    utils.log_message("Could not decode Json from client, printing post body:")
+                    utils.log_message(post_body, print_time=False)
+                    return
             if (request_classification == "exists" or \
                 (request_classification == "new" and agent_data["command_type"] == "collect")):
                 self.parse_agent_data(agent_data)
@@ -116,6 +122,8 @@ class C2(BaseHTTPRequestHandler):
                 return
         # intruder or new agent that didn't collect data as first request - Bye Bye
         self.close_connection = True
+        utils.log_message("Post from intruder (not a valid Nimbo implant), closing connection")
+
 
     def do_GET(self):
         self.log_message = self.default_logger_sinkhole

@@ -4,6 +4,7 @@ from server import ps_modules
 
 import os
 import re
+import sys
 import json
 import shlex
 import subprocess
@@ -398,6 +399,8 @@ def print_agent_help(target: str = "All"):
             padding = " " * max(1, 50 - len(cmd.name + " " + args))
             print(f"    {cmd.name} {args}{padding}->  {cmd.help}")
         print()
+    sys.stdout.write("\033[F")  # Move cursor up one line
+    sys.stdout.write("\033[K")  # Clear to end of line
 
 
 def print_agent_help_general():

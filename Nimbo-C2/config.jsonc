@@ -7,7 +7,7 @@
         "listen_on_address": "0.0.0.0",
         "listen_on_port": 80,
         // your actual c2 address
-        "address": "172.27.240.1",
+        "address": "localhost",
         "port": 80
     },
     "agent":
