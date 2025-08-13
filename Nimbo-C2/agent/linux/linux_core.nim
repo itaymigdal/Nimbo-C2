@@ -127,7 +127,7 @@ proc wrap_load_memfd(elf_base64: string, command_line: string, mode: string): bo
     }.toOrderedTable()
     
     if output.len() > 0:
-        data[protectString("output")] = output
+        data[protectString("output")] = "\n" & output
 
     is_success = post_data(client, protectString("memfd"), $data)
 

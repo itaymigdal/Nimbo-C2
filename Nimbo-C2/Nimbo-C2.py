@@ -339,7 +339,7 @@ def enrich_agent_completer_dict(commands_dict):
     commands_dict["uac"] = dict.fromkeys(['fodhelper', 'sdclt'])
     commands_dict["lsass"] = dict.fromkeys(['examine', 'direct', 'comsvcs', 'eviltwin'])
     commands_dict["critical"] = dict.fromkeys(['true', 'false'])
-    commands_dict["patch"] = dict.fromkeys(['task', 'implant'])
+    commands_dict["memfd"] = dict.fromkeys(["task", "implant"])
     return commands_dict
 
 
