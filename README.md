@@ -82,6 +82,7 @@ git clone https://github.com/itaymigdal/Nimbo-C2
 cd Nimbo-C2/Nimbo-C2
 docker run -it --rm -p 80:80 -v ${pwd}:/Nimbo-C2 -w /Nimbo-C2 itaymigdal/nimbo-dependencies
 ```
+For Linux replace `${pwd}` with `$(pwd)`.
 
 # Usage
 
