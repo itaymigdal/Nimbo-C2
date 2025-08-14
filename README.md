@@ -37,6 +37,7 @@ My work wouldn't be possible without the previous great work done by others, lis
 - Packing payloads using [UPX](https://github.com/upx/upx) and obfuscate the PE section names (`UPX0`, `UPX1`) to make detection and unpacking harder.
 - Encrypted HTTP communication (AES in CBC mode, key hardcoded in the agent and configurable by the `config.jsonc`).
 - Auto-completion in the C2 Console for convenient interaction.  
+- File & Registry commands.
 - In-memory Powershell commands execution.
 - File download and upload commands.
 - Built-in discovery commands.
@@ -47,8 +48,9 @@ My work wouldn't be possible without the previous great work done by others, lis
 - Inline .NET assemblies execution.
 - Persistence capabilities.
 - UAC bypass methods.
+- Token impersonation and getsystem.
 - Setting implant process as critical (BSOD on termination).
-- ELF loading using `memfd` in 2 modes.
+- (Linux) ELF loading using `memfd` in 2 modes.
 - And more !
 
 # Installation
