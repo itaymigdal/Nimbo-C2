@@ -588,6 +588,8 @@ def agent_screen(agent_id, os):
                 command_dict = command.handler(*command_list[1:])
                 if command_dict:
                     listener.agents[agent_id]["pending_commands"] += [command_dict]
+                if command_dict:
+                    listener.agents[agent_id]["pending_commands"] += [command_dict]
             else:
                 raise Exception
 
